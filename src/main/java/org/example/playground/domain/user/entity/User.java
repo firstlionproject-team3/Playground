@@ -34,6 +34,11 @@ public class User {
     @Column(name = "joined_date", updatable = false)
     private LocalDateTime joinedDate;
 
+    //소셜 로그인 관련 필드
+    private String provider;
+
+    private String providerId;
+
     public static User userFromDTO(UserDTO userDTO, String encodingPW){
         return User.builder()
                 .name(userDTO.getName())
