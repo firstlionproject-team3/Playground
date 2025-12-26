@@ -6,6 +6,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface QuestionRepository extends JpaRepository<Question,Long> {
-    Page<Question> findByTitleContainingIgnoreCaseOrContentContainingIgnoreCase(
-            String title, String content, Pageable pageable);
+    //전체조회
+    Page<Question> findAll(Pageable pageable);
+
+    //키워드조회(제목이나 본문)
+
 }
