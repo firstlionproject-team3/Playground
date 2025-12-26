@@ -1,9 +1,11 @@
 package org.example.playground.domain.user.dto;
 
 import lombok.*;
+import org.example.playground.domain.user.entity.Role;
 import org.example.playground.domain.user.entity.User;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Getter
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
@@ -16,7 +18,7 @@ public class UserRegisterDTO {
     private String loginId;
     private String email;
     private LocalDateTime joinedDate;
-//    private Set<Role> roles;
+    private Set<Role> roles;
 
     public static UserRegisterDTO userRegisterDTOfromEntity(User user){
         return UserRegisterDTO.builder()
@@ -25,7 +27,7 @@ public class UserRegisterDTO {
                 .loginId(user.getLoginId())
                 .email(user.getEmail())
                 .joinedDate(user.getJoinedDate())
-//                .roles(user.getRoles())
+                .roles(user.getRoles())
                 .build();
     }
 }

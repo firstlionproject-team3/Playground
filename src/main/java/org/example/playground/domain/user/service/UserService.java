@@ -13,7 +13,7 @@ public interface UserService {
     //회원 정보 수정
 
     //회원 탈퇴
-    public void deleteUser(Integer id) throws UserNotFoundException;
+    public void deleteUser(Long id, UserDetails userDetails) throws UserNotFoundException;
 
     //회원 정보 조회
 //    public UserDTO getUser(Integer id, UserDetails userDetails);
