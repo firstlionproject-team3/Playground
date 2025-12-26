@@ -32,6 +32,7 @@ public class Question {
     @Column(nullable = false)
     private LocalDateTime updated_at;
 
+    //질문 생성
     public static Question create(Long member_id, String title, String content) {
         LocalDateTime now = LocalDateTime.now();
 
@@ -44,6 +45,7 @@ public class Question {
                 .build();
     }
 
+    //질문 수정
     public void update(String title, String content) {
         if(title != null && !title.isBlank()) {
             this.title = title;
