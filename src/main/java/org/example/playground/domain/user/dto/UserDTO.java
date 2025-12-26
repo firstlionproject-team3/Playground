@@ -12,9 +12,7 @@ import lombok.Getter;
 @Builder(access = AccessLevel.PRIVATE)
 public class UserDTO {
     //회원가입 할때 받아오는 정보를 담는 DTO
-    private Integer id;
-
-
+    private Long id;
     @Size(max = 50)
     private String name;
     @NotBlank
@@ -23,10 +21,6 @@ public class UserDTO {
     @NotBlank
     @Size(max = 20)
     private String password;
-
     @Size(max = 100)
     private String email;
-
-    private String provider;
-    private String providerId;
 }

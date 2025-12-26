@@ -1,6 +1,7 @@
 package org.example.playground.domain.user.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.playground.domain.user.dto.OAuthUserInfo;
 import org.example.playground.domain.user.dto.UserDTO;
 import org.example.playground.domain.user.dto.UserRegisterDTO;
 import org.example.playground.domain.user.entity.Role;
@@ -15,6 +16,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.UUID;
 
 import static org.example.playground.domain.user.dto.UserRegisterDTO.userRegisterDTOfromEntity;
 import static org.example.playground.domain.user.entity.User.userFromDTO;
@@ -39,11 +42,21 @@ public class UserServiceImpl implements UserService{
         String encodingPW = passwordEncoder.encode(userDTO.getPassword());
         User user = userFromDTO(userDTO, encodingPW);
 
-        //기본적으로 USER 권한 부여. 만약 roles 테이블에 USER 이 없을 시 새로 만들어서 USER 부여. (첫 회원)
-        user.addRole(roleRepository.findByName("USER").orElseGet(()
-                -> roleRepository.save(new Role("USER"))));
+        addUserRole(user);
 
         return userRegisterDTOfromEntity(userRepository.save(user));
+    }
+
+    @Override
+    @Transactional
+    public User loginOrRegisterSocial(OAuthUserInfo oAuthUserInfo) {
+        return userRepository.findByProviderAndProviderId(oAuthUserInfo.getProvider(), oAuthUserInfo.getProviderId())
+                .orElseGet(() -> {
+                    User user = User.userFromOAuthUser(oAuthUserInfo, passwordEncoder);
+
+                    addUserRole(user);
+                    return userRepository.save(user);
+                });
     }
 
     @Override
@@ -59,6 +72,16 @@ public class UserServiceImpl implements UserService{
         }
 
         userRepository.delete(findUser);
+    }
+
+    //기본적으로 USER 권한 부여. 만약 roles 테이블에 USER 이 없을 시 새로 만들어서 USER 부여. (첫 회원)
+    private void addUserRole(User user) {
+        user.addRole(roleRepository.findByName("USER").orElseGet(()
+                -> roleRepository.save(new Role("USER"))));
+    }
+
+    private String generateDummyPassword() {
+        return UUID.randomUUID().toString();
     }
 }
 

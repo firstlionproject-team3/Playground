@@ -2,12 +2,15 @@ package org.example.playground.domain.user.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.playground.domain.user.dto.OAuthUserInfo;
 import org.example.playground.domain.user.dto.UserDTO;
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -29,7 +32,7 @@ public class User {
     @Column(name = "password", nullable = false, length = 100)
     private String password;
 
-    @Column(name = "email", nullable = false, length = 100)
+    @Column(name = "email", length = 100)
     private String email;
 
     @CreationTimestamp
@@ -37,7 +40,9 @@ public class User {
     private LocalDateTime joinedDate;
 
     //소셜 로그인 관련 필드
+    @Column(name = "provider", length = 20)
     private String provider; // 소셜 로그인 제공자 (없으면 일반 회원)
+    @Column(name = "provider_id", length = 100)
     private String providerId; // 소셜 계정과 연결될 때 쓰는 ID
 
     @Builder.Default
@@ -59,6 +64,22 @@ public class User {
                 .loginId(userDTO.getLoginId())
                 .password(encodingPW)
                 .email(userDTO.getEmail())
+                .build();
+    }
+
+    public static User userFromOAuthUser(OAuthUserInfo info, PasswordEncoder passwordEncoder) {
+        String loginId = info.getProvider() + "_" + info.getProviderId();
+
+        // 소셜 유저는 password 로그인에 쓰지 않으므로 더미 생성 (NOT NULL 만족용)
+        String dummyPassword = passwordEncoder.encode(UUID.randomUUID().toString());
+
+        return User.builder()
+                .name(info.getName() != null ? info.getName() : info.getProvider() + "_user")
+                .loginId(loginId)
+                .password(dummyPassword)
+                .email(info.getEmail())
+                .provider(info.getProvider())
+                .providerId(info.getProviderId())
                 .build();
     }
 
