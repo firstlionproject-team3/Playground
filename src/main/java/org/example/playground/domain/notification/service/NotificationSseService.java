@@ -18,7 +18,7 @@ public class NotificationSseService {
 
     private final Map<Long, SseEmitter> emitters = new ConcurrentHashMap<>();
 
-    // 알림 저장
+    // 연결 유지
     public SseEmitter createEmitter(Long userId) {
         SseEmitter emitter = new SseEmitter(60 * 60 * 1000L);
         emitters.put(userId, emitter);
@@ -33,12 +33,12 @@ public class NotificationSseService {
     public void send(Notification notification) {
         notificationRepository.save(notification);
 
-        SseEmitter emitter = emitters.get(notification.getReceiverId());
+        SseEmitter emitter = emitters.get(notification.getReceiver().getId());
         if (emitter != null) {
             try {
                 emitter.send(notification.getContent());
             } catch (IOException e) {
-                emitters.remove(notification.getReceiverId());
+                emitters.remove(notification.getReceiver().getId());
             }
         }
     }

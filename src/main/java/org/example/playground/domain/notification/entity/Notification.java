@@ -3,6 +3,7 @@ package org.example.playground.domain.notification.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.playground.domain.user.entity.User;
 
 import java.time.LocalDateTime;
 
@@ -18,13 +19,15 @@ public class Notification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 수신자
-    @Column(name = "receiver_id", nullable = false)
-    private Long receiverId;
+    // 알림 수신자
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "receiver_id", nullable = false)
+    private User receiver;
 
-    // 발신자
-    @Column(name = "sender_id", nullable = false)
-    private Long senderId;
+    // 알림 발생자 (채택자 / 신고자)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sender_id", nullable = false)
+    private User sender;
 
     // 알림 유형
     @Enumerated(EnumType.STRING)
@@ -42,4 +45,18 @@ public class Notification {
     // 생성일
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    public static Notification create(
+            User receiver,
+            User sender,
+            NotificationType type,
+            String content
+    ) {
+        return Notification.builder()
+                .receiver(receiver)
+                .sender(sender)
+                .type(type)
+                .content(content)
+                .build();
+    }
 }
