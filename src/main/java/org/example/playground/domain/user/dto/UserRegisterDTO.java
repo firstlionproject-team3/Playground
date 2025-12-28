@@ -1,34 +1,26 @@
 package org.example.playground.domain.user.dto;
 
-import lombok.*;
-import org.example.playground.domain.user.entity.Role;
-import org.example.playground.domain.user.entity.User;
-import org.example.playground.domain.user.entity.UserRole;
-
-import java.time.LocalDateTime;
-import java.util.Set;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
 
 @Getter
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder(access = AccessLevel.PRIVATE)
-//회원가입 성공했을때 결과 출력용
-// 유저 상세 정보 보기?
+//회원가입 할때 받아오는 정보를 담는 DTO
 public class UserRegisterDTO {
     private Long id;
+    @Size(max = 50)
     private String name;
-    private String loginId;
+    @NotBlank
+    @Size(max = 50)
+    private String loginId; // provider_providerId
+    @NotBlank
+    @Size(max = 20)
+    private String password;
+    @Size(max = 100)
     private String email;
-    private LocalDateTime joinedDate;
-    private Set<UserRole> roles;
-
-    public static UserRegisterDTO userRegisterDTOfromEntity(User user){
-        return UserRegisterDTO.builder()
-                .id(user.getId())
-                .name(user.getName())
-                .loginId(user.getLoginId())
-                .email(user.getEmail())
-                .joinedDate(user.getJoinedDate())
-                .roles(user.getRoles())
-                .build();
-    }
 }

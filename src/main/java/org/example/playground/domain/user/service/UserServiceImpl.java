@@ -3,8 +3,8 @@ package org.example.playground.domain.user.service;
 import lombok.RequiredArgsConstructor;
 import org.example.playground.domain.user.dto.OAuth2ResponseForJWT;
 import org.example.playground.domain.user.dto.OAuth2UserInfo;
-import org.example.playground.domain.user.dto.UserDTO;
 import org.example.playground.domain.user.dto.UserRegisterDTO;
+import org.example.playground.domain.user.dto.UserRegisterSuccessDTO;
 import org.example.playground.domain.user.entity.Role;
 import org.example.playground.domain.user.entity.User;
 import org.example.playground.domain.user.exception.AnotherUserException;
@@ -19,9 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
-import java.util.UUID;
 
-import static org.example.playground.domain.user.dto.UserRegisterDTO.userRegisterDTOfromEntity;
+import static org.example.playground.domain.user.dto.UserRegisterSuccessDTO.userRegisterSuccessDTOfromEntity;
 import static org.example.playground.domain.user.entity.User.userFromDTO;
 
 @Service
@@ -34,7 +33,7 @@ public class UserServiceImpl implements UserService{
 
     @Override
     @Transactional
-    public UserRegisterDTO createUser(UserDTO userDTO) {
+    public UserRegisterSuccessDTO createUser(UserRegisterDTO userDTO) {
         if(userRepository.existsByLoginId(userDTO.getLoginId())){
             throw new DuplicateUserException("이미 존재하는 로그인 ID입니다");
         }
@@ -46,7 +45,7 @@ public class UserServiceImpl implements UserService{
 
         addUserRole(user);
 
-        return userRegisterDTOfromEntity(userRepository.save(user));
+        return userRegisterSuccessDTOfromEntity(userRepository.save(user));
     }
 
     @Override
@@ -93,5 +92,11 @@ public class UserServiceImpl implements UserService{
 
         userRepository.delete(findUser);
     }
+
+    //TODO 회원 마이페이지 정보 조회 메서드
+
+
+    //TODO 회원정보 수정 메서드
+
 }
 

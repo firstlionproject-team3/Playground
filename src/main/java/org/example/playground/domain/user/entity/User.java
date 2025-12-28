@@ -3,7 +3,7 @@ package org.example.playground.domain.user.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.playground.domain.user.dto.OAuth2UserInfo;
-import org.example.playground.domain.user.dto.UserDTO;
+import org.example.playground.domain.user.dto.UserRegisterDTO;
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -61,7 +61,7 @@ public class User {
         }
     }
 
-    public static User userFromDTO(UserDTO userDTO, String encodingPW){
+    public static User userFromDTO(UserRegisterDTO userDTO, String encodingPW){
         return User.builder()
                 .name(userDTO.getName())
                 .loginId(userDTO.getLoginId())
