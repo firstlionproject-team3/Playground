@@ -2,7 +2,7 @@ package org.example.playground.domain.user.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.example.playground.domain.user.dto.OAuthUserInfo;
+import org.example.playground.domain.user.dto.OAuth2UserInfo;
 import org.example.playground.domain.user.dto.UserDTO;
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -67,7 +67,7 @@ public class User {
                 .build();
     }
 
-    public static User userFromOAuthUser(OAuthUserInfo info, PasswordEncoder passwordEncoder) {
+    public static User userFromOAuthUser(OAuth2UserInfo info, PasswordEncoder passwordEncoder) {
         String loginId = info.getProvider() + "_" + info.getProviderId();
 
         // 소셜 유저는 password 로그인에 쓰지 않으므로 더미 생성 (NOT NULL 만족용)

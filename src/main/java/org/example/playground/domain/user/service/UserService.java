@@ -1,17 +1,16 @@
 package org.example.playground.domain.user.service;
 
 import org.example.playground.domain.user.dto.OAuth2ResponseForJWT;
-import org.example.playground.domain.user.dto.OAuthUserInfo;
+import org.example.playground.domain.user.dto.OAuth2UserInfo;
 import org.example.playground.domain.user.dto.UserDTO;
 import org.example.playground.domain.user.dto.UserRegisterDTO;
-import org.example.playground.domain.user.entity.User;
 import org.springframework.security.core.userdetails.UserDetails;
 
 public interface UserService {
     //회원 가입
     public UserRegisterDTO createUser(UserDTO userDTO);
 
-    public OAuth2ResponseForJWT handleOAuthLogin(OAuthUserInfo oAuthUserInfo);
+    public OAuth2ResponseForJWT handleOAuth2Login(OAuth2UserInfo oAuthUserInfo);
     //회원 정보 수정
 
 
