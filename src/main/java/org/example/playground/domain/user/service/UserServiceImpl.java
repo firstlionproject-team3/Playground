@@ -1,10 +1,7 @@
 package org.example.playground.domain.user.service;
 
 import lombok.RequiredArgsConstructor;
-import org.example.playground.domain.user.dto.OAuth2ResponseForJWT;
-import org.example.playground.domain.user.dto.OAuth2UserInfo;
-import org.example.playground.domain.user.dto.UserRegisterDTO;
-import org.example.playground.domain.user.dto.UserRegisterSuccessDTO;
+import org.example.playground.domain.user.dto.*;
 import org.example.playground.domain.user.entity.Role;
 import org.example.playground.domain.user.entity.User;
 import org.example.playground.domain.user.exception.AnotherUserException;
@@ -13,6 +10,7 @@ import org.example.playground.domain.user.exception.UserNotFoundException;
 import org.example.playground.domain.user.repository.RoleRepository;
 import org.example.playground.domain.user.repository.UserRepository;
 import org.example.playground.domain.user.repository.UserRoleRepository;
+import org.springframework.data.domain.Page;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -60,9 +58,10 @@ public class UserServiceImpl implements UserService{
         return OAuth2ResponseForJWT.oAuth2ResponseFromUser(user);
     }
 
+
     //로그인한 유저인지 찾는 메서드
     private Optional<User> findOAuth2User(OAuth2UserInfo info) {
-        return userRepository.findByProviderAndProviderId(info.getProvider(), info.getProviderId());
+        return userRepository.findUserByProviderAndProviderId(info.getProvider(), info.getProviderId());
     }
 
     //회원테이블에 없다면 새로 등록하는 회원가입 메서드
@@ -81,22 +80,62 @@ public class UserServiceImpl implements UserService{
     @Override
     @Transactional
     public void deleteUser(Long id, UserDetails currentUser) {
-        User findUser = userRepository.findById(id).orElseThrow(()
-                -> new UserNotFoundException("사용자를 찾을 수 없습니다"));
+        User findUser = findUserFromDB(id);
 
         // 권한 검증
-        if(!(currentUser.getAuthorities().stream().anyMatch(auth -> auth
-                .getAuthority().equals("ROLE_ADMIN")) || findUser.getLoginId().equals(currentUser.getUsername()))){
-            throw new AnotherUserException("본인 혹은 관리자만 회원 탈퇴를 진행할 수 있습니다.");
+        if(!isSelfOrAdmin(currentUser, findUser)){
+            throw new AnotherUserException("본인 혹은 관리자만 접근할 수 있습니다");
         }
 
         userRepository.delete(findUser);
     }
 
-    //TODO 회원 마이페이지 정보 조회 메서드
-
+    //TODO 회원 마이페이지용 유저 정보 조회 메서드, 질문 답변 도메인 담당자에게 유저 본인 질문, 댓글 목록 조회 메서드 작성 요청하기
+    @Override
+    @Transactional(readOnly = true)
+    public UserDetailDTO getUser(Long id, UserDetails currentUser) {
+        User findUser = findUserFromDB(id);
+        if(!isSelfOrAdmin(currentUser, findUser)){
+            throw new AnotherUserException("본인 혹은 관리자만 접근할 수 있습니다");
+        }
+        return UserDetailDTO.userDetailDTOFromEntity(findUser);
+    }
 
     //TODO 회원정보 수정 메서드
+    @Override
+    @Transactional
+    public UserDetailDTO updateUser(Long id, UserDetails currentUser, UserDetailDTO userDetailDTO) {
+        User findUser = findUserFromDB(id);
+        if(!isSelfOrAdmin(currentUser, findUser)){
+            throw new AnotherUserException("본인 혹은 관리자만 접근할 수 있습니다");
+        }
+        //TODO 사용자가 수정한 정보를 기존 정보에 업데이트
+
+        return null;
+    }
+
+    //TODO 관리자의 유저 목록 조회
+    @Override
+    @Transactional(readOnly = true)
+    public Page<UserSummaryDTO> getUsers(UserDetails admin) {
+        return null;
+    }
+
+    //TODO 회원정보 검색하는 메서드
+    private User findUserFromDB(Long id){
+        return userRepository.findById(id).orElseThrow(() ->
+                new UserNotFoundException("존재하지 않는 회원입니다."));
+    }
+
+    //TODO 권한검증 메서드
+    private boolean isSelfOrAdmin(UserDetails currentUser, User findUser){
+        boolean isAdmin = currentUser.getAuthorities().stream().anyMatch(auth -> auth
+                .getAuthority().equals("ROLE_ADMIN"));
+
+        boolean isSelf = findUser.getLoginId().equals(currentUser.getUsername());
+
+        return (isAdmin || isSelf);
+    }
 
 }
 

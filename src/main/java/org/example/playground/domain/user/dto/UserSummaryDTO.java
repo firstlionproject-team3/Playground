@@ -9,7 +9,8 @@ import lombok.Getter;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder(access = AccessLevel.PRIVATE)
 //유저 요약 보기 (게시글, 댓글 에 나오는 정보)
+//관리자의 유저 모아보기
 public class UserSummaryDTO {
-    private Integer id;
+    private Long id;
     private String name;
 }
