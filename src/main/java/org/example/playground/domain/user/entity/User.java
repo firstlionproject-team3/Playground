@@ -17,16 +17,19 @@ import java.util.UUID;
 @Entity
 @Getter
 @Builder
-@Table(name = "users")
+@Table(
+        name = "users",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"provider", "provider_id"})
+)
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name", nullable = false, length = 50)
+    @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    @Column(name = "login_id", nullable = false, unique = true, length = 20)
+    @Column(name = "login_id", nullable = false, unique = true, length = 100)
     private String loginId;
 
     @Column(name = "password", nullable = false, length = 100)
@@ -40,7 +43,7 @@ public class User {
     private LocalDateTime joinedDate;
 
     //소셜 로그인 관련 필드
-    @Column(name = "provider", length = 20)
+    @Column(name = "provider", length = 100)
     private String provider; // 소셜 로그인 제공자 (없으면 일반 회원)
     @Column(name = "provider_id", length = 100)
     private String providerId; // 소셜 계정과 연결될 때 쓰는 ID
