@@ -1,6 +1,7 @@
 package org.example.playground.domain.user.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.playground.domain.user.dto.OAuth2ResponseForJWT;
 import org.example.playground.domain.user.dto.OAuthUserInfo;
 import org.example.playground.domain.user.dto.UserDTO;
 import org.example.playground.domain.user.dto.UserRegisterDTO;
@@ -17,8 +18,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
 import java.util.UUID;
 
+import static org.example.playground.domain.user.dto.OAuth2ResponseForJWT.oAuth2ResponseFromUser;
 import static org.example.playground.domain.user.dto.UserRegisterDTO.userRegisterDTOfromEntity;
 import static org.example.playground.domain.user.entity.User.userFromDTO;
 
@@ -49,14 +52,26 @@ public class UserServiceImpl implements UserService{
 
     @Override
     @Transactional
-    public User loginOrRegisterSocial(OAuthUserInfo oAuthUserInfo) {
-        return userRepository.findByProviderAndProviderId(oAuthUserInfo.getProvider(), oAuthUserInfo.getProviderId())
-                .orElseGet(() -> {
-                    User user = User.userFromOAuthUser(oAuthUserInfo, passwordEncoder);
+    //OAuth2 인증을 성공한 유저가 회원이 아니라면 회원테이블에 추가하는 로직
+    //반환타입은 토큰 발급에 필요한 두개의 필드를 가진 별도의 타입
+    public OAuth2ResponseForJWT handleOAuthLogin(OAuthUserInfo info) {
+        User user = findOAuthUser(info)
+                .orElseGet(() -> registerOAuthUser(info));   // 가입
 
-                    addUserRole(user);
-                    return userRepository.save(user);
-                });
+        // 여기서 로그인 처리 의미는 사용자 식별 완료
+        return OAuth2ResponseForJWT.oAuth2ResponseFromUser(user);
+    }
+
+    //로그인한 유저인지 찾는 메서드
+    private Optional<User> findOAuthUser(OAuthUserInfo info) {
+        return userRepository.findByProviderAndProviderId(info.getProvider(), info.getProviderId());
+    }
+
+    //회원테이블에 없다면 새로 등록하는 회원가입 메서드
+    private User registerOAuthUser(OAuthUserInfo info) {
+        User user = User.userFromOAuthUser(info, passwordEncoder);
+        addUserRole(user);
+        return userRepository.save(user);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package org.example.playground.domain.user.service;
 
+import org.example.playground.domain.user.dto.OAuth2ResponseForJWT;
 import org.example.playground.domain.user.dto.OAuthUserInfo;
 import org.example.playground.domain.user.dto.UserDTO;
 import org.example.playground.domain.user.dto.UserRegisterDTO;
@@ -10,7 +11,7 @@ public interface UserService {
     //회원 가입
     public UserRegisterDTO createUser(UserDTO userDTO);
 
-    public User loginOrRegisterSocial(OAuthUserInfo oAuthUserInfo);
+    public OAuth2ResponseForJWT handleOAuthLogin(OAuthUserInfo oAuthUserInfo);
     //회원 정보 수정
 
 
