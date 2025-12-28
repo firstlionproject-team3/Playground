@@ -73,6 +73,12 @@ public class UserServiceImpl implements UserService{
         return userRepository.save(user);
     }
 
+    //기본적으로 USER 권한 부여. 만약 roles 테이블에 USER 이 없을 시 새로 만들어서 USER 부여. (첫 회원)
+    private void addUserRole(User user) {
+        user.addRole(roleRepository.findByName("USER").orElseGet(()
+                -> roleRepository.save(new Role("USER"))));
+    }
+
     @Override
     @Transactional
     public void deleteUser(Long id, UserDetails currentUser) {
@@ -86,16 +92,6 @@ public class UserServiceImpl implements UserService{
         }
 
         userRepository.delete(findUser);
-    }
-
-    //기본적으로 USER 권한 부여. 만약 roles 테이블에 USER 이 없을 시 새로 만들어서 USER 부여. (첫 회원)
-    private void addUserRole(User user) {
-        user.addRole(roleRepository.findByName("USER").orElseGet(()
-                -> roleRepository.save(new Role("USER"))));
-    }
-
-    private String generateDummyPassword() {
-        return UUID.randomUUID().toString();
     }
 }
 
