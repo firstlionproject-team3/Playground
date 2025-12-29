@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import org.example.playground.domain.question.dto.request.QuestionUpdateRequestDTO;
 import org.example.playground.domain.question.dto.response.QuestionDetailResponseDTO;
 import org.example.playground.domain.question.dto.response.QuestionSummaryResponseDTO;
+import org.example.playground.domain.question.exception.QuestionNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
@@ -86,7 +87,7 @@ public class QuestionService {
     @Transactional(readOnly = true)
     public QuestionDetailResponseDTO findOne(Long id) {
         Question question = questionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("질문 없음: " + id)); //todo 예외로직 추가 예쩡
+                .orElseThrow(() -> new QuestionNotFoundException(id));
         return QuestionDetailResponseDTO.from(question);
     }
 
