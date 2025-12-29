@@ -2,6 +2,8 @@ package org.example.playground.domain.question.service;
 
 import jakarta.validation.Valid;
 import org.example.playground.domain.question.dto.request.QuestionUpdateRequestDTO;
+import org.example.playground.domain.question.dto.response.QuestionDetailResponseDTO;
+import org.example.playground.domain.question.dto.response.QuestionSummaryResponseDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,21 +23,21 @@ public class QuestionService {
 
     //질문 생성
     @Transactional
-    public QuestionResponseDTO create(QuestionCreateRequestDTO request) {
+    public QuestionDetailResponseDTO create(QuestionCreateRequestDTO request) {
         Question question = Question.create(request.member_id(), request.title(), request.content());
-        return QuestionResponseDTO.from(questionRepository.save(question));
+        return QuestionDetailResponseDTO.from(questionRepository.save(question));
     }
 
     //질문 전체목록 보기
     @Transactional(readOnly = true)
-    public Page<QuestionResponseDTO> getQuestions(Pageable pageable) {
-        return questionRepository.findAll(pageable).map(QuestionResponseDTO::from);
+    public Page<QuestionSummaryResponseDTO> getQuestions(Pageable pageable) {
+        return questionRepository.findAll(pageable).map(QuestionSummaryResponseDTO::from);
     }
 
 
     //질문 검색
     @Transactional(readOnly = true)
-    public Page<QuestionResponseDTO> search(String type, String keyword, Pageable pageable) {
+    public Page<QuestionSummaryResponseDTO> search(String type, String keyword, Pageable pageable) {
         //keyword가 없으면 전체질문목록 보여주기
         if(keyword == null || keyword.isBlank()) {
             return getQuestions(pageable);
@@ -55,32 +57,33 @@ public class QuestionService {
             case "content":
                 page =  questionRepository.findByContentContaining(keyword, pageable);
                 break;
+            //todo 사용자검색 추가
             case "all":
             default:
                 page = questionRepository.findByTitleContainingIgnoreCaseOrContentContaining(keyword, keyword, pageable);
                 break;
         }
         //엔티티를 DTO로 변환 - 도움
-        return page.map(QuestionResponseDTO::from);
+        return page.map(QuestionSummaryResponseDTO::from);
     }
 
 
     //질문 1건 상세 조회
     @Transactional(readOnly = true)
-    public QuestionResponseDTO findOne(Long id) {
+    public QuestionDetailResponseDTO findOne(Long id) {
         Question question = questionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("질문 없음: " + id)); //todo 예외로직 추가 예쩡
-        return QuestionResponseDTO.from(question);
+        return QuestionDetailResponseDTO.from(question);
     }
 
     //질문 수정
     @Transactional
-    public QuestionResponseDTO update(Long id, QuestionUpdateRequestDTO request) {
+    public QuestionDetailResponseDTO update(Long id, QuestionUpdateRequestDTO request) {
         Question question = questionRepository.findById(id)
                 .orElse(null); //todo 예외로직 추가 예정
 
         question.update(request.title(), request.content());
-        return QuestionResponseDTO.from(question);
+        return QuestionDetailResponseDTO.from(question);
     }
 
     //질문 삭제

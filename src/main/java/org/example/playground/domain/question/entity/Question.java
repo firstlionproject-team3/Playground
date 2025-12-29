@@ -17,7 +17,7 @@ public class Question {
     private Long id;
 
     @Column(nullable = false)
-    private Long member_id;
+    private Long member_id; //임시로 사용, todo 나중에 user객체로 찍어서 필드에서 사용
 
     @Column(nullable = false, length = 255)
     private String title;
