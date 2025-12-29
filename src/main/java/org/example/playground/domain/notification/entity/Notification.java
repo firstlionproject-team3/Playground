@@ -26,7 +26,7 @@ public class Notification {
     @JoinColumn(name = "receiver_id", nullable = false)
     private User receiver;
 
-    // 알림 발생자 (채택자 / 신고자, nullable 가능)
+    // 알림 발생자
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id", nullable = true)
     private User sender;
@@ -44,7 +44,7 @@ public class Notification {
     @Column(name = "is_read", nullable = false)
     private boolean isRead = false;
 
-    // 생성일 (JPA Auditing으로 자동 설정)
+    // 생성일
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
