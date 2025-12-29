@@ -1,7 +1,5 @@
 package org.example.playground.domain.user.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,17 +12,13 @@ import java.time.LocalDateTime;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder(access = AccessLevel.PRIVATE)
 //마이페이지 용 자세한 정보 조회
-public class UserDetailDTO {
-    @NotBlank
-    @Size(max = 100)
+public class UserMyPageResponseDTO {
     private String name;
-    @NotBlank
-    @Size(max = 100)
     private String email;
     private LocalDateTime joinedDate;
 
-    public static UserDetailDTO userDetailDTOFromEntity(User user){
-        return UserDetailDTO.builder()
+    public static UserMyPageResponseDTO userMyPageDTOFromEntity(User user){
+        return UserMyPageResponseDTO.builder()
                 .name(user.getName())
                 .email(user.getEmail())
                 .joinedDate(user.getJoinedDate())

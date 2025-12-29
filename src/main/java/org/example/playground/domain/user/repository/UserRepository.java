@@ -18,7 +18,4 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     //로그인 아이디로 회원 검색(회원정보 상세조회)
     Optional<User> findByLoginId(String loginId);
-
-    //곤리자를 제외한 회원 조회용
-    Page<User> findUsersByRoles(Set<UserRole> roles);
 }

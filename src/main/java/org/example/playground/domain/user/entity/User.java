@@ -3,8 +3,7 @@ package org.example.playground.domain.user.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.playground.domain.user.dto.OAuth2UserInfo;
-import org.example.playground.domain.user.dto.UserRegisterDTO;
-import org.hibernate.annotations.CreationTimestamp;
+import org.example.playground.domain.user.dto.UserRegisterRequestDTO;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
@@ -16,6 +15,7 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Getter
+@Setter
 @Builder
 @Table(
         name = "users",
@@ -27,7 +27,7 @@ public class User {
     private Long id;
 
     @Column(name = "name", nullable = false, length = 100)
-    private String name;
+    private String name; // 닉네임
 
     @Column(name = "login_id", nullable = false, unique = true, length = 100)
     private String loginId;
@@ -38,7 +38,6 @@ public class User {
     @Column(name = "email", length = 100)
     private String email;
 
-    @CreationTimestamp
     @Column(name = "joined_date", updatable = false)
     private LocalDateTime joinedDate;
 
@@ -61,7 +60,7 @@ public class User {
         }
     }
 
-    public static User userFromDTO(UserRegisterDTO userDTO, String encodingPW){
+    public static User userFromDTO(UserRegisterRequestDTO userDTO, String encodingPW){
         return User.builder()
                 .name(userDTO.getName())
                 .loginId(userDTO.getLoginId())
@@ -77,7 +76,7 @@ public class User {
         String dummyPassword = passwordEncoder.encode(UUID.randomUUID().toString());
 
         return User.builder()
-                .name(info.getName() != null ? info.getName() : info.getProvider() + "_user")
+                .name(info.getName() != null ? "("+ info.getProvider() +")" + info.getName() : info.getProvider() + "_user")
                 .loginId(loginId)
                 .password(dummyPassword)
                 .email(info.getEmail())
@@ -87,6 +86,12 @@ public class User {
     }
 
     public void addRole(Role role) {
+        //한 유저는 같은 Role을 중복으로 가질 수 없다.
+        boolean exists = roles.stream()
+                .anyMatch(ur -> ur.getRole().getName().equals(role.getName()));
+
+        if (exists) return;
+
         //User에게 새로운 내역을 갖게 함.
         UserRole userRole = UserRole.of(this, role);
         roles.add(userRole);
