@@ -1,12 +1,18 @@
 package org.example.playground.domain.notification.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.example.playground.domain.notification.entity.Notification;
 import org.example.playground.domain.notification.entity.NotificationType;
 
 import java.time.LocalDateTime;
 
 @Getter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class NotificationResponseDTO {
     private Long id;
     private NotificationType type;
@@ -16,15 +22,16 @@ public class NotificationResponseDTO {
     private boolean isRead;
     private LocalDateTime createdAt;
 
-    public NotificationResponseDTO(Notification notification) {
-        this.id = notification.getId();
-        this.type = notification.getType();
-        this.content = notification.getContent();
-        this.senderId = notification.getSender() != null
-                ? notification.getSender().getId()
-                : null;
-        this.receiverId = notification.getReceiver().getId();
-        this.isRead = notification.isRead();
-        this.createdAt = notification.getCreatedAt();
+    public static NotificationResponseDTO from(Notification notification) {
+        return NotificationResponseDTO.builder()
+                .id(notification.getId())
+                .type(notification.getType())
+                .content(notification.getContent())
+                .senderId(notification.getSender() != null ? notification.getSender().getId() : null)
+                .receiverId(notification.getReceiver().getId())
+                .isRead(notification.isRead())
+                .createdAt(notification.getCreatedAt())
+                .build();
     }
 }
+
