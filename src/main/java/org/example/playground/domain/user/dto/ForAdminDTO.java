@@ -6,19 +6,26 @@ import lombok.Builder;
 import lombok.Getter;
 import org.example.playground.domain.user.entity.User;
 
+import java.time.LocalDateTime;
+
 @Getter
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder(access = AccessLevel.PRIVATE)
-//유저 요약 보기 (게시글, 댓글 에 나오는 정보)
-//관리자의 유저 모아보기
-public class UserSummaryDTO {
+public class ForAdminDTO {
+    //관리자가 보기 편한 정보만 모은 dto
     private Long id;
+    private String loginId;
     private String name;
+    private String provider;
+    private LocalDateTime joinedDate;
 
-    public static UserSummaryDTO userSummaryDTOFromEntity(User user){
-        return UserSummaryDTO.builder()
+    public static ForAdminDTO forAdminDTOFromEntity(User user){
+        return ForAdminDTO.builder()
                 .id(user.getId())
+                .loginId(user.getLoginId())
                 .name(user.getName())
+                .provider(user.getProvider())
+                .joinedDate(user.getJoinedDate())
                 .build();
     }
 }
