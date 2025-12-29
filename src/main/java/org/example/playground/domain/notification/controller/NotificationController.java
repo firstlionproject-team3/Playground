@@ -1,24 +1,17 @@
 package org.example.playground.domain.notification.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.playground.domain.notification.dto.NotificationRequestDTO;
 import org.example.playground.domain.notification.dto.NotificationListResponseDTO;
+import org.example.playground.domain.notification.dto.NotificationRequestDTO;
 import org.example.playground.domain.notification.dto.NotificationResponseDTO;
-import org.example.playground.domain.notification.entity.Notification;
-import org.example.playground.domain.notification.entity.NotificationType;
-import org.example.playground.domain.notification.repository.NotificationRepository;
-import org.example.playground.domain.notification.service.NotificationCommandService;
+import org.example.playground.domain.notification.service.NotificationService;
 import org.example.playground.domain.notification.service.NotificationSseService;
 import org.example.playground.domain.user.entity.User;
-import org.example.playground.domain.user.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/notification")
@@ -26,9 +19,7 @@ import java.util.stream.Collectors;
 public class NotificationController {
 
     private final NotificationSseService sseService;
-    private final NotificationCommandService commandService;
-    private final NotificationRepository notificationRepository;
-    private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     /**
      * 알림 생성 및 전송
@@ -37,32 +28,8 @@ public class NotificationController {
     @PostMapping
     public ResponseEntity<NotificationResponseDTO> createNotification(
             @RequestBody NotificationRequestDTO request) {
-        // 수신자 조회
-        User receiver = userRepository.findById(request.getReceiverId())
-                .orElseThrow(() -> new IllegalArgumentException("수신자를 찾을 수 없습니다: " + request.getReceiverId()));
-
-        // 발신자 조회
-        User sender = null;
-        if (request.getSenderId() != null) {
-            sender = userRepository.findById(request.getSenderId())
-                    .orElseThrow(() -> new IllegalArgumentException("발신자를 찾을 수 없습니다: " + request.getSenderId()));
-        }
-
-        // 알림 생성
-        Notification notification;
-        if (request.getType() == NotificationType.ACCEPTED_ANSWER) {
-            notification = Notification.createAnswerAccepted(receiver, sender, request.getContent());
-        } else if (request.getType() == NotificationType.REPORT_RECEIVED) {
-            notification = Notification.createReport(receiver, sender, request.getContent());
-        } else {
-            throw new IllegalArgumentException("지원하지 않는 알림 유형입니다: " + request.getType());
-        }
-
-        // 알림 저장 및 전송
-        Notification savedNotification = sseService.send(notification);
-
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(NotificationResponseDTO.from(savedNotification));
+        NotificationResponseDTO response = notificationService.createNotification(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     /**
@@ -71,10 +38,7 @@ public class NotificationController {
      */
     @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter subscribe(@RequestParam Long userId) {
-        // 사용자 존재 여부 확인
-        userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
-
+        notificationService.validateUser(userId);
         return sseService.createEmitter(userId);
     }
 
@@ -84,18 +48,7 @@ public class NotificationController {
      */
     @GetMapping
     public ResponseEntity<NotificationListResponseDTO> getNotifications(@RequestParam Long userId) {
-        List<Notification> notifications = notificationRepository
-                .findByReceiverIdOrderByCreatedAtDesc(userId);
-
-        List<NotificationResponseDTO> responseList = notifications.stream()
-                .map(NotificationResponseDTO::from)
-                .collect(Collectors.toList());
-
-        NotificationListResponseDTO response = new NotificationListResponseDTO(
-                responseList,
-                responseList.size()
-        );
-
+        NotificationListResponseDTO response = notificationService.getNotifications(userId);
         return ResponseEntity.ok(response);
     }
 
@@ -107,10 +60,8 @@ public class NotificationController {
     public ResponseEntity<Void> markAsRead(
             @PathVariable Long id,
             @RequestParam Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
-
-        commandService.markAsRead(id, user);
+        User user = notificationService.findUserById(userId);
+        notificationService.markAsRead(id, user);
         return ResponseEntity.noContent().build();
     }
 
@@ -122,10 +73,8 @@ public class NotificationController {
     public ResponseEntity<Void> deleteNotification(
             @PathVariable Long id,
             @RequestParam Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
-
-        commandService.delete(id, user);
+        User user = notificationService.findUserById(userId);
+        notificationService.delete(id, user);
         return ResponseEntity.noContent().build();
     }
 }
