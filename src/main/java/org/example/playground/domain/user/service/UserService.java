@@ -1,24 +1,25 @@
 package org.example.playground.domain.user.service;
 
-import org.example.playground.domain.user.dto.UserDTO;
-import org.example.playground.domain.user.dto.UserRegisterDTO;
-import org.example.playground.domain.user.exception.DuplicateUserException;
-import org.example.playground.domain.user.exception.UserNotFoundException;
+import org.example.playground.domain.user.dto.*;
 import org.springframework.security.core.userdetails.UserDetails;
 
 public interface UserService {
     //회원 가입
-    public UserRegisterDTO createUser(UserDTO userDTO) throws DuplicateUserException;
+    UserRegisterResponseDTO createUser(UserRegisterRequestDTO userDTO);
 
-    //회원 정보 수정
+    //security 일반 로그인 용 메서드
+    SecurityResponseForJWT handleLogin(String loginId);
+
+    SecurityResponseForJWT handleOAuth2Login(OAuth2UserInfo oAuthUserInfo);
+
+    //TODO 회원 마이페이지용 유저 정보 조회 메서드, 질문 답변 도메인 담당자에게 유저 본인 질문, 댓글 목록 조회 메서드 작성 요청하기
+    UserMyPageResponseDTO getUser(Long id);
+
+    //TODO 회원정보 수정 메서드
+    UserMyPageResponseDTO updateUser(UserDetails userDetails, UserUpdateRequestDTO userUpdateRequestDTO);
 
     //회원 탈퇴
-    public void deleteUser(Long id, UserDetails userDetails) throws UserNotFoundException;
-
-    //회원 정보 조회
-//    public UserDTO getUser(Integer id, UserDetails userDetails);
-
-    //모든 회원 목록
+    void deleteUser(UserDetails userDetails);
 
     //회원의 모든 댓글 조회
 
