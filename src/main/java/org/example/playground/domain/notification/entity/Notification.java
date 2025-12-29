@@ -1,14 +1,16 @@
 package org.example.playground.domain.notification.entity;
 
-
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.playground.domain.user.entity.User;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "notification")
+@EntityListeners(AuditingEntityListener.class)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
@@ -24,9 +26,9 @@ public class Notification {
     @JoinColumn(name = "receiver_id", nullable = false)
     private User receiver;
 
-    // 알림 발생자 (채택자 / 신고자)
+    // 알림 발생자 (채택자 / 신고자, nullable 가능)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_id", nullable = false)
+    @JoinColumn(name = "sender_id", nullable = true)
     private User sender;
 
     // 알림 유형
@@ -42,21 +44,35 @@ public class Notification {
     @Column(name = "is_read", nullable = false)
     private boolean isRead = false;
 
-    // 생성일
-    @Column(name = "created_at", nullable = false)
+    // 생성일 (JPA Auditing으로 자동 설정)
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    public static Notification create(
-            User receiver,
-            User sender,
-            NotificationType type,
-            String content
-    ) {
+    // 정적 팩토리 메서드: 답변 채택 알림
+    public static Notification createAnswerAccepted(User receiver, User sender, String content) {
         return Notification.builder()
                 .receiver(receiver)
                 .sender(sender)
-                .type(type)
+                .type(NotificationType.ACCEPTED_ANSWER)
                 .content(content)
+                .isRead(false)
                 .build();
+    }
+
+    // 정적 팩토리 메서드: 신고 알림
+    public static Notification createReport(User receiver, User sender, String content) {
+        return Notification.builder()
+                .receiver(receiver)
+                .sender(sender)
+                .type(NotificationType.REPORT_RECEIVED)
+                .content(content)
+                .isRead(false)
+                .build();
+    }
+
+    // 읽음 처리
+    public void markAsRead() {
+        this.isRead = true;
     }
 }
