@@ -6,8 +6,6 @@ import org.example.playground.domain.refreshtoken.repository.RefreshTokenReposit
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
-
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -24,8 +22,7 @@ public class RefreshTokenService {
     @Transactional(readOnly = true)
     public RefreshToken getRefreshToken(String token) {
         return refreshTokenRepository.findByToken(token)
-                // 나중에 NotFoundRefreshToken 예외 클래스 생성?
-                .orElseThrow(() -> new RuntimeException("토큰이 존재하지 않습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("토큰이 존재하지 않습니다."));
     }
 
     // 토큰 삭제

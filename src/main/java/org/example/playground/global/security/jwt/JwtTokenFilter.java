@@ -72,8 +72,10 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     private void tokenToAuthentication(String token) {
         Claims claims = jwtTokenProvider.parseAccessToken(token);
         Long userId = Long.parseLong(claims.getSubject());
-        String email = claims.get("email", String.class);
-        String username = claims.get("loginId", String.class);
+
+        // 지금 당장은 필요없을듯하고 나중에 controller에서 authentication으로 더 많은 정보를 가져오고 싶다 할때 추가 할 수 있다.
+        // String email = claims.get("email", String.class);
+        // String username = claims.get("loginId", String.class);
 
         List<GrantedAuthority> authorities = new ArrayList<>();
         for (String role : (List<String>) claims.get("roles")) {
@@ -81,7 +83,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         }
 
         // 위의 정보를 UserDetails에 담아준다.
-        CustomUserDetails customUserDetails = new CustomUserDetails(userId, username, email, authorities);
+        CustomUserDetails customUserDetails = new CustomUserDetails(userId, authorities);
         Authentication authentication =
                 new UsernamePasswordAuthenticationToken(customUserDetails, null, authorities);
         SecurityContextHolder.getContext().setAuthentication(authentication);

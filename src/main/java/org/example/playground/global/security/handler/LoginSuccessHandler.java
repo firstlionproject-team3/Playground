@@ -2,7 +2,6 @@ package org.example.playground.global.security.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +10,7 @@ import org.example.playground.domain.refreshtoken.service.RefreshTokenService;
 import org.example.playground.global.security.jwt.JwtTokenProvider;
 import org.example.playground.global.security.jwt.dto.TokenDTO;
 import org.example.playground.global.security.user.CustomUserDetails;
+import org.example.playground.global.util.CookieUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -52,16 +52,7 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
 
         // refreshToken -> HttpOnly 쿠키에 담아준다.(자바스크립트에서 접근불가)
         // 쿠키는 Date타입을 받지않고 초단위로 만료시간을 계산한다.
-        long expSec = expiration.getTime() - System.currentTimeMillis();
-        // 만료된 경우 0
-        int maxAge = expSec > 0 ? (int) (expSec / 1000) : 0;
-
-        // 쿠키 생성
-        Cookie refreshTokenCookie = new Cookie("refreshToken", refreshToken.getToken());
-        refreshTokenCookie.setHttpOnly(true);
-        refreshTokenCookie.setPath("/");
-        refreshTokenCookie.setMaxAge(maxAge);
-        response.addCookie(refreshTokenCookie);
+        CookieUtil.addRefreshToken(response,refreshToken);
 
         // accessToken 응답
         Map<String, Object> body = new HashMap<>();
