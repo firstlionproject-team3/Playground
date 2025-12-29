@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.security.access.AccessDeniedException;
 
 @RestControllerAdvice
-public class UserExeptioinHandler {
+public class UserExceptioinHandler {
     @ExceptionHandler(DuplicateUserException.class)
     public ResponseEntity<String> handleDuplicateUserException(DuplicateUserException e){
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
@@ -26,5 +26,9 @@ public class UserExeptioinHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<String> handleAccessDeniedException(AccessDeniedException e){
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+    }
+    @ExceptionHandler(OAuth2SignedupException.class)
+    public ResponseEntity<String> handleOAuth2SignedupException(OAuth2SignedupException e){
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
 }
