@@ -1,10 +1,8 @@
 package org.example.playground.domain.refreshtoken.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.example.playground.domain.refreshtoken.entity.RefreshToken;
 import org.example.playground.domain.refreshtoken.service.RefreshTokenService;
@@ -16,7 +14,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -27,10 +24,9 @@ public class RefreshTokenController {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenService refreshTokenService;
-    private final ObjectMapper objectMapper;
 
     @PostMapping("/refreshToken")
-    public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<?> refreshToken(HttpServletRequest request) {
         // 쿠키에서 리프레시토큰 찾기
         String refreshToken = getRefreshToken(request);
         // 토큰 x -> 에러 반환
