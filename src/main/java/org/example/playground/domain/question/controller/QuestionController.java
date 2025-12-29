@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
@@ -37,6 +38,19 @@ public class QuestionController {
     ) {
         return questionService.search(type, keyword, pageable);
     }
+
+    /*
+    마이페이지에서 내가 작성한 질문 목록 조회
+    @GetMapping("/me")
+    public Page<QuestionSummaryResponseDTO> myQuestions(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            Pageable pageable
+    ) {
+        Long memberId = userDetails.getMemberId(); // 너희 메서드명에 맞게 getId()면 getId()로
+        return questionService.getMyQuestions(memberId, pageable);
+    }
+
+     */
 
     //질문 상세 조회(1건) //responseBody로 json으로 변환 - 프론트에 넘겨줌,
     //responseentity라는 스프링이 자체적으로 갖고있는 클래스가있음

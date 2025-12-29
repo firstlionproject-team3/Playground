@@ -57,7 +57,12 @@ public class QuestionService {
             case "content":
                 page =  questionRepository.findByContentContaining(keyword, pageable);
                 break;
-            //todo 사용자검색 추가
+            //todo 사용자검색 추가 - 작성자 닉네임으로 검색
+            case "writer":
+            case "nickname":
+                page = questionRepository.findByMemberNicknameContainingIgnoreCase(keyword, pageable);
+                break;
+
             case "all":
             default:
                 page = questionRepository.findByTitleContainingIgnoreCaseOrContentContaining(keyword, keyword, pageable);
@@ -67,6 +72,15 @@ public class QuestionService {
         return page.map(QuestionSummaryResponseDTO::from);
     }
 
+/*
+    로그인한 사용자가 작성한 질문 목록을 조회
+    @Transactional(readOnly = true)
+    public Page<QuestionSummaryResponseDTO> getMyQuestions(Long memberId, Pageable pageable) {
+        Page<Question> page = questionRepository.findByMemberIdOrderByCreatedAtDesc(memberId, pageable);
+        return page.map(QuestionSummaryResponseDTO::from);
+    }
+    
+ */
 
     //질문 1건 상세 조회
     @Transactional(readOnly = true)
