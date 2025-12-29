@@ -7,18 +7,16 @@ import java.util.Locale;
 
 public record QuestionSummaryResponseDTO(
         Long id,
-        Long member_id,
+        Long memberId,
         String title,
-        String content,
-        LocalDateTime created_at
+        LocalDateTime createdAt
 ) {
     public static QuestionSummaryResponseDTO from(Question question) {
         return new QuestionSummaryResponseDTO(
                 question.getId(),
-                question.getMember_id(),
+                question.getMemberId(),
                 question.getTitle(),
-                question.getContent(),
-                question.getCreated_at()
+                question.getCreatedAt()
                 //앞 100지 자르기? preview
         );
     }

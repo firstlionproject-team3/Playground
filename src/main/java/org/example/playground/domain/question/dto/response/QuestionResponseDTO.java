@@ -7,21 +7,21 @@ import java.time.LocalDateTime;
 //서버가 클라에게 주기로 한 데이터들
 public record QuestionResponseDTO(
         Long id,
-        Long member_id,
+        Long memberId,
         String title,
         String content,
-        LocalDateTime created_at,
-        LocalDateTime updated_at
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt
 ) {
     //question 하나를 questionresponse로 바꿔줘야함
     public static QuestionResponseDTO from(Question question) {
         return new QuestionResponseDTO(
                 question.getId(),
-                question.getMember_id(),
+                question.getMemberId(),
                 question.getTitle(),
                 question.getContent(),
-                question.getCreated_at(),
-                question.getUpdated_at()
+                question.getCreatedAt(),
+                question.getUpdatedAt()
         );
     }
 }

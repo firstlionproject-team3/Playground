@@ -24,7 +24,7 @@ public class QuestionService {
     //질문 생성
     @Transactional
     public QuestionDetailResponseDTO create(QuestionCreateRequestDTO request) {
-        Question question = Question.create(request.member_id(), request.title(), request.content());
+        Question question = Question.create(request.memberId(), request.title(), request.content());
         return QuestionDetailResponseDTO.from(questionRepository.save(question));
     }
 

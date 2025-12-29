@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 //클라가 서버로 보내는 데이터들
 public record QuestionCreateRequestDTO(
-    @NotNull Long member_id,
+    @NotNull Long memberId,
     @NotBlank String title,
     @NotBlank String content
 ) {

@@ -17,7 +17,7 @@ public class Question {
     private Long id;
 
     @Column(nullable = false)
-    private Long member_id; //임시로 사용, todo 나중에 user객체로 찍어서 필드에서 사용
+    private Long memberId; //임시로 사용, todo 나중에 user객체로 찍어서 필드에서 사용
 
     @Column(nullable = false, length = 255)
     private String title;
@@ -27,21 +27,21 @@ public class Question {
     private String content;
 
     @Column(nullable = false)
-    private LocalDateTime created_at;
+    private LocalDateTime createdAt;
 
     @Column(nullable = false)
-    private LocalDateTime updated_at;
+    private LocalDateTime updatedAt;
 
     //질문 생성
     public static Question create(Long member_id, String title, String content) {
         LocalDateTime now = LocalDateTime.now();
 
         return Question.builder()
-                .member_id(member_id)
+                .memberId(member_id)
                 .title(title)
                 .content(content)
-                .created_at(now)
-                .updated_at(now)
+                .createdAt(now)
+                .updatedAt(now)
                 .build();
     }
 
@@ -52,7 +52,7 @@ public class Question {
         }
         if(content != null && !content.isBlank()) {
             this.content = content;
-        } this.updated_at = LocalDateTime.now();
+        } this.updatedAt = LocalDateTime.now();
     }
 
 

@@ -15,11 +15,11 @@ public record QuestionDetailResponseDTO(
     public static QuestionDetailResponseDTO from(Question question) {
         return new QuestionDetailResponseDTO(
                 question.getId(),
-                question.getMember_id(),
+                question.getMemberId(),
                 question.getTitle(),
                 question.getContent(),
-                question.getCreated_at(),
-                question.getUpdated_at()
+                question.getCreatedAt(),
+                question.getUpdatedAt()
         );
     }
 }
