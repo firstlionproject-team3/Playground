@@ -7,6 +7,7 @@ import org.example.playground.domain.user.dto.UserRegisterRequestDTO;
 import org.example.playground.domain.user.dto.UserRegisterResponseDTO;
 import org.example.playground.domain.user.dto.UserUpdateRequestDTO;
 import org.example.playground.domain.user.service.UserService;
+import org.example.playground.global.security.user.CustomUserDetails;
 import org.hibernate.query.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,7 +47,7 @@ public class UserController {
     @PatchMapping("/me")
     public ResponseEntity<UserMyPageResponseDTO> myPageUpdate(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody UserUpdateRequestDTO userUpdateRequestDTO,
+            @Valid @RequestBody UserUpdateRequestDTO userUpdateRequestDTO
             ){
         return ResponseEntity.ok(userService.updateUser(userDetails, userUpdateRequestDTO));
     }
