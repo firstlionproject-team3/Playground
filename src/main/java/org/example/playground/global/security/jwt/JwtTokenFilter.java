@@ -94,7 +94,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
         // 첫 번째 방식: Authorization 헤더에서 꺼내는 방식
         String token = request.getHeader("Authorization");
-        if (token.startsWith("Bearer ")) {
+        if (token != null && token.startsWith("Bearer ")) {
             return token.substring(7);
         }
 
