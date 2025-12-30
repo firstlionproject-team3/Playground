@@ -5,14 +5,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.playground.domain.user.dto.*;
 import org.example.playground.domain.user.entity.Role;
 import org.example.playground.domain.user.entity.User;
-import org.example.playground.domain.user.exception.AnotherUserException;
 import org.example.playground.domain.user.exception.DuplicateUserException;
 import org.example.playground.domain.user.exception.OAuth2SignedupException;
 import org.example.playground.domain.user.exception.UserNotFoundException;
 import org.example.playground.domain.user.repository.RoleRepository;
 import org.example.playground.domain.user.repository.UserRepository;
+import org.example.playground.global.security.user.CustomUserDetails;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -105,8 +104,8 @@ public class UserServiceImpl implements UserService {
     //회원 마이페이지용 유저 정보 조회 메서드
     @Override
     @Transactional(readOnly = true)
-    public UserMyPageResponseDTO getUser(Long id) {
-        User findUser = findUserFromDB(id);
+    public UserMyPageResponseDTO getUser(CustomUserDetails currentUser) {
+        User findUser = findUserFromDB(currentUser.getId());
 
         return UserMyPageResponseDTO.userMyPageDTOFromEntity(findUser);
     }
@@ -114,15 +113,15 @@ public class UserServiceImpl implements UserService {
     // 회원정보 수정 메서드
     @Override
     @Transactional
-    public UserMyPageResponseDTO updateUser(UserDetails currentUser, UserUpdateRequestDTO userUpdateRequestDTO) {
+    public UserMyPageResponseDTO updateUser(CustomUserDetails currentUser, UserUpdateRequestDTO userUpdateRequestDTO) {
         User findUser = findUserFromDB(currentUser.getId());
 
         if (!findUser.getName().equals(userUpdateRequestDTO.getName())) {
-            findUser.setName(userUpdateRequestDTO.getName());
+            findUser.changeName(userUpdateRequestDTO.getName());
         }
 
         if (!Objects.equals(findUser.getEmail(), userUpdateRequestDTO.getEmail())){
-            findUser.setEmail(userUpdateRequestDTO.getEmail());
+            findUser.changeEmail(userUpdateRequestDTO.getEmail());
         }
 
         return UserMyPageResponseDTO.userMyPageDTOFromEntity(findUser);
@@ -130,7 +129,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void deleteUser(UserDetails currentUser) {
+    public void deleteUser(CustomUserDetails currentUser) {
         User findUser = findUserFromDB(currentUser.getId());
         userRepository.delete(findUser);
     }

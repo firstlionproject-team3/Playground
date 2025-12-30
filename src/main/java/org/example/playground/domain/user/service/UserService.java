@@ -1,7 +1,7 @@
 package org.example.playground.domain.user.service;
 
 import org.example.playground.domain.user.dto.*;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.example.playground.global.security.user.CustomUserDetails;
 
 public interface UserService {
     //회원 가입
@@ -12,14 +12,14 @@ public interface UserService {
 
     SecurityResponseForJWT handleOAuth2Login(OAuth2UserInfo oAuthUserInfo);
 
-    //TODO 회원 마이페이지용 유저 정보 조회 메서드, 질문 답변 도메인 담당자에게 유저 본인 질문, 댓글 목록 조회 메서드 작성 요청하기
-    UserMyPageResponseDTO getUser(Long id);
+    //TODO 회원 마이페이지용 유저 정보 조회 메서드
+    UserMyPageResponseDTO getUser(CustomUserDetails userDetails);
 
     //TODO 회원정보 수정 메서드
-    UserMyPageResponseDTO updateUser(UserDetails userDetails, UserUpdateRequestDTO userUpdateRequestDTO);
+    UserMyPageResponseDTO updateUser(CustomUserDetails userDetails, UserUpdateRequestDTO userUpdateRequestDTO);
 
     //회원 탈퇴
-    void deleteUser(UserDetails userDetails);
+    void deleteUser(CustomUserDetails userDetails);
 
     //회원의 모든 댓글 조회
 
