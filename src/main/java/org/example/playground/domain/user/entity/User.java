@@ -1,6 +1,7 @@
 package org.example.playground.domain.user.entity;
 
 import jakarta.persistence.*;
+
 import lombok.*;
 import org.example.playground.domain.user.dto.OAuth2UserInfo;
 import org.example.playground.domain.user.dto.UserRegisterRequestDTO;
@@ -15,7 +16,6 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Getter
-@Setter
 @Builder
 @Table(
         name = "users",
@@ -95,5 +95,13 @@ public class User {
         //User에게 새로운 내역을 갖게 함.
         UserRole userRole = UserRole.of(this, role);
         roles.add(userRole);
+    }
+
+    public void changeName(String name) {
+        this.name = name;
+    }
+
+    public void changeEmail(String email) {
+        this.email = email;
     }
 }
