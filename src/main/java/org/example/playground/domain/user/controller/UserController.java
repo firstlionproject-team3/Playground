@@ -8,11 +8,9 @@ import org.example.playground.domain.user.dto.UserRegisterResponseDTO;
 import org.example.playground.domain.user.dto.UserUpdateRequestDTO;
 import org.example.playground.domain.user.service.UserService;
 import org.example.playground.global.security.user.CustomUserDetails;
-import org.hibernate.query.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -40,7 +38,7 @@ public class UserController {
     // GET /me (마이페이지)
     @GetMapping("/me")
     public ResponseEntity<UserMyPageResponseDTO> myPage(@AuthenticationPrincipal CustomUserDetails userDetails){
-        return ResponseEntity.ok(userService.getUser(userDetails.getId()));
+        return ResponseEntity.ok(userService.getUser(userDetails));
     }
 
     // PATCH /me (마이페이지 정보수정)
