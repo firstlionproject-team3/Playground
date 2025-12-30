@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.security.access.AccessDeniedException;
 
 @RestControllerAdvice
-public class UserExceptioinHandler {
+public class UserExeptioinHandler {
     @ExceptionHandler(DuplicateUserException.class)
     public ResponseEntity<String> handleDuplicateUserException(DuplicateUserException e){
         return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
