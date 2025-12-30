@@ -8,7 +8,7 @@ public interface UserService {
     UserRegisterResponseDTO createUser(UserRegisterRequestDTO userDTO);
 
     //security 일반 로그인 용 메서드
-    SecurityResponseForJWT handleLogin(String loginId);
+    SecurityResponseForJWT loadForTokenIssue(String loginId);
 
     SecurityResponseForJWT handleOAuth2Login(OAuth2UserInfo oAuthUserInfo);
 

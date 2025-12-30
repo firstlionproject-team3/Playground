@@ -19,7 +19,7 @@ public class UserUpdateRequestDTO {
             regexp = "^[가-힣a-zA-Z0-9]+$",
             message = "닉네임은 한글, 영문, 숫자만 사용할 수 있습니다."
     )
-    private String name;
+    private String nickname;
     @NotBlank
     @Size(max = 100)
     @Email
