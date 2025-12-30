@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.playground.domain.user.dto.*;
 import org.example.playground.domain.user.entity.Role;
 import org.example.playground.domain.user.entity.User;
-import org.example.playground.domain.user.exception.AnotherUserException;
 import org.example.playground.domain.user.exception.DuplicateUserException;
 import org.example.playground.domain.user.exception.OAuth2SignedupException;
 import org.example.playground.domain.user.exception.UserNotFoundException;
@@ -105,8 +104,8 @@ public class UserServiceImpl implements UserService {
     //회원 마이페이지용 유저 정보 조회 메서드
     @Override
     @Transactional(readOnly = true)
-    public UserMyPageResponseDTO getUser(Long id) {
-        User findUser = findUserFromDB(id);
+    public UserMyPageResponseDTO getUser(CustomUserDetails currentUser) {
+        User findUser = findUserFromDB(currentUser.getId());
 
         return UserMyPageResponseDTO.userMyPageDTOFromEntity(findUser);
     }
@@ -118,11 +117,11 @@ public class UserServiceImpl implements UserService {
         User findUser = findUserFromDB(currentUser.getId());
 
         if (!findUser.getName().equals(userUpdateRequestDTO.getName())) {
-            findUser.setName(userUpdateRequestDTO.getName());
+            findUser.changeName(userUpdateRequestDTO.getName());
         }
 
         if (!Objects.equals(findUser.getEmail(), userUpdateRequestDTO.getEmail())){
-            findUser.setEmail(userUpdateRequestDTO.getEmail());
+            findUser.changeEmail(userUpdateRequestDTO.getEmail());
         }
 
         return UserMyPageResponseDTO.userMyPageDTOFromEntity(findUser);

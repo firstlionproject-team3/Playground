@@ -31,7 +31,7 @@ public class AdminUserController {
     //관리자의 유저 상세 보기
     @GetMapping("/{id}")
     public ResponseEntity<UserMyPageResponseDTO> getOneUser(@PathVariable("id") Long id){
-        return ResponseEntity.ok(userService.getUser(id));
+        return ResponseEntity.ok(adminUserService.getUser(id));
     }
 
     //관리자가 직접 유저 계정 삭제

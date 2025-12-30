@@ -5,6 +5,9 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+## test용 yml
+application-test.yml
+
 ### STS ###
 .apt_generated
 .classpath

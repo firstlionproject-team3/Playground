@@ -2,7 +2,6 @@ package org.example.playground.domain.user.dto;
 
 import lombok.*;
 import org.example.playground.domain.user.entity.User;
-import org.example.playground.domain.user.entity.UserRole;
 
 import java.time.LocalDateTime;
 import java.util.Set;
