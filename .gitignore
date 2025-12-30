@@ -39,4 +39,6 @@ out/
 ### VS Code ###
 .vscode/
 
+**/application.*
 **/application-secret.*
+**/application-local.*
