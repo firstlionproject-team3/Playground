@@ -1,6 +1,7 @@
 package org.example.playground.domain.user.service;
 
 import org.example.playground.domain.user.dto.*;
+import org.example.playground.global.security.user.CustomUserDetails;
 import org.springframework.security.core.userdetails.UserDetails;
 
 public interface UserService {
@@ -16,10 +17,10 @@ public interface UserService {
     UserMyPageResponseDTO getUser(Long id);
 
     //TODO 회원정보 수정 메서드
-    UserMyPageResponseDTO updateUser(UserDetails userDetails, UserUpdateRequestDTO userUpdateRequestDTO);
+    UserMyPageResponseDTO updateUser(CustomUserDetails userDetails, UserUpdateRequestDTO userUpdateRequestDTO);
 
     //회원 탈퇴
-    void deleteUser(UserDetails userDetails);
+    void deleteUser(CustomUserDetails userDetails);
 
     //회원의 모든 댓글 조회
 
