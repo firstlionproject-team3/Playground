@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.playground.domain.notification.dto.NotificationResponseDTO;
 import org.example.playground.domain.notification.entity.Notification;
 import org.example.playground.domain.notification.repository.NotificationRepository;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -82,5 +83,38 @@ public class NotificationSseService {
         }
 
         return savedNotification;
+    }
+
+
+    /**
+     * SSE 갱신
+     */
+    @Scheduled(fixedRate = 30000) // 30초
+    public void keepConnect() {
+        // 현재 SSE에 속해 있는 유저들에게 다시 신호 보내기
+        emitters.forEach((userId, emitter) -> {
+            try {
+                emitter.send(
+                        SseEmitter.event()
+                                .name("keepConnect")
+                                .data("ping")
+                );
+            } catch (IOException e) {
+                // 끊긴 연결 → 오프라인 처리
+                emitters.remove(userId);
+            }
+        });
+    }
+
+    /**
+     * SSE 연결 종료
+     *
+     * @param userId 연결 종료 유저
+     */
+    public void disconnect(Long userId) {
+        SseEmitter emitter = emitters.remove(userId);
+        if (emitter != null) {
+            emitter.complete(); // 연결 종료
+        }
     }
 }

@@ -77,5 +77,16 @@ public class NotificationController {
         notificationService.delete(id, user);
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * SSE 연결 종료
+     * DELETE /notification/subscribe?userId={userId}
+     */
+    @DeleteMapping("/subscribe")
+    public ResponseEntity<Void> disconnect(@RequestParam Long userId) {
+        notificationService.validateUser(userId);
+        sseService.disconnect(userId);
+        return ResponseEntity.noContent().build();
+    }
 }
 
