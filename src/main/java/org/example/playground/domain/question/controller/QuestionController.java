@@ -5,9 +5,9 @@ import lombok.RequiredArgsConstructor;
 import org.example.playground.domain.question.dto.request.QuestionCreateRequestDTO;
 import org.example.playground.domain.question.dto.request.QuestionUpdateRequestDTO;
 import org.example.playground.domain.question.dto.response.QuestionDetailResponseDTO;
-import org.example.playground.domain.question.dto.response.QuestionResponseDTO;
 import org.example.playground.domain.question.dto.response.QuestionSummaryResponseDTO;
 import org.example.playground.domain.question.service.QuestionService;
+import org.example.playground.global.security.user.CustomUserDetails;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -23,9 +23,11 @@ public class QuestionController {
 
     //질문 생성
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED) //무조건 200
-    public QuestionDetailResponseDTO create(@Valid @RequestBody QuestionCreateRequestDTO request) {
-        return questionService.create(request);
+    @ResponseStatus(HttpStatus.CREATED) //무조건 201
+    public QuestionDetailResponseDTO create(
+            @AuthenticationPrincipal CustomUserDetails principal,
+            @Valid @RequestBody QuestionCreateRequestDTO request) {
+        return questionService.create(principal.getId(), request);
     }
 
     //질문 검색 - keyword 없으면 전체조회, 있으면 title,content,all검색(서비스에서 처리)
@@ -39,18 +41,20 @@ public class QuestionController {
         return questionService.search(type, keyword, pageable);
     }
 
-    /* 마이페이지에 필요한 api는 민섭님이, 나는 필요가 없다
-    마이페이지에서 내가 작성한 질문 목록 조회
+    // 마이페이지에 필요한 api는 민섭님이, 나는 필요가 없다
+   // 마이페이지에서 내가 작성한 질문 목록 조회
+    /*
     @GetMapping("/me")
     public Page<QuestionSummaryResponseDTO> myQuestions(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             Pageable pageable
     ) {
-        Long memberId = userDetails.getMemberId(); // 너희 메서드명에 맞게 getId()면 getId()로
-        return questionService.getMyQuestions(memberId, pageable);
+        return questionService.getMyQuestions(principal.getId(), pageable)
     }
 
      */
+
+
 
     //질문 상세 조회(1건) //responseBody로 json으로 변환 - 프론트에 넘겨줌,
     //responseentity라는 스프링이 자체적으로 갖고있는 클래스가있음
@@ -59,17 +63,23 @@ public class QuestionController {
         return questionService.findOne(id);
     }
 
-    //질문 수정
+    //질문 수정 - 작성자만
     @PatchMapping("/{id}")
-    public QuestionDetailResponseDTO update(@PathVariable Long id, @Valid @RequestBody QuestionUpdateRequestDTO request) {
-        return questionService.update(id, request);
+    public QuestionDetailResponseDTO update(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails principal,
+            @RequestBody QuestionUpdateRequestDTO request)
+    {
+        return questionService.update(id, principal.getId(), request);
     }
 
-    //질문 삭제
+    //질문 삭제 - 작성자만
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        questionService.delete(id);
+    public void delete(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        questionService.delete(id,  principal.getId());
     }
 
     //질문 신고
