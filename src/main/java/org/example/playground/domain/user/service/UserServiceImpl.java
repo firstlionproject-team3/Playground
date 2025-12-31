@@ -9,7 +9,6 @@ import org.example.playground.domain.user.exception.OAuth2SignedupException;
 import org.example.playground.domain.user.exception.UserNotFoundException;
 import org.example.playground.domain.user.repository.RoleRepository;
 import org.example.playground.domain.user.repository.UserRepository;
-import org.example.playground.global.security.user.CustomUserDetails;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
