@@ -1,10 +1,10 @@
-package org.example.playground.global.security.auth.controller;
+package org.example.playground.global.security.login.controller;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.playground.domain.refreshtoken.dto.AccessAndRefreshTokenDTO;
-import org.example.playground.global.security.auth.service.AuthService;
+import org.example.playground.global.security.login.service.LoginService;
 import org.example.playground.global.security.jwt.dto.TokenDTO;
 import org.example.playground.global.security.user.dto.LoginRequestDTO;
 import org.example.playground.global.util.CookieUtil;
@@ -19,9 +19,9 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/auth")
-public class AuthController {
+public class LoginController {
 
-    private final AuthService authService;
+    private final LoginService authService;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDTO loginRequestDTO,

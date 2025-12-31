@@ -1,4 +1,4 @@
-package org.example.playground.global.security.auth.service;
+package org.example.playground.global.security.login.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.playground.domain.refreshtoken.dto.AccessAndRefreshTokenDTO;
@@ -6,7 +6,7 @@ import org.example.playground.domain.refreshtoken.entity.RefreshToken;
 import org.example.playground.domain.refreshtoken.repository.RefreshTokenRepository;
 import org.example.playground.domain.user.entity.User;
 import org.example.playground.domain.user.repository.UserRepository;
-import org.example.playground.global.security.auth.exception.LoginFailedException;
+import org.example.playground.global.security.login.exception.LoginFailedException;
 import org.example.playground.global.security.jwt.JwtTokenProvider;
 import org.example.playground.global.security.jwt.dto.TokenDTO;
 import org.example.playground.global.security.user.dto.LoginRequestDTO;
@@ -20,7 +20,7 @@ import java.util.List;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class AuthService {
+public class LoginService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
