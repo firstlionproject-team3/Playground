@@ -7,14 +7,14 @@ import java.util.Locale;
 
 public record QuestionSummaryResponseDTO(
         Long id,
-        String name, //닉네임
+        String nickname, //닉네임
         String title,
         LocalDateTime createdAt
 ) {
     public static QuestionSummaryResponseDTO from(Question question) {
         return new QuestionSummaryResponseDTO(
                 question.getId(),
-                question.getUser().getName(),
+                question.getUser().getNickname(),
                 question.getTitle(),
                 question.getCreatedAt()
 

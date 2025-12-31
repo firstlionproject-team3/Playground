@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 
 public record QuestionDetailResponseDTO(
         Long id,
-        String name,
+        String nickname,
         String title,
         String content,
         LocalDateTime createdAt,
@@ -15,7 +15,7 @@ public record QuestionDetailResponseDTO(
     public static QuestionDetailResponseDTO from(Question question) {
         return new QuestionDetailResponseDTO(
                 question.getId(),
-                question.getUser().getName(),
+                question.getUser().getNickname(),
                 question.getTitle(),
                 question.getContent(),
                 question.getCreatedAt(),
