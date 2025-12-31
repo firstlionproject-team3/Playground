@@ -15,7 +15,7 @@ public class ForAdminDTO {
     //관리자가 보기 편한 정보만 모은 dto
     private Long id;
     private String loginId;
-    private String name;
+    private String nickname;
     private String provider;
     private LocalDateTime joinedDate;
 
@@ -23,7 +23,7 @@ public class ForAdminDTO {
         return ForAdminDTO.builder()
                 .id(user.getId())
                 .loginId(user.getLoginId())
-                .name(user.getName())
+                .nickname(user.getNickname())
                 .provider(user.getProvider())
                 .joinedDate(user.getJoinedDate())
                 .build();

@@ -13,13 +13,13 @@ import java.time.LocalDateTime;
 @Builder(access = AccessLevel.PRIVATE)
 //마이페이지 용 자세한 정보 조회
 public class UserMyPageResponseDTO {
-    private String name;
+    private String nickname;
     private String email;
     private LocalDateTime joinedDate;
 
     public static UserMyPageResponseDTO userMyPageDTOFromEntity(User user){
         return UserMyPageResponseDTO.builder()
-                .name(user.getName())
+                .nickname(user.getNickname())
                 .email(user.getEmail())
                 .joinedDate(user.getJoinedDate())
                 .build();

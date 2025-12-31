@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 @Builder(access = AccessLevel.PRIVATE)
 //회원가입 성공했을때 결과 출력용
 public class UserRegisterResponseDTO {
-    private String name;
+    private String nickname;
     private String loginId;
     private String email;
     private LocalDateTime joinedDate;
@@ -20,7 +20,7 @@ public class UserRegisterResponseDTO {
 
     public static UserRegisterResponseDTO userRegisterResponseDTOfromEntity(User user){
         return UserRegisterResponseDTO.builder()
-                .name(user.getName())
+                .nickname(user.getNickname())
                 .loginId(user.getLoginId())
                 .email(user.getEmail())
                 .joinedDate(user.getJoinedDate())
