@@ -49,11 +49,6 @@ public class Notification {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-    }
-
     // 정적 팩토리 메서드: 답변 채택 알림
     public static Notification createAnswerAccepted(User receiver, User sender, String content) {
         return Notification.builder()

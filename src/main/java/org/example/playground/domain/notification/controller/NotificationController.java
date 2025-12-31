@@ -43,17 +43,6 @@ public class NotificationController {
     }
 
     /**
-     * SSE 연결 종료
-     * DELETE /notification/subscribe?userId={userId}
-     */
-    @DeleteMapping("/subscribe")
-    public ResponseEntity<Void> disconnect(@RequestParam Long userId) {
-        notificationService.validateUser(userId);
-        sseService.disconnect(userId);
-        return ResponseEntity.noContent().build();
-    }
-
-    /**
      * 알림 목록 조회
      * GET /notification?userId={userId}
      */
