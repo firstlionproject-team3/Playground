@@ -1,7 +1,6 @@
 package org.example.playground.domain.user.service;
 
 import org.example.playground.domain.user.dto.*;
-import org.example.playground.global.security.user.CustomUserDetails;
 
 public interface UserService {
     //회원 가입
