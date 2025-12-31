@@ -1,5 +1,6 @@
 package org.example.playground.global.security.login.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -35,5 +36,12 @@ public class LoginController {
         CookieUtil.addRefreshToken(response,refreshToken);
 
         return ResponseEntity.ok(Map.of("accessToken", accessToken));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
+
+        authService.logout(request, response);
+        return ResponseEntity.noContent().build();
     }
 }
