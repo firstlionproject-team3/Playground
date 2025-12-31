@@ -28,8 +28,7 @@ public class AuthController {
 
     @PostMapping("/token")
     public ResponseEntity<Map<String, String>> exchangeToken(@RequestParam String code,
-                              HttpServletResponse response) throws IOException {
-
+                                                             HttpServletResponse response) throws IOException {
         // ... 코드 검증 및 토큰 생성
         CodeInfo codeInfo = tempCodeStore.getCodeInfoAndRemove(code);
         //TODO: 이건 나중에 tempCodeStore 안에 넣어야할지 고민하기
