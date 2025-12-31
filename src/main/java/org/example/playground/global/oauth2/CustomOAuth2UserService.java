@@ -43,11 +43,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
             //playground db 접근=======================
             String nullableEmail = socialUserInfo.getAttribute("email");
-            String nullableName = socialUserInfo.getAttribute("name");
 
             OAuth2UserInfo build = OAuth2UserInfo.builder()
                     .email(nullableEmail)
-                    .name(nullableName)
                     .providerId(socialUserInfo.getProviderId())
                     .provider(socialUserInfo.getProvider())
                     .build();
