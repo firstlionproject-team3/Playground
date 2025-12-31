@@ -41,19 +41,6 @@ public class QuestionController {
         return questionService.search(type, keyword, pageable);
     }
 
-    // 마이페이지에 필요한 api는 민섭님이, 나는 필요가 없다
-   // 마이페이지에서 내가 작성한 질문 목록 조회
-    /*
-    @GetMapping("/me")
-    public Page<QuestionSummaryResponseDTO> myQuestions(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            Pageable pageable
-    ) {
-        return questionService.getMyQuestions(principal.getId(), pageable)
-    }
-
-     */
-
 
 
     //질문 상세 조회(1건) //responseBody로 json으로 변환 - 프론트에 넘겨줌,
