@@ -22,8 +22,7 @@ public class UserController {
     //회원 가입
     @PostMapping
     public ResponseEntity<UserRegisterResponseDTO> createUser(
-            @Valid @RequestBody UserRegisterRequestDTO userDTO,
-            @AuthenticationPrincipal CustomUserDetails userDetails
+            @Valid @RequestBody UserRegisterRequestDTO userDTO
     ) {
 
         //TODO 인증/인가 관련 로직은 시큐리티에서 처리하는 것이 나을 것 같은..?
@@ -51,11 +50,11 @@ public class UserController {
     }
 
     //TODO GET /me/questions?page=0&size=20 (마이페이지 - 질문 목록)
-//    @GetMapping("/questions")
+//    @GetMapping("me/questions")
 
 
     //TODO GET /me/answers?page=0&size=20 (마이페이지 에서 내가 쓴 댓글 클릭시 - 댓글 목록)
-//    @GetMapping("/answers")
+//    @GetMapping("me/answers")
 
     //마이페이지에서 삭제
     @DeleteMapping("/me")

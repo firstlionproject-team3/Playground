@@ -3,13 +3,11 @@ package org.example.playground.domain.user.controller;
 import lombok.RequiredArgsConstructor;
 import org.example.playground.domain.user.dto.ForAdminDTO;
 import org.example.playground.domain.user.dto.UserMyPageResponseDTO;
-import org.example.playground.domain.user.dto.UserSummaryDTO;
 import org.example.playground.domain.user.service.AdminUserService;
 import org.example.playground.domain.user.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
