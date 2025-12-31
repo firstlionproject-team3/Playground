@@ -19,11 +19,12 @@ public interface QuestionRepository extends JpaRepository<Question,Long> {
             String title, String content, Pageable pageable);
 
     //닉네임으로 질문 검색
-    //이름에 keywork가 포함된 사람들을 기준으로 조회
+    //이름에 keyword가 포함된 사람들을 기준으로 조회
+    //
     Page<Question> findByMemberNicknameContainingIgnoreCase(String keyword, Pageable pageable);
 
     //특정회원이 작성한 질문들을 최신순으로 조회
     //정확히 누구의 글인가? 로그인아이디로 조회, db에서 딱 그사람을 가리키는 값, 닉네임으로 설정하면 변경했을때 예전 글이 안나오는 문제
-    //Page<Question> findByMemberIdOrderByCreatedAtDesc(Long memberId, Pageable pageable);
+    Page<Question> findByMemberIdOrderByCreatedAtDesc(Long memberId, Pageable pageable);
 
 }

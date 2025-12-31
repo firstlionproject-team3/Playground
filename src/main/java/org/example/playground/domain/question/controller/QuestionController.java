@@ -39,7 +39,7 @@ public class QuestionController {
         return questionService.search(type, keyword, pageable);
     }
 
-    /*
+    /* 마이페이지에 필요한 api는 민섭님이, 나는 필요가 없다
     마이페이지에서 내가 작성한 질문 목록 조회
     @GetMapping("/me")
     public Page<QuestionSummaryResponseDTO> myQuestions(
@@ -76,7 +76,10 @@ public class QuestionController {
     @PatchMapping("/{id}/report")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void report(@PathVariable Long id) {
-        //todo 질문 신고정책 설계 필요
+        //todo 질문 신고정책 설계 필요, 보통 관리자에게 알림 -> 지피티한테 관라자에게만 일림이 가는 코드를?
+        //민섭님에게 관리자 api, 거기서 쓸수있으면 좋음
+        //관리자 api한테 알림을 날려야돼! 라는 코드
     }
-
+    
+    //질문에 답변 등록 알림 - 답변 도메인에서 "답변이 달렸다!" 이벤트를 만들고 여기에(이용자에게) 알림을 보냄 (AnswerService에서)
 }
