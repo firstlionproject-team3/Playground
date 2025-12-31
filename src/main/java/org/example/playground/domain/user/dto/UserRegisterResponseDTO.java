@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 //회원가입 성공했을때 결과 출력용
 public class UserRegisterResponseDTO {
     private String nickname;
-    private String tag;
     private String loginId;
     private String email;
     private LocalDateTime joinedDate;

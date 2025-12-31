@@ -59,15 +59,15 @@ public class UserServiceImpl implements UserService {
 
         throw new IllegalStateException("이름 생성 충돌이 반복되어 회원가입에 실패했습니다. 잠시 후 다시 시도하세요.");
     }
-
-    // TODO: 로그인 인증은 AuthenticationManager에서 처리. 이 메서드는 인증 성공 후 사용자 조회/토큰 클레임 생성용으로 사용
-    @Override
-    public SecurityResponseForJWT loadForTokenIssue(String loginId) {
-        User user = userRepository.findByLoginId(loginId)
-                .orElseThrow(() -> new UserNotFoundException("유저가 존재하지 않습니다"));
-
-        return SecurityResponseForJWT.securityResponseFromUser(user);
-    }
+//
+//    //  로그인 인증은 AuthenticationManager에서 처리. 이 메서드는 인증 성공 후 사용자 조회/토큰 클레임 생성용으로 사용
+//    @Override
+//    public SecurityResponseForJWT loadForTokenIssue(String loginId) {
+//        User user = userRepository.findByLoginId(loginId)
+//                .orElseThrow(() -> new UserNotFoundException("유저가 존재하지 않습니다"));
+//
+//        return SecurityResponseForJWT.securityResponseFromUser(user);
+//    }
 
     @Override
     @Transactional
