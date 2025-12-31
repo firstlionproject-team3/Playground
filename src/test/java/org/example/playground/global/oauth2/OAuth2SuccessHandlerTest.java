@@ -12,7 +12,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.web.RedirectStrategy;
 
 import java.util.List;
 
@@ -26,9 +25,6 @@ class OAuth2SuccessHandlerTest {
 
     @Mock
     private TempCodeStore tempCodeStore;
-
-    @Mock
-    private RedirectStrategy redirectStrategy;
 
     @InjectMocks
     private OAuth2SuccessHandler successHandler;
@@ -47,9 +43,9 @@ class OAuth2SuccessHandlerTest {
 
         // Mock 사용자 생성
         mockUser = mock(CustomOAuth2User.class);
-
-        // RedirectStrategy 주입
-        successHandler.setRedirectStrategy(redirectStrategy);
+        when(mockUser.getUserId()).thenReturn(1L);
+        when(mockUser.getRoles()).thenReturn(List.of("ROLE_USER"));
+        when(authentication.getPrincipal()).thenReturn(mockUser);
     }
 
     @Test
@@ -57,10 +53,6 @@ class OAuth2SuccessHandlerTest {
     void onAuthenticationSuccess_Success() throws Exception {
         // given
         String expectedCode = "temp-code-123";
-        when(mockUser.getUserId()).thenReturn(1L);
-        when(mockUser.getRoles()).thenReturn(List.of("ROLE_USER"));
-
-        when(authentication.getPrincipal()).thenReturn(mockUser);
         when(tempCodeStore.createCode(1L, List.of("ROLE_USER")))
                 .thenReturn(expectedCode);
 
@@ -70,23 +62,20 @@ class OAuth2SuccessHandlerTest {
         // then
         // 1. tempCodeStore.createCode가 올바른 파라미터로 호출되었는지 확인
         verify(tempCodeStore, times(1))
-                .createCode(1L, List.of("ROLE_USER"));
+                .createCode(1L, List.of("ROLE_USER") );
 
-        // 2. 리다이렉트가 올바른 URL로 호출되었는지 확인
-        verify(redirectStrategy, times(1))
-                .sendRedirect(
-                        eq(request),
-                        eq(response),
-                        contains("code=" + expectedCode)
-                );
+        // 2. 리다이렉트 URL 검증 - MockHttpServletResponse 사용!
+        String redirectUrl = response.getRedirectedUrl();
+        assertThat(redirectUrl).isNotNull();
+        assertThat(redirectUrl).contains("http://localhost:8080/test/oauth/verify-code");
+        assertThat(redirectUrl).contains("code=" + expectedCode);
     }
 
     @Test
-    @DisplayName("로그인 성공 - 올바른 콜백 URL로 리다이렉트")
-    void onAuthenticationSuccess_RedirectToCorrectUrl() throws Exception {
+    @DisplayName("로그인 성공 - 정확한 콜백 URL 형식 검증")
+    void onAuthenticationSuccess_RedirectUrlFormat() throws Exception {
         // given
-        String expectedCode = "abc123";
-        when(authentication.getPrincipal()).thenReturn(mockUser);
+        String expectedCode = "abc123xyz";
         when(tempCodeStore.createCode(anyLong(), anyList()))
                 .thenReturn(expectedCode);
 
@@ -94,11 +83,15 @@ class OAuth2SuccessHandlerTest {
         successHandler.onAuthenticationSuccess(request, response, authentication);
 
         // then
-        verify(redirectStrategy).sendRedirect(
-                any(HttpServletRequest.class),
-                any(HttpServletResponse.class),
-                argThat(url -> url.contains("http://localhost:8080/test/oauth/verify-code?code="))
-        );
+        String redirectUrl = response.getRedirectedUrl();
+
+        // URL 형식 상세 검증
+        assertThat(redirectUrl)
+                .startsWith("http://localhost:8080/test/oauth/verify-code?code=")
+                .endsWith(expectedCode);
+
+        // HTTP 상태 코드 확인 (302 리다이렉트)
+        assertThat(response.getStatus()).isEqualTo(302);
     }
 
     @Test
@@ -106,25 +99,25 @@ class OAuth2SuccessHandlerTest {
     void onAuthenticationSuccess_MultipleRoles() throws Exception {
         // given
         List<String> roles = List.of("ROLE_USER", "ROLE_ADMIN");
-        CustomOAuth2User adminUser = mock(CustomOAuth2User.class);
-        when(adminUser.getUserId()).thenReturn(2L);
-        when(adminUser.getRoles()).thenReturn(roles);
-        when(authentication.getPrincipal()).thenReturn(adminUser);
+        when(mockUser.getUserId()).thenReturn(2L);
+        when(mockUser.getRoles()).thenReturn(roles);
         when(tempCodeStore.createCode(2L, roles))
-                .thenReturn("admin-code");
+                .thenReturn("admin-code-456");
 
         // when
         successHandler.onAuthenticationSuccess(request, response, authentication);
 
         // then
-        verify(tempCodeStore).createCode(2L, roles);
+        verify(tempCodeStore, times(1)).createCode(2L, roles );
+
+        String redirectUrl = response.getRedirectedUrl();
+        assertThat(redirectUrl).contains("code=admin-code-456");
     }
 
     @Test
     @DisplayName("코드 생성 실패시 - 예외 전파")
     void onAuthenticationSuccess_CodeGenerationFails() {
         // given
-        when(authentication.getPrincipal()).thenReturn(mockUser);
         when(tempCodeStore.createCode(anyLong(), anyList()))
                 .thenThrow(new RuntimeException("코드 생성 실패"));
 
@@ -133,5 +126,25 @@ class OAuth2SuccessHandlerTest {
                 successHandler.onAuthenticationSuccess(request, response, authentication)
         ).isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("코드 생성 실패");
+
+        // 리다이렉트가 발생하지 않았는지 확인
+        assertThat(response.getRedirectedUrl()).isNull();
+    }
+
+    @Test
+    @DisplayName("roles가 빈 리스트인 경우에도 정상 처리")
+    void onAuthenticationSuccess_EmptyRoles() throws Exception {
+        // given
+        List<String> emptyRoles = List.of();
+        when(mockUser.getRoles()).thenReturn(emptyRoles);
+        when(tempCodeStore.createCode(1L, emptyRoles))
+                .thenReturn("code-no-roles");
+
+        // when
+        successHandler.onAuthenticationSuccess(request, response, authentication);
+
+        // then
+        verify(tempCodeStore).createCode(1L, emptyRoles);
+        assertThat(response.getRedirectedUrl()).contains("code=code-no-roles");
     }
 }
