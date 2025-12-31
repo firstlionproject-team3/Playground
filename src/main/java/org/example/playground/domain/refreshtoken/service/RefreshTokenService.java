@@ -1,10 +1,17 @@
 package org.example.playground.domain.refreshtoken.service;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.MalformedJwtException;
 import lombok.RequiredArgsConstructor;
+import org.example.playground.domain.refreshtoken.dto.AccessAndRefreshTokenDTO;
 import org.example.playground.domain.refreshtoken.entity.RefreshToken;
 import org.example.playground.domain.refreshtoken.repository.RefreshTokenRepository;
+import org.example.playground.global.security.jwt.JwtTokenProvider;
+import org.example.playground.global.security.jwt.dto.TokenDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @Transactional
@@ -12,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
+    private final JwtTokenProvider jwtTokenProvider;
 
     // 토큰 저장
     public RefreshToken createRefreshToken(RefreshToken refreshToken) {
@@ -29,5 +37,41 @@ public class RefreshTokenService {
     public void deleteRefreshToken(String token) {
         refreshTokenRepository.findByToken(token)
                 .ifPresent(refreshTokenRepository::delete);
+    }
+
+    // accessToken 재발급, refreshToken 로테이션
+    public AccessAndRefreshTokenDTO reissueToken(String refreshToken) {
+
+        // 토큰 검증, 파싱
+        // 나중에 전역처리기에 예외 작성해야함.(토큰만료,유효하지않은토큰 등)
+        Claims claims = jwtTokenProvider.parseRefreshToken(refreshToken);
+        // 사용자 정보에서 id값,권한을 꺼내서 토큰 발급
+        Long sub = Long.parseLong(claims.getSubject());
+        // Claims에 권한이 저장될때 List<?>로 저장되기때문에 변환과정이 필요함.
+        List<?> rowRoles = claims.get("roles", List.class);
+        List<String> roles = rowRoles.stream()
+                .map(Object::toString)
+                .toList();
+
+        // 쿠키에서 꺼낸 토큰으로 db에 저장된 토큰과 일치하는지 검증
+        // 일치하지 않는다면 -> 에러반환
+        RefreshToken dbToken = refreshTokenRepository.findByToken(refreshToken)
+                .orElseThrow(() -> new IllegalArgumentException("토큰이 존재하지 않습니다."));
+        if (!dbToken.getToken().equals(refreshToken)) {
+            throw new MalformedJwtException("유효하지 않은 Refresh Token 입니다.");
+        }
+
+        // 로테이션 - 한 번 사용된 RefreshToken은 즉시 폐기하고 새로 발급하여 DB에 교체해주는 방식.
+        refreshTokenRepository.deleteByToken(refreshToken);
+        TokenDTO newRefreshTokenDTO = jwtTokenProvider.createRefreshToken(sub);
+
+        RefreshToken newRefreshToken = RefreshToken.from(sub, newRefreshTokenDTO.getToken(), newRefreshTokenDTO.getExpiration());
+        refreshTokenRepository.save(newRefreshToken);
+
+        // accessToken 발급
+        TokenDTO tokenDTO = jwtTokenProvider.createAccessToken(sub, roles);
+        String accessToken = tokenDTO.getToken();
+
+        return AccessAndRefreshTokenDTO.from(accessToken, newRefreshTokenDTO);
     }
 }
