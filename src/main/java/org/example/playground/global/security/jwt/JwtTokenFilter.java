@@ -53,16 +53,20 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 tokenToAuthentication(token);
             } catch (ExpiredJwtException e) { // 기간이 만료된 토큰
                 request.setAttribute("exception", JwtExceptionCode.EXPIRED_TOKEN.getCode());
-                throw new BadCredentialsException("Expired token exception", e);
+                filterChain.doFilter(request, response);
+                return;
             } catch (UnsupportedJwtException e){ // 지원하지 않는 토큰
                 request.setAttribute("exception", JwtExceptionCode.UNSUPPORTED_TOKEN.getCode());
-                throw new BadCredentialsException("Unsupported token exception", e);
+                filterChain.doFilter(request, response);
+                return;
             } catch (MalformedJwtException e) { // 유효하지 않은 토큰
                 request.setAttribute("exception", JwtExceptionCode.INVALID_TOKEN.getCode());
-                throw new BadCredentialsException("Invalid token exception", e);
+                filterChain.doFilter(request, response);
+                return;
             } catch (Exception e) { // jwt 검증 중 예상하지못한 나머지 예외
                 request.setAttribute("exception", JwtExceptionCode.UNKNOWN_ERROR.getCode());
-                throw new BadCredentialsException("JWT filter internal exception", e);
+                filterChain.doFilter(request, response);
+                return;
             }
         }
 
