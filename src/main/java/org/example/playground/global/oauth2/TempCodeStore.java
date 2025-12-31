@@ -1,5 +1,6 @@
 package org.example.playground.global.oauth2;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -11,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @EnableScheduling
+@Slf4j
 public class TempCodeStore {
 
     private final Map<String, CodeInfo> codeStore = new ConcurrentHashMap<>();
@@ -24,8 +26,20 @@ public class TempCodeStore {
     }
 
     public String createCode(Long userId,  List<String> roles) {
-        String randomCode = UUID.randomUUID().toString();
-        codeStore.put(randomCode, CodeInfo.create(userId, roles));
+        String randomCode;
+        CodeInfo codeInfo = CodeInfo.create(userId, roles);
+        int attempts = 0;
+        do {
+            randomCode = UUID.randomUUID().toString();
+            if (++attempts > 10) {
+                log.error("Failed to generate unique code for userId: {}", userId);
+                throw new IllegalStateException("Failed to generate unique code");
+            }
+        } while (codeStore.putIfAbsent(randomCode, codeInfo) != null);
+
+        if (attempts > 1) {
+            log.warn("Code generation took {} attempts", attempts);
+        }
         return randomCode;
     }
 
