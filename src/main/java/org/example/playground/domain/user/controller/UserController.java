@@ -10,7 +10,8 @@ import org.example.playground.domain.user.dto.UserRegisterResponseDTO;
 import org.example.playground.domain.user.dto.UserUpdateRequestDTO;
 import org.example.playground.domain.user.service.UserService;
 import org.example.playground.global.security.user.CustomUserDetails;
-import org.hibernate.query.Page;
+
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
