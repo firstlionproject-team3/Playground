@@ -30,10 +30,10 @@ public class SecurityConfig {
 
         http
                 .csrf(csrf -> csrf.disable())
-                .oauth2Login(oauth -> {
-                    oauth.successHandler(oAuth2SuccessHandler);
-                    oauth.failureHandler(oAuth2FailureHandler);
-                })
+//                .oauth2Login(oauth -> {
+//                    oauth.successHandler(oAuth2SuccessHandler);
+//                    oauth.failureHandler(oAuth2FailureHandler);
+//                })
                 //TODO: h2 콘솔 허용 설정 추후 교체
                 .headers(headers ->
                         headers.frameOptions(frame -> frame.disable())
