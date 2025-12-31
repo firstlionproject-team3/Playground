@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.example.playground.global.security.user.CustomUserDetails;
 import org.example.playground.global.security.jwt.exception.JwtExceptionCode;
+import org.example.playground.global.util.CookieUtil;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -99,15 +100,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         }
 
         // 두 번째 방식: 쿠키에서 꺼내는 방식: 반복문을 돌면서 토큰을 찾는다.
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if (cookie.getName().equals("accessToken")) {
-                    return cookie.getValue();
-                }
-            }
-        }
-        // 토큰 없음 - 로그인, 회원가입 등의 요청은 토큰이 없다.
-        return null;
+        // 찾지 못하면 null을 반환 -> 로그인, 회원가입 등의 요청이 될 수도 있다.
+        return CookieUtil.getToken(request, "accessToken");
     }
 }
