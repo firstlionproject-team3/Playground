@@ -49,7 +49,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     .email(nullableEmail)
                     .name(nullableName)
                     .providerId(socialUserInfo.getProviderId())
-                    .providerId(socialUserInfo.getProvider())
+                    .provider(socialUserInfo.getProvider())
                     .build();
             
             //playground db 유저 정보 획득
