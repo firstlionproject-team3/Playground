@@ -9,7 +9,6 @@ import org.example.playground.domain.user.exception.OAuth2SignedupException;
 import org.example.playground.domain.user.exception.UserNotFoundException;
 import org.example.playground.domain.user.repository.RoleRepository;
 import org.example.playground.domain.user.repository.UserRepository;
-import org.example.playground.global.security.user.CustomUserDetails;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -59,15 +58,6 @@ public class UserServiceImpl implements UserService {
 
         throw new IllegalStateException("이름 생성 충돌이 반복되어 회원가입에 실패했습니다. 잠시 후 다시 시도하세요.");
     }
-//
-//    //  로그인 인증은 AuthenticationManager에서 처리. 이 메서드는 인증 성공 후 사용자 조회/토큰 클레임 생성용으로 사용
-//    @Override
-//    public SecurityResponseForJWT loadForTokenIssue(String loginId) {
-//        User user = userRepository.findByLoginId(loginId)
-//                .orElseThrow(() -> new UserNotFoundException("유저가 존재하지 않습니다"));
-//
-//        return SecurityResponseForJWT.securityResponseFromUser(user);
-//    }
 
     @Override
     @Transactional
@@ -83,8 +73,8 @@ public class UserServiceImpl implements UserService {
     //회원 마이페이지용 유저 정보 조회 메서드
     @Override
     @Transactional(readOnly = true)
-    public UserMyPageResponseDTO getUser(CustomUserDetails currentUser) {
-        User findUser = findUserOrThrow(currentUser.getId());
+    public UserMyPageResponseDTO getUser(Long userId) {
+        User findUser = findUserOrThrow(userId);
 
         return UserMyPageResponseDTO.userMyPageDTOFromEntity(findUser);
     }
@@ -92,8 +82,8 @@ public class UserServiceImpl implements UserService {
     // 회원정보 수정 메서드
     @Override
     @Transactional
-    public UserMyPageResponseDTO updateUser(CustomUserDetails currentUser, UserUpdateRequestDTO userUpdateRequestDTO) {
-        User findUser = findUserOrThrow(currentUser.getId());
+    public UserMyPageResponseDTO updateUser(Long userId, UserUpdateRequestDTO userUpdateRequestDTO) {
+        User findUser = findUserOrThrow(userId);
 
         if (!Objects.equals(findUser.getNickname(), userUpdateRequestDTO.getNickname())) {
             findUser.changeNickname(userUpdateRequestDTO.getNickname());
@@ -116,8 +106,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void deleteUser(CustomUserDetails currentUser) {
-        User findUser = findUserOrThrow(currentUser.getId());
+    public void deleteUser(Long userId) {
+        User findUser = findUserOrThrow(userId);
         userRepository.delete(findUser);
     }
 
