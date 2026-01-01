@@ -41,6 +41,7 @@ public class Notification {
     private String content;
 
     // 읽음 여부
+    @Builder.Default
     @Column(name = "is_read", nullable = false)
     private boolean isRead = false;
 

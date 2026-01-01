@@ -6,6 +6,7 @@ import org.example.playground.domain.notification.dto.NotificationRequestDTO;
 import org.example.playground.domain.notification.dto.NotificationResponseDTO;
 import org.example.playground.domain.notification.entity.Notification;
 import org.example.playground.domain.notification.entity.NotificationType;
+import org.example.playground.domain.notification.exception.*;
 import org.example.playground.domain.notification.repository.NotificationRepository;
 import org.example.playground.domain.user.entity.User;
 import org.example.playground.domain.user.repository.UserRepository;
@@ -14,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static org.example.playground.domain.notification.exception.NotificationErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -32,13 +35,13 @@ public class NotificationService {
     public NotificationResponseDTO createNotification(NotificationRequestDTO request) {
         // 수신자 조회
         User receiver = userRepository.findById(request.getReceiverId())
-                .orElseThrow(() -> new IllegalArgumentException("수신자를 찾을 수 없습니다: " + request.getReceiverId()));
+                .orElseThrow(() -> new ReceiverNotFoundException(RECEIVER_NOT_FOUND, request.getReceiverId()));
 
         // 발신자 조회 (nullable)
         User sender = null;
         if (request.getSenderId() != null) {
             sender = userRepository.findById(request.getSenderId())
-                    .orElseThrow(() -> new IllegalArgumentException("발신자를 찾을 수 없습니다: " + request.getSenderId()));
+                    .orElseThrow(() -> new SenderNotFoundException(SENDER_NOT_FOUND, request.getSenderId()));
         }
 
         // 알림 생성
@@ -48,7 +51,7 @@ public class NotificationService {
         } else if (request.getType() == NotificationType.REPORT_RECEIVED) {
             notification = Notification.createReport(receiver, sender, request.getContent());
         } else {
-            throw new IllegalArgumentException("지원하지 않는 알림 유형입니다: " + request.getType());
+            throw new UnsupportedNotificationTypeException(UNSUPPORTED_NOTIFICATION_TYPE, request.getType());
         }
 
         // 알림 저장 및 전송
@@ -66,7 +69,7 @@ public class NotificationService {
     public NotificationListResponseDTO getNotifications(Long userId) {
         // 사용자 존재 여부 확인
         userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
+                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND, userId));
 
         List<Notification> notifications = notificationRepository
                 .findByReceiverIdOrderByCreatedAtDesc(userId);
@@ -85,7 +88,7 @@ public class NotificationService {
     @Transactional(readOnly = true)
     public void validateUser(Long userId) {
         userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
+                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND, userId));
     }
 
     /**
@@ -96,7 +99,7 @@ public class NotificationService {
     @Transactional(readOnly = true)
     public User findUserById(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
+                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND, userId));
     }
 
 
@@ -107,11 +110,11 @@ public class NotificationService {
      */
     public void markAsRead(Long notificationId, User user) {
         Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() -> new IllegalArgumentException("알림을 찾을 수 없습니다: " + notificationId));
+                .orElseThrow(() -> new NotificationNotFoundException(NOTIFICATION_NOT_FOUND, notificationId));
 
         // 권한 검증: 알림 수신자만 읽음 처리 가능
         if (!notification.getReceiver().getId().equals(user.getId())) {
-            throw new IllegalArgumentException("본인의 알림만 읽음 처리할 수 있습니다.");
+            throw new UnauthorizedReadAccessException(UNAUTHORIZED_READ_ACCESS);
         }
 
         notification.markAsRead();
@@ -126,11 +129,11 @@ public class NotificationService {
      */
     public void delete(Long notificationId, User user) {
         Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() -> new IllegalArgumentException("알림을 찾을 수 없습니다: " + notificationId));
+                .orElseThrow(() -> new NotificationNotFoundException(NOTIFICATION_NOT_FOUND, notificationId));
 
         // 권한 검증: 알림 수신자만 삭제 가능
         if (!notification.getReceiver().getId().equals(user.getId())) {
-            throw new IllegalArgumentException("본인의 알림만 삭제할 수 있습니다.");
+            throw new UnauthorizedDeleteAccessException(UNAUTHORIZED_DELETE_ACCESS);
         }
 
         notificationRepository.delete(notification);
