@@ -49,8 +49,8 @@ public class User {
     @Column(name = "joined_date", updatable = false)
     private LocalDateTime joinedDate;
 
-    @Column(name = "current_points")
-    private int point;
+    @Column(name = "current_points", nullable = false)
+    private long currentPoints = 0L;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -130,9 +130,5 @@ public class User {
 
     public void changeEmail(String email) {
         this.email = email;
-    }
-
-    public void changePoints(int value) {
-        this.point += value;
     }
 }
