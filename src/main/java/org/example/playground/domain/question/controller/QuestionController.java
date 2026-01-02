@@ -84,4 +84,17 @@ public class QuestionController {
     }
     
     //질문에 답변 등록 알림 - 답변 도메인에서 "답변이 달렸다!" 이벤트를 만들고 여기에(이용자에게) 알림을 보냄 (AnswerService에서)
+
+
+    @PatchMapping("/questions/{questionId}/answers/{answerId}/accept")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void accept(
+            @PathVariable Long questionId,
+            @PathVariable Long answerId,
+            @AuthenticationPrincipal CustomUserDetails principal
+    ) {
+        questionService.acceptAnswer(questionId, answerId, principal.getId());
+    }
+
+
 }

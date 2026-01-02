@@ -10,6 +10,7 @@ public record QuestionDetailResponseDTO(
         String title,
         String content,
         Long viewCount,
+        Long acceptedAnswerId,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
@@ -20,6 +21,7 @@ public record QuestionDetailResponseDTO(
                 question.getTitle(),
                 question.getContent(),
                 question.getViewCount(),
+                question.getAcceptedAnswerId(),
                 question.getCreatedAt(),
                 question.getUpdatedAt()
         );

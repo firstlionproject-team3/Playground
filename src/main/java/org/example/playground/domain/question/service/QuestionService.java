@@ -1,6 +1,8 @@
 package org.example.playground.domain.question.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.playground.domain.answer.entity.Answer;
+import org.example.playground.domain.answer.repository.AnswerRepository;
 import org.example.playground.domain.notification.dto.NotificationRequestDTO;
 import org.example.playground.domain.notification.entity.NotificationType;
 import org.example.playground.domain.notification.service.NotificationService;
@@ -26,6 +28,7 @@ public class QuestionService {
     private final QuestionRepository questionRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final AnswerRepository answerRepository;
 
     //질문 생성
     @Transactional
@@ -155,5 +158,24 @@ public class QuestionService {
         );
         notificationService.createNotification(req);
     }
+
+    @Transactional
+    public void acceptAnswer(Long questionId, Long answerId, Long requesterId) {
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new RuntimeException("질문 없음"));
+
+        Answer answer = answerRepository.findById(answerId)
+                .orElseThrow(() -> new RuntimeException("답변 없음"));
+
+        // 채택 대상 답변은 그 질문에 달린 답변이어야 함
+        if (!answer.getQuestion().getId().equals(question.getId())) {
+            throw new RuntimeException("해당 질문의 답변만 채택할 수 있습니다.");
+        }
+
+        Long answerWriterId = answer.getUser().getId(); // Answer에 user 있어야 함
+
+        question.acceptAnswer(answer.getId(), requesterId, answerWriterId);
+    }
+
 
 }
