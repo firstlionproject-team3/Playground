@@ -6,16 +6,16 @@ import java.time.LocalDateTime;
 
 public record QuestionDetailResponseDTO(
         Long id,
-        Long member_id,
+        String nickname,
         String title,
         String content,
-        LocalDateTime created_at,
-        LocalDateTime updated_at
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt
 ) {
     public static QuestionDetailResponseDTO from(Question question) {
         return new QuestionDetailResponseDTO(
                 question.getId(),
-                question.getMemberId(),
+                question.getUser().getNickname(),
                 question.getTitle(),
                 question.getContent(),
                 question.getCreatedAt(),

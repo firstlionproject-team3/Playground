@@ -8,6 +8,10 @@ build/
 ## test용 yml
 application-test.yml
 
+## test용 sql
+src/main/resources/*.sql
+
+
 ### STS ###
 .apt_generated
 .classpath

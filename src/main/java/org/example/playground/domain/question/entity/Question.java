@@ -2,8 +2,12 @@ package org.example.playground.domain.question.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.playground.domain.answer.entity.Answer;
+import org.example.playground.domain.user.entity.User;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -16,8 +20,16 @@ public class Question {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Long memberId; //임시로 사용, todo 나중에 user객체로 찍어서 필드에서 사용
+    @OneToMany(
+            mappedBy = "question",
+            cascade = CascadeType.REMOVE,
+            orphanRemoval = true
+    )
+    private List<Answer> answers = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "userId", nullable = false)
+    private User user;
 
     @Column(nullable = false, length = 255)
     private String title;
@@ -33,11 +45,11 @@ public class Question {
     private LocalDateTime updatedAt;
 
     //질문 생성
-    public static Question create(Long member_id, String title, String content) {
+    public static Question create(User user, String title, String content) {
         LocalDateTime now = LocalDateTime.now();
 
         return Question.builder()
-                .memberId(member_id)
+                .user(user)
                 .title(title)
                 .content(content)
                 .createdAt(now)

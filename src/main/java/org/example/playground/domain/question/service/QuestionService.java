@@ -1,32 +1,39 @@
 package org.example.playground.domain.question.service;
 
-import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.example.playground.domain.question.dto.request.QuestionUpdateRequestDTO;
 import org.example.playground.domain.question.dto.response.QuestionDetailResponseDTO;
 import org.example.playground.domain.question.dto.response.QuestionSummaryResponseDTO;
 import org.example.playground.domain.question.exception.QuestionNotFoundException;
+import org.example.playground.domain.user.entity.User;
+import org.example.playground.domain.user.exception.UserNotFoundException;
+import org.example.playground.domain.user.repository.UserRepository;
+import org.example.playground.global.security.user.CustomUserDetails;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import org.example.playground.domain.question.dto.request.QuestionCreateRequestDTO;
-import org.example.playground.domain.question.dto.response.QuestionResponseDTO;
 import org.example.playground.domain.question.entity.Question;
 import org.example.playground.domain.question.repository.QuestionRepository;
 import org.springframework.stereotype.Service;
 
+@RequiredArgsConstructor
 @Service
 public class QuestionService {
     private final QuestionRepository questionRepository;
-
-    public QuestionService(QuestionRepository questionRepository) {
-        this.questionRepository = questionRepository;
-    }
+    private final UserRepository userRepository;
 
     //질문 생성
     @Transactional
-    public QuestionDetailResponseDTO create(QuestionCreateRequestDTO request) {
-        Question question = Question.create(request.memberId(), request.title(), request.content());
-        return QuestionDetailResponseDTO.from(questionRepository.save(question));
+    public QuestionDetailResponseDTO create(Long userId, QuestionCreateRequestDTO request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("userId=" + userId));
+        System.out.println("questionservice log");
+        Question question = Question.create(user, request.title(), request.content());
+        Question saved = questionRepository.save(question);
+
+        return QuestionDetailResponseDTO.from(saved);
+
     }
 
     //질문 전체목록 보기
@@ -56,28 +63,28 @@ public class QuestionService {
                 page =  questionRepository.findByTitleContainingIgnoreCase(keyword, pageable);
                 break;
             case "content":
-                page =  questionRepository.findByContentContaining(keyword, pageable);
+                page =  questionRepository.findByContentContainingIgnoreCase(keyword, pageable);
                 break;
 
             case "all":
             default:
-                page = questionRepository.findByTitleContainingIgnoreCaseOrContentContaining(keyword, keyword, pageable);
+                page = questionRepository.findByTitleContainingIgnoreCaseOrContentContainingIgnoreCase(keyword, keyword, pageable);
                 break;
         }
         //엔티티를 DTO로 변환 - 도움
         return page.map(QuestionSummaryResponseDTO::from);
     }
 
-/*
-    로그인한 사용자가 자기가 작성한 질문 목록을 조회
+
+    //로그인한 사용자가 자기가 작성한 질문 목록을 조회
     @Transactional(readOnly = true)
-    public Page<QuestionSummaryResponseDTO> getMyQuestions(Long memberId, Pageable pageable) {
+    public Page<QuestionSummaryResponseDTO> getMyQuestions(Long userId, Pageable pageable) {
         //최신순
-        Page<Question> page = questionRepository.findByMemberIdOrderByCreatedAtDesc(memberId, pageable);
+        Page<Question> page = questionRepository.findByUser_IdOrderByCreatedAtDesc(userId, pageable);
         return page.map(QuestionSummaryResponseDTO::from);
     }
     
- */
+
 
     //질문 1건 상세 조회
     @Transactional(readOnly = true)
@@ -88,18 +95,35 @@ public class QuestionService {
     }
 
     //질문 수정
+    //권한 체크
     @Transactional
-    public QuestionDetailResponseDTO update(Long id, QuestionUpdateRequestDTO request) {
+    public QuestionDetailResponseDTO update(Long id, Long userId, QuestionUpdateRequestDTO request) {
         Question question = questionRepository.findById(id)
-                .orElse(null); //todo 예외로직 추가 예정
+                .orElseThrow(() -> new QuestionNotFoundException(id));
 
+        validateOwner(question, userId);
         question.update(request.title(), request.content());
         return QuestionDetailResponseDTO.from(question);
     }
 
     //질문 삭제
     @Transactional
-    public void delete(Long id) {
-        questionRepository.deleteById(id);
+    public void delete(Long questionId, Long userId) {
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new QuestionNotFoundException(questionId));
+
+        validateOwner(question, userId);
+
+        questionRepository.delete(question);
     }
+
+    //작성자 검증
+    private void validateOwner(Question question, Long userId) {
+        Long ownerId = question.getUser().getId();
+        if (!ownerId.equals(userId)) {
+            //프로젝트 공통 예외로?
+            throw new RuntimeException("작성자만 가능합니다.");
+        }
+    }
+
 }
