@@ -28,7 +28,7 @@ public class QuestionService {
     public QuestionDetailResponseDTO create(Long userId, QuestionCreateRequestDTO request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("userId=" + userId));
-
+        System.out.println("questionservice log");
         Question question = Question.create(user, request.title(), request.content());
         Question saved = questionRepository.save(question);
 
