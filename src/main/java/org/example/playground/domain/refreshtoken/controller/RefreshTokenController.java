@@ -24,7 +24,7 @@ public class RefreshTokenController {
     @PostMapping("/refreshToken")
     public ResponseEntity<?> refreshToken(HttpServletRequest request, HttpServletResponse response) {
         // 쿠키에서 리프레시토큰 찾기
-        String refreshToken = getRefreshToken(request);
+        String refreshToken = CookieUtil.getToken(request,"refreshToken");
         // 토큰 x -> 에러 반환
         if (refreshToken == null) {
             return ResponseEntity.badRequest().body("Refresh Token이 존재하지 않습니다.");
@@ -37,17 +37,5 @@ public class RefreshTokenController {
         CookieUtil.addRefreshToken(response, accessAndRefreshTokenDTO.getRefreshToken());
 
         return ResponseEntity.ok(Map.of("accessToken", accessAndRefreshTokenDTO.getAccessToken()));
-    }
-
-    private String getRefreshToken(HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if (cookie.getName().equals("refreshToken")) {
-                    return cookie.getValue();
-                }
-            }
-        }
-        return null;
     }
 }

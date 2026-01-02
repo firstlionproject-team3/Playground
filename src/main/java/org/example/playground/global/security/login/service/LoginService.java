@@ -1,5 +1,7 @@
 package org.example.playground.global.security.login.service;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.example.playground.domain.refreshtoken.dto.AccessAndRefreshTokenDTO;
 import org.example.playground.domain.refreshtoken.entity.RefreshToken;
@@ -10,6 +12,7 @@ import org.example.playground.global.security.login.exception.LoginFailedExcepti
 import org.example.playground.global.security.jwt.JwtTokenProvider;
 import org.example.playground.global.security.jwt.dto.TokenDTO;
 import org.example.playground.global.security.user.dto.LoginRequestDTO;
+import org.example.playground.global.util.CookieUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,5 +59,19 @@ public class LoginService {
         refreshTokenRepository.save(refreshTokenEntity);
 
         return AccessAndRefreshTokenDTO.from(accessToken.getToken(), refreshToken);
+    }
+
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
+
+        // 리프레시 토큰 찾기
+        // 리프레시 토큰을 찾을 수 없다면 null이 반환되지만
+        // logout을 한다는건 로그인이 되어있는것이고, 토큰이 쿠키에 들어있다는것이 보장이 된다.
+        String refreshToken = CookieUtil.getToken(request, "refreshToken");
+
+        // db에서 리프레시 토큰 제거
+        refreshTokenRepository.deleteByToken(refreshToken);
+
+        // 쿠키에 있는 리프레시 토큰 제거
+        CookieUtil.deleteRefreshToken(response);
     }
 }

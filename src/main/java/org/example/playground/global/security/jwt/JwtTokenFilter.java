@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.example.playground.global.security.user.CustomUserDetails;
 import org.example.playground.global.security.jwt.exception.JwtExceptionCode;
+import org.example.playground.global.util.CookieUtil;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -52,16 +53,20 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 tokenToAuthentication(token);
             } catch (ExpiredJwtException e) { // 기간이 만료된 토큰
                 request.setAttribute("exception", JwtExceptionCode.EXPIRED_TOKEN.getCode());
-                throw new BadCredentialsException("Expired token exception", e);
+                filterChain.doFilter(request, response);
+                return;
             } catch (UnsupportedJwtException e){ // 지원하지 않는 토큰
                 request.setAttribute("exception", JwtExceptionCode.UNSUPPORTED_TOKEN.getCode());
-                throw new BadCredentialsException("Unsupported token exception", e);
+                filterChain.doFilter(request, response);
+                return;
             } catch (MalformedJwtException e) { // 유효하지 않은 토큰
                 request.setAttribute("exception", JwtExceptionCode.INVALID_TOKEN.getCode());
-                throw new BadCredentialsException("Invalid token exception", e);
+                filterChain.doFilter(request, response);
+                return;
             } catch (Exception e) { // jwt 검증 중 예상하지못한 나머지 예외
                 request.setAttribute("exception", JwtExceptionCode.UNKNOWN_ERROR.getCode());
-                throw new BadCredentialsException("JWT filter internal exception", e);
+                filterChain.doFilter(request, response);
+                return;
             }
         }
 
@@ -99,15 +104,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         }
 
         // 두 번째 방식: 쿠키에서 꺼내는 방식: 반복문을 돌면서 토큰을 찾는다.
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if (cookie.getName().equals("accessToken")) {
-                    return cookie.getValue();
-                }
-            }
-        }
-        // 토큰 없음 - 로그인, 회원가입 등의 요청은 토큰이 없다.
-        return null;
+        // 찾지 못하면 null을 반환 -> 로그인, 회원가입 등의 요청이 될 수도 있다.
+        return CookieUtil.getToken(request, "accessToken");
     }
 }
