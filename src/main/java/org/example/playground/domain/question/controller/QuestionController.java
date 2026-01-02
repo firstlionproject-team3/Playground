@@ -76,10 +76,11 @@ public class QuestionController {
     //질문 신고
     @PatchMapping("/{id}/report")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void report(@PathVariable Long id) {
-        //todo 질문 신고정책 설계 필요, 보통 관리자에게 알림 -> 지피티한테 관라자에게만 일림이 가는 코드를?
-        //민섭님에게 관리자 api, 거기서 쓸수있으면 좋음
-        //관리자 api한테 알림을 날려야돼! 라는 코드
+    public void report(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails principal
+    ) {
+        questionService.report(id, principal.getId());
     }
     
     //질문에 답변 등록 알림 - 답변 도메인에서 "답변이 달렸다!" 이벤트를 만들고 여기에(이용자에게) 알림을 보냄 (AnswerService에서)

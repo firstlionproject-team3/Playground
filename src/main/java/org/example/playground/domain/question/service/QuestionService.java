@@ -1,6 +1,9 @@
 package org.example.playground.domain.question.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.playground.domain.notification.dto.NotificationRequestDTO;
+import org.example.playground.domain.notification.entity.NotificationType;
+import org.example.playground.domain.notification.service.NotificationService;
 import org.example.playground.domain.question.dto.request.QuestionUpdateRequestDTO;
 import org.example.playground.domain.question.dto.response.QuestionDetailResponseDTO;
 import org.example.playground.domain.question.dto.response.QuestionSummaryResponseDTO;
@@ -22,6 +25,7 @@ import org.springframework.stereotype.Service;
 public class QuestionService {
     private final QuestionRepository questionRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     //질문 생성
     @Transactional
@@ -127,6 +131,29 @@ public class QuestionService {
             //프로젝트 공통 예외로?
             throw new RuntimeException("작성자만 가능합니다.");
         }
+    }
+
+    //질문 신고
+    @Transactional
+    public void report(Long questionId, Long reporterId) {
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new QuestionNotFoundException(questionId));
+
+        //신고 처리 (도메인 상태 변경)
+        //reportBy() : 질문이 신고된 횟수를 기록한 메서드
+        question.reportBy(reporterId);
+        //TODO 신고 정책/중복신고/횟수 누적 등은 나중에
+
+        Long adminId = 1L; //임시 관리자 계정 ID (팀에서 확정 필요)
+
+        // 알림 전송 (현재 NotificationService는 REPORT_RECEIVED만 지원)
+        NotificationRequestDTO req = new NotificationRequestDTO(
+                adminId,
+                reporterId,
+                NotificationType.REPORT_RECEIVED,
+                "질문 신고가 접수되었습니다. questionId=" + questionId
+        );
+        notificationService.createNotification(req);
     }
 
 }

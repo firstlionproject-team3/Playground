@@ -48,6 +48,8 @@ public class Question {
     @Column(nullable = false)
     private Long viewCount = 0L;
 
+    //신고횟수, 관리자가 판단할때의 근거
+    private int reportCount = 0;
 
     //엔티티 저장 전 기본값 보장
     //Builder 사용 시 null이 될 수 있는 필드(createdAt, updatedAt, viewCount)를
@@ -96,4 +98,8 @@ public class Question {
         this.viewCount++;
     }
 
+    //질문 신고 횟수 증가
+    public void reportBy(Long reporterId) {
+        this.reportCount++;
+    }
 }
