@@ -108,7 +108,11 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void deleteUser(Long userId) {
         User findUser = findUserOrThrow(userId);
-        userRepository.delete(findUser);
+
+//        refreshTokenRepository.deleteByUserId(userId);
+
+        findUser.softDeleteAndAnonymize();
+        userRepository.save(findUser);
     }
 
     //가능하면 constraintName을 제공하는 Hibernate 예외를 우선 확인하고, 없으면 메시지 fallback을 사용한다
@@ -160,6 +164,12 @@ public class UserServiceImpl implements UserService {
     //로그인한 유저인지 찾는 메서드
     private User findOrCreateOAuthUser(OAuth2UserInfo info) {
         return userRepository.findUserByProviderAndProviderId(info.getProvider(), info.getProviderId())
+                .map(found -> {
+                    if (found.isDeleted()) {
+                        throw new OAuth2SignedupException("탈퇴한 계정입니다.");
+                    }
+                    return found;
+                })
                 .orElseGet(() -> createOAuthUserWithRetry(info));
     }
 
