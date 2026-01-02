@@ -41,3 +41,5 @@ out/
 
 **/application-secret.*
 **/application-local.*
+
+**/data.sql
