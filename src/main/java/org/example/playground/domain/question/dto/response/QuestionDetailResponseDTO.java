@@ -9,6 +9,7 @@ public record QuestionDetailResponseDTO(
         String nickname,
         String title,
         String content,
+        Long viewCount,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
@@ -18,6 +19,7 @@ public record QuestionDetailResponseDTO(
                 question.getUser().getNickname(),
                 question.getTitle(),
                 question.getContent(),
+                question.getViewCount(),
                 question.getCreatedAt(),
                 question.getUpdatedAt()
         );

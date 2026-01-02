@@ -44,6 +44,30 @@ public class Question {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    //조회수 필드
+    @Column(nullable = false)
+    private Long viewCount = 0L;
+
+
+    //엔티티 저장 전 기본값 보장
+    //Builder 사용 시 null이 될 수 있는 필드(createdAt, updatedAt, viewCount)를
+    //NOT NULL 제약 위반 없이 안전하게 초기화하기 위한 생명주기 콜백
+
+    @PrePersist
+    protected void prePersist() {
+        LocalDateTime now = LocalDateTime.now();
+
+        if (this.createdAt == null) {
+            this.createdAt = now;
+        }
+        if (this.updatedAt == null) {
+            this.updatedAt = now;
+        }
+        if (this.viewCount == null) {
+            this.viewCount = 0L;
+        }
+    }
+
     //질문 생성
     public static Question create(User user, String title, String content) {
         LocalDateTime now = LocalDateTime.now();
@@ -67,5 +91,9 @@ public class Question {
         } this.updatedAt = LocalDateTime.now();
     }
 
+    //조회수 증가 로직
+    public void increaseViewCount() {
+        this.viewCount++;
+    }
 
 }

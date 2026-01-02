@@ -87,10 +87,13 @@ public class QuestionService {
 
 
     //질문 1건 상세 조회
-    @Transactional(readOnly = true)
+    @Transactional
     public QuestionDetailResponseDTO findOne(Long id) {
         Question question = questionRepository.findById(id)
                 .orElseThrow(() -> new QuestionNotFoundException(id));
+        //조회수 증가++, 조회수는 변경된느 작업이므로 (readOnly = true) 사용 X
+        question.increaseViewCount();
+
         return QuestionDetailResponseDTO.from(question);
     }
 
