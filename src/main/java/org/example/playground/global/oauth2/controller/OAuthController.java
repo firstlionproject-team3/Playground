@@ -20,7 +20,7 @@ import java.util.Map;
 @RequestMapping("/oauth")
 @RequiredArgsConstructor
 @Slf4j
-public class AuthController {
+public class OAuthController {
 
     private final TempCodeStore tempCodeStore;
     private final JwtTokenProvider jwtTokenProvider;
