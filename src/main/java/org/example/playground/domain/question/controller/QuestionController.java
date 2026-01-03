@@ -23,12 +23,16 @@ public class QuestionController {
 
     //질문 생성
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED) //무조건 201
+    @ResponseStatus(HttpStatus.CREATED)
     public QuestionDetailResponseDTO create(
             @AuthenticationPrincipal CustomUserDetails principal,
             @Valid @RequestBody QuestionCreateRequestDTO request) {
+        System.out.println("questioncontroller log");
         return questionService.create(principal.getId(), request);
     }
+
+
+
 
     //질문 검색 - keyword 없으면 전체조회, 있으면 title,content,all검색(서비스에서 처리)
     @GetMapping

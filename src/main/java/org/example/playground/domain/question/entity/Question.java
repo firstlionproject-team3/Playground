@@ -2,9 +2,12 @@ package org.example.playground.domain.question.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.playground.domain.answer.entity.Answer;
 import org.example.playground.domain.user.entity.User;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -16,6 +19,13 @@ public class Question {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @OneToMany(
+            mappedBy = "question",
+            cascade = CascadeType.REMOVE,
+            orphanRemoval = true
+    )
+    private List<Answer> answers = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "userId", nullable = false)
