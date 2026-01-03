@@ -3,16 +3,12 @@ package org.example.playground.domain.user.entity;
 import jakarta.persistence.*;
 
 import lombok.*;
-import org.example.playground.domain.answer.entity.Answer;
-import org.example.playground.domain.question.entity.Question;
 import org.example.playground.domain.user.dto.OAuth2UserInfo;
 import org.example.playground.domain.user.dto.UserRegisterRequestDTO;
 import org.hibernate.annotations.SQLDelete;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
@@ -49,9 +45,7 @@ public class User {
     @Column(name = "joined_date", updatable = false)
     private LocalDateTime joinedDate;
 
-    @Column(name = "current_points", nullable = false)
-    private long currentPoints = 0L;
-
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserStatus status = UserStatus.ACTIVE;
@@ -67,7 +61,6 @@ public class User {
         this.deletedAt = LocalDateTime.now();
 
         this.nickname = "deleted#" + this.nickname;
-        this.loginId = "deleted_" + this.id; // 재로그인 방지
         this.email = null;
         this.providerId = "deleted_" + this.providerId; // 재로그인 방지
     }
@@ -88,6 +81,10 @@ public class User {
     public void prePersist() {
         if(this.joinedDate == null){
             this.joinedDate = LocalDateTime.now();
+        }
+
+        if(this.status == null){
+            this.status = UserStatus.ACTIVE;
         }
     }
 

@@ -3,9 +3,6 @@ package org.example.playground.domain.user.repository;
 import org.example.playground.domain.user.entity.User;
 import org.example.playground.domain.user.entity.UserStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
@@ -21,26 +18,4 @@ public interface UserRepository extends JpaRepository<User, Long> {
     //로그인 아이디로 회원 검색(회원정보 상세조회)
     Optional<User> findByLoginId(String loginId);
     Optional<User> findByLoginIdAndStatus(String loginId, UserStatus status);
-
-    @Modifying(flushAutomatically = true, clearAutomatically = false)
-    @Query("""
-        update User u
-           set u.currentPoints = u.currentPoints + :amount
-         where u.id = :userId
-           and u.status = :active
-    """)
-    int increasePoints(@Param("userId") Long userId,
-                       @Param("amount") long amount,
-                       @Param("active") UserStatus active);
-
-    @Modifying(flushAutomatically = true, clearAutomatically = false)
-    @Query("""
-        update User u
-           set u.currentPoints = u.currentPoints - :amount
-         where u.id = :userId
-           and u.status = :active
-    """)
-    int decreasePoints(@Param("userId") Long userId,
-                       @Param("amount") long amount,
-                       @Param("active") UserStatus active);
 }
