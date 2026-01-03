@@ -50,6 +50,10 @@ public class NotificationService {
             notification = Notification.createAnswerAccepted(receiver, sender, request.getContent());
         } else if (request.getType() == NotificationType.REPORT_RECEIVED) {
             notification = Notification.createReport(receiver, sender, request.getContent());
+        } else if (request.getType() == NotificationType.NEW_ANSWER) {
+            notification = Notification.createNewAnswer(receiver, sender, request.getContent());
+        } else if (request.getType() == NotificationType.NEW_COMMENT) {
+            notification = Notification.createNewComment(receiver, sender, request.getContent());
         } else {
             throw new UnsupportedNotificationTypeException(UNSUPPORTED_NOTIFICATION_TYPE, request.getType());
         }
