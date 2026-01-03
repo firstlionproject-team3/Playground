@@ -77,6 +77,28 @@ public class Notification {
                 .build();
     }
 
+    // 정적 팩토리 메서드: 답변 알림
+    public static Notification createNewAnswer(User receiver, User sender, String content) {
+        return Notification.builder()
+                .receiver(receiver)
+                .sender(sender)
+                .type(NotificationType.NEW_ANSWER)
+                .content(content)
+                .isRead(false)
+                .build();
+    }
+
+    // 정적 팩토리 메서드: 댓글 알림
+    public static Notification createNewComment(User receiver, User sender, String content) {
+        return Notification.builder()
+                .receiver(receiver)
+                .sender(sender)
+                .type(NotificationType.NEW_COMMENT)
+                .content(content)
+                .isRead(false)
+                .build();
+    }
+
     // 읽음 처리
     public void markAsRead() {
         this.isRead = true;
