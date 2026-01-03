@@ -7,6 +7,7 @@ import org.example.playground.domain.answer.dto.response.AnswerDetailResponseDTO
 import org.example.playground.domain.answer.dto.response.AnswerSummaryResponseDTO;
 import org.example.playground.domain.answer.entity.Answer;
 import org.example.playground.domain.answer.exception.AnswerNotFoundException;
+import org.example.playground.domain.answer.exception.CannotAnswerOwnQuestionException;
 import org.example.playground.domain.answer.repository.AnswerRepository;
 import org.example.playground.domain.question.entity.Question;
 import org.example.playground.domain.question.exception.QuestionNotFoundException;
@@ -36,6 +37,12 @@ public class AnswerService {
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new QuestionNotFoundException(questionId));
 
+        //자기 질문에 답변 달기 금지
+        Long questionOwnerId = question.getUser().getId();
+        if (userId.equals(question.getUser().getId())) {
+            throw new CannotAnswerOwnQuestionException();
+        }
+
         Answer answer = Answer.create(question, user, request.content());
         Answer saved = answerRepository.save(answer);
 
@@ -48,8 +55,11 @@ public class AnswerService {
     //해당 질문 답변 조회 - 전체
     @Transactional(readOnly = true)
     public Page<AnswerSummaryResponseDTO> getAnswerByQuestion(Long questionId, Pageable pageable){
-        return answerRepository.findByQuestion_IdOrderByCreatedAtDesc(questionId, pageable).map(AnswerSummaryResponseDTO::from);
+        return answerRepository
+                .findByQuestion_IdOrderByAcceptedDescCreatedAtDesc(questionId, pageable)
+                .map(AnswerSummaryResponseDTO::from);
     }
+
 
 
     //답변 수정 - 작성자만

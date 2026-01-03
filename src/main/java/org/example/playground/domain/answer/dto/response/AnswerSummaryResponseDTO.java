@@ -8,6 +8,7 @@ public record AnswerSummaryResponseDTO(
         Long id,
         String nickname,
         String content,
+        boolean accepted,
         LocalDateTime createdAt
 ) {
 
@@ -16,6 +17,7 @@ public record AnswerSummaryResponseDTO(
                 answer.getId(),
                 answer.getUser().getNickname(),
                 answer.getContent(),
+                answer.isAccepted(),
                 answer.getCreatedAt()
         );
     }

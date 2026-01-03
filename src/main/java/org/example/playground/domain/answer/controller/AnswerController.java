@@ -71,16 +71,11 @@ public class AnswerController {
         //TODO 신고 정책 확정 후 구현
     }
 
-    //답변 채택
-    @PatchMapping("/questions/{questionId}/answers/{answerId}/accept")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void accept(
-            @PathVariable Long questionId,
-            @PathVariable Long answerId,
-            @AuthenticationPrincipal CustomUserDetails principal
-    ) {
-        //TODO 질문 작성자만 채택 가능하도록 권한체크 후 구현
-    }
+
+
+
+
+
 
 
 }
