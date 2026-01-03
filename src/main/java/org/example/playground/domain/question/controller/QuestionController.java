@@ -27,12 +27,8 @@ public class QuestionController {
     public QuestionDetailResponseDTO create(
             @AuthenticationPrincipal CustomUserDetails principal,
             @Valid @RequestBody QuestionCreateRequestDTO request) {
-        System.out.println("questioncontroller log");
         return questionService.create(principal.getId(), request);
     }
-
-
-
 
     //질문 검색 - keyword 없으면 전체조회, 있으면 title,content,all검색(서비스에서 처리)
     @GetMapping
@@ -59,7 +55,7 @@ public class QuestionController {
     public QuestionDetailResponseDTO update(
             @PathVariable Long id,
             @AuthenticationPrincipal CustomUserDetails principal,
-            @RequestBody QuestionUpdateRequestDTO request)
+            @Valid @RequestBody QuestionUpdateRequestDTO request)
     {
         return questionService.update(id, principal.getId(), request);
     }
@@ -86,7 +82,8 @@ public class QuestionController {
     //질문에 답변 등록 알림 - 답변 도메인에서 "답변이 달렸다!" 이벤트를 만들고 여기에(이용자에게) 알림을 보냄 (AnswerService에서)
 
 
-    @PatchMapping("/questions/{questionId}/answers/{answerId}/accept")
+    //답변 채택
+    @PatchMapping("/{questionId}/answers/{answerId}/accept")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void accept(
             @PathVariable Long questionId,

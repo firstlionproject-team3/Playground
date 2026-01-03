@@ -2,6 +2,8 @@ package org.example.playground.domain.question.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.playground.domain.answer.entity.Answer;
+import org.example.playground.domain.answer.exception.AnswerNotFoundException;
+import org.example.playground.domain.answer.exception.AnswerNotInQuestionException;
 import org.example.playground.domain.answer.repository.AnswerRepository;
 import org.example.playground.domain.notification.dto.NotificationRequestDTO;
 import org.example.playground.domain.notification.entity.NotificationType;
@@ -9,7 +11,10 @@ import org.example.playground.domain.notification.service.NotificationService;
 import org.example.playground.domain.question.dto.request.QuestionUpdateRequestDTO;
 import org.example.playground.domain.question.dto.response.QuestionDetailResponseDTO;
 import org.example.playground.domain.question.dto.response.QuestionSummaryResponseDTO;
+import org.example.playground.domain.question.exception.AnswerAcceptForbiddenException;
+import org.example.playground.domain.question.exception.AnswerAlreadyAcceptedException;
 import org.example.playground.domain.question.exception.QuestionNotFoundException;
+import org.example.playground.domain.question.exception.SelfAnswerAdoptNotAllowedException;
 import org.example.playground.domain.user.entity.User;
 import org.example.playground.domain.user.exception.UserNotFoundException;
 import org.example.playground.domain.user.repository.UserRepository;
@@ -21,6 +26,9 @@ import org.example.playground.domain.question.dto.request.QuestionCreateRequestD
 import org.example.playground.domain.question.entity.Question;
 import org.example.playground.domain.question.repository.QuestionRepository;
 import org.springframework.stereotype.Service;
+
+import java.util.Comparator;
+import java.util.List;
 
 @RequiredArgsConstructor
 @Service
@@ -98,10 +106,13 @@ public class QuestionService {
     public QuestionDetailResponseDTO findOne(Long id) {
         Question question = questionRepository.findById(id)
                 .orElseThrow(() -> new QuestionNotFoundException(id));
-        //조회수 증가++, 조회수는 변경된느 작업이므로 (readOnly = true) 사용 X
+
+        //조회수 증가++, 조회수는 변경되는작업이므로 (readOnly = true) 사용 X
         question.increaseViewCount();
 
-        return QuestionDetailResponseDTO.from(question);
+        List<Answer> answers = answerRepository.findByQuestion_IdOrderByAcceptedDescCreatedAtDesc(id);
+        return QuestionDetailResponseDTO.from(question, answers);
+
     }
 
     //질문 수정
@@ -159,23 +170,49 @@ public class QuestionService {
         notificationService.createNotification(req);
     }
 
+    //답변 채택
     @Transactional
-    public void acceptAnswer(Long questionId, Long answerId, Long requesterId) {
-        Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new RuntimeException("질문 없음"));
+    public void acceptAnswer(Long questionId, Long answerId, Long userId) {
 
-        Answer answer = answerRepository.findById(answerId)
-                .orElseThrow(() -> new RuntimeException("답변 없음"));
+        // 1) 답변 존재 확인 (없으면 404 계열)
+        Answer target = answerRepository.findById(answerId)
+                .orElseThrow(() -> new AnswerNotFoundException(answerId));
 
-        // 채택 대상 답변은 그 질문에 달린 답변이어야 함
-        if (!answer.getQuestion().getId().equals(question.getId())) {
-            throw new RuntimeException("해당 질문의 답변만 채택할 수 있습니다.");
+        // 2) 답변이 해당 질문 소속인지 검증 (URL 조작 방지)
+        if (!target.getQuestion().getId().equals(questionId)) {
+            throw new AnswerNotInQuestionException();
         }
 
-        Long answerWriterId = answer.getUser().getId(); // Answer에 user 있어야 함
+        // 3) 질문 존재 확인 (answer가 question을 들고있긴 하지만, 명시적으로 확인)
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new QuestionNotFoundException(questionId));
 
-        question.acceptAnswer(answer.getId(), requesterId, answerWriterId);
+        // 4) 권한: 질문 작성자만 가능
+        if (!question.getUser().getId().equals(userId)) {
+            throw new AnswerAcceptForbiddenException();
+        }
+
+        // 5) 자기 답변 채택 금지
+        if (target.getUser().getId().equals(userId)) {
+            throw new SelfAnswerAdoptNotAllowedException();
+        }
+
+        //이미 내가 채택한 답변이면 그냥 성공 처리(원하면)
+        if (target.isAccepted()) {
+            return;
+        }
+
+        // 6) 중복 채택 방지 (취소/변경 불가 정책)
+        if (answerRepository.existsByQuestion_IdAndAcceptedTrue(questionId)) {
+            throw new AnswerAlreadyAcceptedException();
+        }
+
+        // 7) 채택 확정
+        target.accept();
     }
+
+
+
 
 
 }

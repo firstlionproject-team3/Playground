@@ -39,6 +39,10 @@ public class Answer {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    //채택여부
+    @Column(nullable = false)
+    private boolean accepted;
+
     // 답변 생성
     public static Answer create(Question question, User user, String content) {
         LocalDateTime now = LocalDateTime.now();
@@ -58,5 +62,17 @@ public class Answer {
         }
         this.updatedAt = LocalDateTime.now();
     }
+
+    //답변 채택
+    public void accept() {
+        this.accepted = true;
+    }
+
+    
+    //답변 채택 해제
+    public void unaccept() {
+        this.accepted = false;
+    }
+
 }
 

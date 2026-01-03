@@ -28,7 +28,7 @@ public class Question {
     private List<Answer> answers = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "userId", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Column(nullable = false, length = 255)
@@ -51,9 +51,9 @@ public class Question {
     //신고횟수, 관리자가 판단할때의 근거
     private int reportCount = 0;
 
-    // 채택된 답변 id (없으면 null)
-    @Column(name = "acceptedAnswerId")
-    private Long acceptedAnswerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "accepted_answer_id")
+    private Answer acceptedAnswer;
 
     //엔티티 저장 전 기본값 보장
     //Builder 사용 시 null이 될 수 있는 필드(createdAt, updatedAt, viewCount)를
@@ -106,23 +106,28 @@ public class Question {
         this.reportCount++;
     }
 
-    public void acceptAnswer(Long answerId, Long requesterId, Long answerWriterId) {
-        //질문 작성자만
+    public void acceptAnswer(Answer answer, Long requesterId) {
+        // 질문 작성자만
         if (!this.user.getId().equals(requesterId)) {
             throw new RuntimeException("질문 작성자만 채택할 수 있습니다.");
         }
 
-        //한 질문당 1개
-        if (this.acceptedAnswerId != null) {
+        // 한 질문당 1개
+        if (this.acceptedAnswer != null) {
             throw new RuntimeException("이미 채택된 답변이 있습니다.");
         }
 
-        //자기 답변 채택 금지
-        if (requesterId.equals(answerWriterId)) {
+        // 자기 답변 채택 금지
+        if (answer.getUser().getId().equals(requesterId)) {
             throw new RuntimeException("자기 답변은 채택할 수 없습니다.");
         }
 
-        this.acceptedAnswerId = answerId;
+        // 이 질문에 달린 답변만 채택 가능
+        if (!answer.getQuestion().getId().equals(this.id)) {
+            throw new RuntimeException("해당 질문의 답변만 채택할 수 있습니다.");
+        }
+
+        this.acceptedAnswer = answer;
     }
 
 }
