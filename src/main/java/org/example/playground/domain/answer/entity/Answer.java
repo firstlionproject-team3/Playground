@@ -69,10 +69,6 @@ public class Answer {
     }
 
     
-    //답변 채택 해제
-    public void unaccept() {
-        this.accepted = false;
-    }
 
 }
 
