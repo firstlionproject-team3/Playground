@@ -60,9 +60,12 @@ public class User {
         this.status = UserStatus.DELETED;
         this.deletedAt = LocalDateTime.now();
 
-        this.nickname = "deleted#" + this.nickname;
+        this.nickname = "deleted#" + this.id;
+        this.loginId = "deleted:" + this.id;
         this.email = null;
-        this.providerId = "deleted_" + this.providerId; // 재로그인 방지
+        if (this.providerId != null) {
+            this.providerId = "deleted_" + this.id;
+        }
     }
 
     //소셜 로그인 관련 필드
