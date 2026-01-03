@@ -38,4 +38,7 @@ public class AdminUserController {
         adminUserService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
+    //todo 관리자 컨트롤러에 조치 컨트롤러 추가. 신고 서비스 받아내서 사용.
+    //-> 신고 DTO 신고 서비스 메서드 이름 알면.
+    //todo - 블랙리스트 엔티티 만들기 소셜 회원 회원가입 다시 못하게,
 }
