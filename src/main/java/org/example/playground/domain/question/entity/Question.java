@@ -28,7 +28,7 @@ public class Question {
     private List<Answer> answers = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "userId", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Column(nullable = false, length = 255)
@@ -43,6 +43,35 @@ public class Question {
 
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    //조회수 필드
+    @Column(nullable = false)
+    private Long viewCount = 0L;
+
+    //신고횟수, 관리자가 판단할때의 근거
+    private int reportCount = 0;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "accepted_answer_id")
+    private Answer acceptedAnswer;
+
+    //엔티티 저장 전 기본값 보장
+    //Builder 사용 시 null이 될 수 있는 필드(createdAt, updatedAt, viewCount)를
+    //NOT NULL 제약 위반 없이 안전하게 초기화하기 위한 생명주기 콜백
+    @PrePersist
+    protected void prePersist() {
+        LocalDateTime now = LocalDateTime.now();
+
+        if (this.createdAt == null) {
+            this.createdAt = now;
+        }
+        if (this.updatedAt == null) {
+            this.updatedAt = now;
+        }
+        if (this.viewCount == null) {
+            this.viewCount = 0L;
+        }
+    }
 
     //질문 생성
     public static Question create(User user, String title, String content) {
@@ -67,5 +96,38 @@ public class Question {
         } this.updatedAt = LocalDateTime.now();
     }
 
+    //조회수 증가 로직
+    public void increaseViewCount() {
+        this.viewCount++;
+    }
+
+    //질문 신고 횟수 증가
+    public void reportBy(Long reporterId) {
+        this.reportCount++;
+    }
+
+    public void acceptAnswer(Answer answer, Long requesterId) {
+        // 질문 작성자만
+        if (!this.user.getId().equals(requesterId)) {
+            throw new RuntimeException("질문 작성자만 채택할 수 있습니다.");
+        }
+
+        // 한 질문당 1개
+        if (this.acceptedAnswer != null) {
+            throw new RuntimeException("이미 채택된 답변이 있습니다.");
+        }
+
+        // 자기 답변 채택 금지
+        if (answer.getUser().getId().equals(requesterId)) {
+            throw new RuntimeException("자기 답변은 채택할 수 없습니다.");
+        }
+
+        // 이 질문에 달린 답변만 채택 가능
+        if (!answer.getQuestion().getId().equals(this.id)) {
+            throw new RuntimeException("해당 질문의 답변만 채택할 수 있습니다.");
+        }
+
+        this.acceptedAnswer = answer;
+    }
 
 }

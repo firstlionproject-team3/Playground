@@ -7,6 +7,7 @@ build/
 
 ## test용 yml
 application-test.yml
+application-local.yml
 
 ## test용 sql
 src/main/resources/*.sql
