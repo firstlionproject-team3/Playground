@@ -3,11 +3,16 @@ package org.example.playground.domain.user.entity;
 import jakarta.persistence.*;
 
 import lombok.*;
+import org.example.playground.domain.answer.entity.Answer;
+import org.example.playground.domain.question.entity.Question;
 import org.example.playground.domain.user.dto.OAuth2UserInfo;
 import org.example.playground.domain.user.dto.UserRegisterRequestDTO;
+import org.hibernate.annotations.SQLDelete;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
@@ -23,6 +28,7 @@ import java.util.Set;
                 @UniqueConstraint(name = "uk_user_nickname", columnNames = {"nickname"})
         }
 )
+@SQLDelete(sql = "UPDATE users SET status='DELETED', deleted_at=now() WHERE id=?") // userRepository.delete시 update가 나감.
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,6 +48,29 @@ public class User {
 
     @Column(name = "joined_date", updatable = false)
     private LocalDateTime joinedDate;
+
+    @Column(name = "current_points", nullable = false)
+    private long currentPoints = 0L;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserStatus status = UserStatus.ACTIVE;
+
+    private LocalDateTime deletedAt;
+
+    public boolean isDeleted() {
+        return status == UserStatus.DELETED;
+    }
+    //소프트 삭제 후 로그인 불가능!
+    public void softDeleteAndAnonymize() {
+        this.status = UserStatus.DELETED;
+        this.deletedAt = LocalDateTime.now();
+
+        this.nickname = "deleted#" + this.nickname;
+        this.loginId = "deleted_" + this.id; // 재로그인 방지
+        this.email = null;
+        this.providerId = "deleted_" + this.providerId; // 재로그인 방지
+    }
 
     //소셜 로그인 관련 필드
     @Column(name = "provider")
