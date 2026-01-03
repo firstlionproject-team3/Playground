@@ -63,6 +63,20 @@ public class AnswerService {
                 .map(AnswerSummaryResponseDTO::from);
     }
 
+    //내 답변 목록 보기 - 마이페이지
+    @Transactional(readOnly = true)
+    public Page<AnswerSummaryResponseDTO> getMyAnswers(Long userId, Pageable pageable) {
+
+        //user 존재 검증
+        userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("userID=" + userId));
+
+        return answerRepository
+                .findByUser_IdOrderByCreatedAtDesc(userId, pageable)
+                .map(AnswerSummaryResponseDTO::from);
+    }
+
+
     // 답변 수정 - 작성자만
     @Transactional
     public AnswerDetailResponseDTO update(Long answerId, Long userId, AnswerUpdateRequestDTO request) {
