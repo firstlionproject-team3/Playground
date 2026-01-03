@@ -1,4 +1,4 @@
-package org.example.playground.global.security;
+package org.example.playground.global.config;
 
 import org.example.playground.global.oauth2.OAuth2FailureHandler;
 import org.example.playground.global.oauth2.OAuth2SuccessHandler;
