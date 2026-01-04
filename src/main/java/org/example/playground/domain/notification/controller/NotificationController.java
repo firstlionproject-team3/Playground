@@ -36,7 +36,7 @@ public class NotificationController {
 
     /**
      * SSE 구독 엔드포인트
-     * GET /notification/subscribe?userId={userId}
+     * GET /notification/subscribe
      */
     @GetMapping(value = "/subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter subscribe(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
@@ -47,22 +47,24 @@ public class NotificationController {
 
     /**
      * 알림 목록 조회
-     * GET /notification?userId={userId}
+     * GET /notification
      */
     @GetMapping
-    public ResponseEntity<NotificationListResponseDTO> getNotifications(@RequestParam Long userId) {
+    public ResponseEntity<NotificationListResponseDTO> getNotifications(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        Long userId = customUserDetails.getId();
         NotificationListResponseDTO response = notificationService.getNotifications(userId);
         return ResponseEntity.ok(response);
     }
 
     /**
      * 알림 읽음 처리
-     * PATCH /notification/{id}/read?userId={userId}
+     * PATCH /notification/{id}/read
      */
     @PatchMapping("/{id}/read")
     public ResponseEntity<Void> markAsRead(
             @PathVariable Long id,
-            @RequestParam Long userId) {
+            @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        Long userId = customUserDetails.getId();
         User user = notificationService.findUserById(userId);
         notificationService.markAsRead(id, user);
         return ResponseEntity.noContent().build();
@@ -70,12 +72,13 @@ public class NotificationController {
 
     /**
      * 알림 삭제
-     * DELETE /notification/{id}?userId={userId}
+     * DELETE /notification/{id}
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteNotification(
             @PathVariable Long id,
-            @RequestParam Long userId) {
+            @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        Long userId = customUserDetails.getId();
         User user = notificationService.findUserById(userId);
         notificationService.delete(id, user);
         return ResponseEntity.noContent().build();
@@ -83,10 +86,11 @@ public class NotificationController {
 
     /**
      * SSE 연결 종료
-     * DELETE /notification/subscribe?userId={userId}
+     * DELETE /notification/subscribe
      */
     @DeleteMapping("/subscribe")
-    public ResponseEntity<Void> disconnect(@RequestParam Long userId) {
+    public ResponseEntity<Void> disconnect(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        Long userId = customUserDetails.getId();
         notificationService.validateUser(userId);
         sseService.disconnect(userId);
         return ResponseEntity.noContent().build();

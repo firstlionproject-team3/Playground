@@ -19,12 +19,6 @@ public enum NotificationErrorCode {
             null
     ),
 
-    USER_NOT_FOUND(
-            "NOTIFICATION_USER_NOT_FOUND",
-            "사용자를 찾을 수 없습니다.",
-            null
-    ),
-
     NOTIFICATION_NOT_FOUND(
             "NOTIFICATION_NOT_FOUND",
             "알림을 찾을 수 없습니다.",
