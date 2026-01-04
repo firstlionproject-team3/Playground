@@ -107,6 +107,24 @@ public class AnswerService {
         return AnswerDetailResponseDTO.from(answer);
     }
 
+    //답변 존재 여부만 확인
+    @Transactional(readOnly = true)
+    public void validateAnswerExists(Long answerId) {
+        if (!answerRepository.existsById(answerId)) {
+            throw new AnswerNotFoundException(answerId);
+        }
+    }
+
+    //관리자에 의해 답변삭제 (soft)
+    @Transactional
+    public void softDeleteAnswerByAdmin(Long answerId) {
+        Answer answer = answerRepository.findById(answerId)
+                .orElseThrow(() -> new AnswerNotFoundException(answerId));
+
+        answer.softDeleteByAdmin();
+    }
+
+
     // ===================== private helpers =====================
 
     // 답변 작성자인지 검증
