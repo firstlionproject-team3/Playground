@@ -147,6 +147,25 @@ public class QuestionService {
         }
     }
 
+    //질문 존재 여부만 확인
+    @Transactional(readOnly = true)
+    public void validateQuestionExists(Long questionId) {
+        if (!questionRepository.existsById(questionId)) {
+            throw new QuestionNotFoundException(questionId);
+        }
+    }
+
+    //관리자에 의해 질문 삭제(hard)
+    @Transactional
+    public void deleteQuestionByAdmin(Long questionId) {
+        // 존재 확인(또는 findOrThrow로 엔티티 가져오기)
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new QuestionNotFoundException(questionId));
+
+        questionRepository.delete(question);
+    }
+
+
     //질문 신고
     @Transactional
     public void report(Long questionId, Long reporterId) {
@@ -156,9 +175,8 @@ public class QuestionService {
         //신고 처리 (도메인 상태 변경)
         //reportBy() : 질문이 신고된 횟수를 기록한 메서드
         question.reportBy(reporterId);
-        //TODO 신고 정책/중복신고/횟수 누적 등은 나중에
 
-        Long adminId = 1L; //임시 관리자 계정 ID (팀에서 확정 필요)
+        Long adminId = 1L; //임시 관리자 계정 ID, 어떻게 받아와야하지?
 
         // 알림 전송 (현재 NotificationService는 REPORT_RECEIVED만 지원)
         NotificationRequestDTO req = new NotificationRequestDTO(
