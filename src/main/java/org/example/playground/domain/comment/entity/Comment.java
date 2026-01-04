@@ -22,6 +22,8 @@ public class Comment {
     @Column(nullable = false)
     private String content;
 
+    private boolean deleted;
+
     @Column(nullable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -50,6 +52,12 @@ public class Comment {
 
     public void update(String content) {
         this.content = content;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void softDelete() {
+        this.content = "관리자에 의해 삭제된 댓글입니다.";
+        this.deleted = true;
         this.updatedAt = LocalDateTime.now();
     }
 }
