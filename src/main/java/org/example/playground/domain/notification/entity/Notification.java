@@ -55,23 +55,12 @@ public class Notification {
         this.createdAt = LocalDateTime.now();
     }
 
-    // 정적 팩토리 메서드: 답변 채택 알림
-    public static Notification createAnswerAccepted(User receiver, User sender, String content) {
+    // 알림 생성 (통합 정적 팩토리 메서드)
+    public static Notification create(NotificationType type, User receiver, User sender, String content) {
         return Notification.builder()
                 .receiver(receiver)
                 .sender(sender)
-                .type(NotificationType.ACCEPTED_ANSWER)
-                .content(content)
-                .isRead(false)
-                .build();
-    }
-
-    // 정적 팩토리 메서드: 신고 알림
-    public static Notification createReport(User receiver, User sender, String content) {
-        return Notification.builder()
-                .receiver(receiver)
-                .sender(sender)
-                .type(NotificationType.REPORT_RECEIVED)
+                .type(type)
                 .content(content)
                 .isRead(false)
                 .build();

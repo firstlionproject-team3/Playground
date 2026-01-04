@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.example.playground.domain.user.dto.OAuth2UserInfo;
 import org.example.playground.domain.user.dto.UserRegisterRequestDTO;
+import org.hibernate.annotations.SQLDelete;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -23,6 +24,7 @@ import java.util.Set;
                 @UniqueConstraint(name = "uk_user_nickname", columnNames = {"nickname"})
         }
 )
+@SQLDelete(sql = "UPDATE users SET status='DELETED', deleted_at=now() WHERE id=?") // userRepository.delete시 update가 나감.
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,6 +45,29 @@ public class User {
     @Column(name = "joined_date", updatable = false)
     private LocalDateTime joinedDate;
 
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserStatus status = UserStatus.ACTIVE;
+
+    private LocalDateTime deletedAt;
+
+    public boolean isDeleted() {
+        return status == UserStatus.DELETED;
+    }
+    //소프트 삭제 후 로그인 불가능!
+    public void softDeleteAndAnonymize() {
+        this.status = UserStatus.DELETED;
+        this.deletedAt = LocalDateTime.now();
+
+        this.nickname = "deleted#" + this.id;
+        this.loginId = "deleted:" + this.id;
+        this.email = null;
+        if (this.providerId != null) {
+            this.providerId = "deleted_" + this.id;
+        }
+    }
+
     //소셜 로그인 관련 필드
     @Column(name = "provider")
     private String provider; // 소셜 로그인 제공자 (없으면 일반 회원)
@@ -59,6 +84,10 @@ public class User {
     public void prePersist() {
         if(this.joinedDate == null){
             this.joinedDate = LocalDateTime.now();
+        }
+
+        if(this.status == null){
+            this.status = UserStatus.ACTIVE;
         }
     }
 

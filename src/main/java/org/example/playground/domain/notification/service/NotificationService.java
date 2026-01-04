@@ -45,14 +45,12 @@ public class NotificationService {
         }
 
         // 알림 생성
-        Notification notification;
-        if (request.getType() == NotificationType.ACCEPTED_ANSWER) {
-            notification = Notification.createAnswerAccepted(receiver, sender, request.getContent());
-        } else if (request.getType() == NotificationType.REPORT_RECEIVED) {
-            notification = Notification.createReport(receiver, sender, request.getContent());
-        } else {
-            throw new UnsupportedNotificationTypeException(UNSUPPORTED_NOTIFICATION_TYPE, request.getType());
-        }
+        Notification notification = Notification.create(
+                request.getType(),
+                receiver,
+                sender,
+                request.getContent()
+        );
 
         // 알림 저장 및 전송
         Notification savedNotification = sseService.send(notification);
