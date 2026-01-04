@@ -40,6 +40,13 @@ public class CommentService {
         return CommentResponseDTO.from(comment);
     }
 
+    // 댓글 단건 조회
+    @Transactional(readOnly = true)
+    public Comment getComment(Long answerId) {
+        return commentRepository.findById(answerId)
+                .orElseThrow(() -> new CommentNotFoundException("댓글이 존재하지 않습니다."));
+    }
+
     // 댓글 조회
     @Transactional(readOnly = true)
     public List<CommentResponseDTO> getComments(Long answerId) {
