@@ -6,18 +6,18 @@ import org.example.playground.domain.answer.dto.request.AnswerUpdateRequestDTO;
 import org.example.playground.domain.answer.dto.response.AnswerDetailResponseDTO;
 import org.example.playground.domain.answer.dto.response.AnswerSummaryResponseDTO;
 import org.example.playground.domain.answer.entity.Answer;
-import org.example.playground.domain.answer.exception.AnswerNotFoundException;
-import org.example.playground.domain.answer.exception.CannotAnswerOwnQuestionException;
+import org.example.playground.domain.answer.exception.AnswerErrorCode;
 import org.example.playground.domain.answer.repository.AnswerRepository;
 import org.example.playground.domain.notification.dto.NotificationRequestDTO;
 import org.example.playground.domain.notification.entity.NotificationType;
 import org.example.playground.domain.notification.service.NotificationService;
 import org.example.playground.domain.question.entity.Question;
-import org.example.playground.domain.question.exception.QuestionNotFoundException;
+import org.example.playground.domain.question.exception.QuestionErrorCode;
 import org.example.playground.domain.question.repository.QuestionRepository;
 import org.example.playground.domain.user.entity.User;
 import org.example.playground.domain.user.exception.UserNotFoundException;
 import org.example.playground.domain.user.repository.UserRepository;
+import org.example.playground.global.exception.BusinessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -39,11 +39,17 @@ public class AnswerService {
                 .orElseThrow(() -> new UserNotFoundException("userID=" + userId));
 
         Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new QuestionNotFoundException(questionId));
+                .orElseThrow(() ->
+                        new BusinessException(
+                                QuestionErrorCode.QUESTION_NOT_FOUND,
+                                "해당하는 질문을 찾을 수 없습니다. questionId = " + questionId
+                        )
+                );
+
 
         // 자기 질문에 답변 달기 금지
         if (userId.equals(question.getUser().getId())) {
-            throw new CannotAnswerOwnQuestionException();
+            throw new BusinessException(AnswerErrorCode.CANNOT_ANSWER_OWN_QUESTION);
         }
 
         Answer answer = Answer.create(question, user, request.content());
@@ -68,6 +74,7 @@ public class AnswerService {
     public Page<AnswerSummaryResponseDTO> getMyAnswers(Long userId, Pageable pageable) {
 
         //user 존재 검증
+        //todo user errorcode 사용
         userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("userID=" + userId));
 
@@ -81,7 +88,12 @@ public class AnswerService {
     @Transactional
     public AnswerDetailResponseDTO update(Long answerId, Long userId, AnswerUpdateRequestDTO request) {
         Answer answer = answerRepository.findById(answerId)
-                .orElseThrow(() -> new AnswerNotFoundException(answerId));
+                .orElseThrow(() ->
+                        new BusinessException(
+                                AnswerErrorCode.ANSWER_NOT_FOUND,
+                                "answerId=" + answerId
+                        )
+                );
 
         validateOwner(answer, userId);
         answer.update(request.content());
@@ -93,7 +105,12 @@ public class AnswerService {
     @Transactional
     public void delete(Long answerId, Long userId) {
         Answer answer = answerRepository.findById(answerId)
-                .orElseThrow(() -> new AnswerNotFoundException(answerId));
+                .orElseThrow(() ->
+                        new BusinessException(
+                                AnswerErrorCode.ANSWER_NOT_FOUND,
+                                "answerId=" + answerId
+                        )
+                );
 
         validateOwner(answer, userId);
         answerRepository.delete(answer);
@@ -103,7 +120,12 @@ public class AnswerService {
     @Transactional(readOnly = true)
     public AnswerDetailResponseDTO findOne(Long answerId) {
         Answer answer = answerRepository.findById(answerId)
-                .orElseThrow(() -> new AnswerNotFoundException(answerId));
+                .orElseThrow(() ->
+                        new BusinessException(
+                                AnswerErrorCode.ANSWER_NOT_FOUND,
+                                "answerId=" + answerId
+                        )
+                );
         return AnswerDetailResponseDTO.from(answer);
     }
 
@@ -111,7 +133,10 @@ public class AnswerService {
     @Transactional(readOnly = true)
     public void validateAnswerExists(Long answerId) {
         if (!answerRepository.existsById(answerId)) {
-            throw new AnswerNotFoundException(answerId);
+            throw new BusinessException(
+                    AnswerErrorCode.ANSWER_NOT_FOUND,
+                    "answerId=" + answerId
+            );
         }
     }
 
@@ -119,7 +144,12 @@ public class AnswerService {
     @Transactional
     public void softDeleteAnswerByAdmin(Long answerId) {
         Answer answer = answerRepository.findById(answerId)
-                .orElseThrow(() -> new AnswerNotFoundException(answerId));
+                .orElseThrow(() ->
+                        new BusinessException(
+                                AnswerErrorCode.ANSWER_NOT_FOUND,
+                                "answerId=" + answerId
+                        )
+                );
 
         answer.softDeleteByAdmin();
     }
@@ -131,7 +161,8 @@ public class AnswerService {
     private void validateOwner(Answer answer, Long userId) {
         Long ownerId = answer.getUser().getId();
         if (!ownerId.equals(userId)) {
-            throw new RuntimeException("작성자만 가능합니다.");
+            throw new BusinessException(AnswerErrorCode.ANSWER_OWNER_MISMATCH);
+
         }
     }
 
