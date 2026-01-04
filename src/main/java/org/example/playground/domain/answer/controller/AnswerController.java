@@ -25,9 +25,14 @@ public class AnswerController {
     @GetMapping("/questions/{questionId}/answers")
     public Page<AnswerSummaryResponseDTO> getAnswers(
             @PathVariable Long questionId,
+            @AuthenticationPrincipal CustomUserDetails principal,
             @PageableDefault(size = 10) Pageable pageable
     ) {
-        return answerService.getAnswerByQuestion(questionId, pageable);
+        return answerService.getAnswerByQuestion(
+                questionId,
+                principal.getId(),
+                pageable
+        );
     }
 
     //답변 생성(등록)

@@ -1,6 +1,7 @@
 package org.example.playground.domain.question.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.playground.domain.answer.dto.response.AnswerSummaryResponseDTO;
 import org.example.playground.domain.answer.entity.Answer;
 import org.example.playground.domain.answer.exception.AnswerErrorCode;
 import org.example.playground.domain.answer.repository.AnswerRepository;
@@ -11,6 +12,9 @@ import org.example.playground.domain.question.dto.request.QuestionUpdateRequestD
 import org.example.playground.domain.question.dto.response.QuestionDetailResponseDTO;
 import org.example.playground.domain.question.dto.response.QuestionSummaryResponseDTO;
 import org.example.playground.domain.question.exception.*;
+import org.example.playground.domain.reaction.entity.ReactionType;
+import org.example.playground.domain.reaction.entity.TargetType;
+import org.example.playground.domain.reaction.service.ReactionService;
 import org.example.playground.domain.user.entity.User;
 import org.example.playground.domain.user.exception.UserNotFoundException;
 import org.example.playground.domain.user.repository.UserRepository;
@@ -24,6 +28,8 @@ import org.example.playground.domain.question.repository.QuestionRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -32,18 +38,18 @@ public class QuestionService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final AnswerRepository answerRepository;
+    private final ReactionService reactionService;
 
     //질문 생성
     @Transactional
-    public QuestionDetailResponseDTO create(Long userId, QuestionCreateRequestDTO request) {
-        //todo 유저에러코드 사용해야함
+    public Long create(Long userId, QuestionCreateRequestDTO request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("userId=" + userId));
+
         Question question = Question.create(user, request.title(), request.content());
         Question saved = questionRepository.save(question);
 
-        return QuestionDetailResponseDTO.from(saved);
-
+        return saved.getId();
     }
 
     //질문 전체목록 보기
@@ -93,33 +99,72 @@ public class QuestionService {
         Page<Question> page = questionRepository.findByUser_IdOrderByCreatedAtDesc(userId, pageable);
         return page.map(QuestionSummaryResponseDTO::from);
     }
-    
 
 
-    //질문 1건 상세 조회
+
+    // 질문 1건 상세 조회
     @Transactional
-    public QuestionDetailResponseDTO findOne(Long id) {
-        Question question = questionRepository.findById(id)
-                .orElseThrow(() ->
-                        new BusinessException(
-                                QuestionErrorCode.QUESTION_NOT_FOUND,
-                                "해당하는 질문을 찾을 수 없습니다. questionId = " + id
-                        )
-                );
+    public QuestionDetailResponseDTO findOne(Long questionId, Long userId) {
 
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new BusinessException(
+                        QuestionErrorCode.QUESTION_NOT_FOUND,
+                        "해당하는 질문을 찾을 수 없습니다. questionId = " + questionId
+                ));
 
-        //조회수 증가++, 조회수는 변경되는작업이므로 (readOnly = true) 사용 X
+        // 조회수 증가
         question.increaseViewCount();
 
-        List<Answer> answers = answerRepository.findByQuestion_IdOrderByAcceptedDescCreatedAtDesc(id);
-        return QuestionDetailResponseDTO.from(question, answers);
+        // 답변 목록(채택 우선, 최신순)
+        List<Answer> answers = answerRepository
+                .findByQuestion_IdOrderByAcceptedDescCreatedAtDesc(questionId);
 
+        // 1) 질문 리액션
+        long qLike = reactionService.getLikeCount(TargetType.QUESTION, questionId);
+        long qDislike = reactionService.getDislikeCount(TargetType.QUESTION, questionId);
+        String qMyReaction = reactionService.getUserReactionType(userId, TargetType.QUESTION, questionId)
+                .map(ReactionType::name)
+                .orElse("NONE");
+
+        // 2) 답변 리액션 (N+1 방지)
+        List<Long> answerIds = answers.stream().map(Answer::getId).toList();
+
+        Map<Long, Long> likeMap = reactionService.getLikeCountMap(TargetType.ANSWER, answerIds);
+        Map<Long, Long> dislikeMap = reactionService.getDislikeCountMap(TargetType.ANSWER, answerIds);
+
+        // ReactionService.getMyReactionMap은 Map<Long, ReactionType> 반환이니까 String으로 변환
+        Map<Long, String> myMap = reactionService.getMyReactionMap(userId, TargetType.ANSWER, answerIds)
+                .entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> e.getValue().name()
+                ));
+
+        // 3) 답변 DTO 생성
+        List<AnswerSummaryResponseDTO> answerDtos = answers.stream()
+                .map(a -> AnswerSummaryResponseDTO.from(
+                        a,
+                        likeMap.getOrDefault(a.getId(), 0L),
+                        dislikeMap.getOrDefault(a.getId(), 0L),
+                        myMap.getOrDefault(a.getId(), "NONE")
+                ))
+                .toList();
+
+        // 4) 최종 응답
+        return QuestionDetailResponseDTO.from(
+                question,
+                qLike,
+                qDislike,
+                qMyReaction,
+                answerDtos
+        );
     }
 
     //질문 수정
     //권한 체크
+
     @Transactional
-    public QuestionDetailResponseDTO update(Long id, Long userId, QuestionUpdateRequestDTO request) {
+    public void update(Long id, Long userId, QuestionUpdateRequestDTO request) {
         Question question = questionRepository.findById(id)
                 .orElseThrow(() ->
                         new BusinessException(
@@ -130,7 +175,6 @@ public class QuestionService {
 
         validateOwner(question, userId);
         question.update(request.title(), request.content());
-        return QuestionDetailResponseDTO.from(question);
     }
 
     //질문 삭제

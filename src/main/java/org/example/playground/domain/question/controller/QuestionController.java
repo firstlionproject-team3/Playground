@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.playground.domain.question.dto.request.QuestionCreateRequestDTO;
 import org.example.playground.domain.question.dto.request.QuestionUpdateRequestDTO;
+import org.example.playground.domain.question.dto.response.IdResponse;
 import org.example.playground.domain.question.dto.response.QuestionDetailResponseDTO;
 import org.example.playground.domain.question.dto.response.QuestionSummaryResponseDTO;
 import org.example.playground.domain.question.service.QuestionService;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,13 +23,13 @@ import org.springframework.web.bind.annotation.*;
 public class QuestionController {
     private final QuestionService questionService;
 
-    //질문 생성
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public QuestionDetailResponseDTO create(
+    public ResponseEntity<IdResponse> create(
             @AuthenticationPrincipal CustomUserDetails principal,
-            @Valid @RequestBody QuestionCreateRequestDTO request) {
-        return questionService.create(principal.getId(), request);
+            @Valid @RequestBody QuestionCreateRequestDTO request
+    ) {
+        Long id = questionService.create(principal.getId(), request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new IdResponse(id));
     }
 
     //질문 검색 - keyword 없으면 전체조회, 있으면 title,content,all검색(서비스에서 처리)
@@ -46,18 +48,22 @@ public class QuestionController {
     //질문 상세 조회(1건) //responseBody로 json으로 변환 - 프론트에 넘겨줌,
     //responseentity라는 스프링이 자체적으로 갖고있는 클래스가있음
     @GetMapping("/{id}")
-    public QuestionDetailResponseDTO one(@PathVariable Long id) {
-        return questionService.findOne(id);
+    public QuestionDetailResponseDTO one(
+            @PathVariable Long id,
+            @AuthenticationPrincipal CustomUserDetails principal
+    ) {
+        return questionService.findOne(id, principal.getId());
     }
 
     //질문 수정 - 작성자만
     @PatchMapping("/{id}")
-    public QuestionDetailResponseDTO update(
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void update(
             @PathVariable Long id,
             @AuthenticationPrincipal CustomUserDetails principal,
-            @Valid @RequestBody QuestionUpdateRequestDTO request)
-    {
-        return questionService.update(id, principal.getId(), request);
+            @Valid @RequestBody QuestionUpdateRequestDTO request
+    ) {
+        questionService.update(id, principal.getId(), request);
     }
 
     //질문 삭제 - 작성자만

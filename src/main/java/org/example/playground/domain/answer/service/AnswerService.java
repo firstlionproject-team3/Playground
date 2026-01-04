@@ -14,14 +14,22 @@ import org.example.playground.domain.notification.service.NotificationService;
 import org.example.playground.domain.question.entity.Question;
 import org.example.playground.domain.question.exception.QuestionErrorCode;
 import org.example.playground.domain.question.repository.QuestionRepository;
+import org.example.playground.domain.reaction.entity.ReactionType;
+import org.example.playground.domain.reaction.entity.TargetType;
+import org.example.playground.domain.reaction.service.ReactionService;
 import org.example.playground.domain.user.entity.User;
 import org.example.playground.domain.user.exception.UserNotFoundException;
 import org.example.playground.domain.user.repository.UserRepository;
 import org.example.playground.global.exception.BusinessException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -31,6 +39,7 @@ public class AnswerService {
     private final QuestionRepository questionRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final ReactionService reactionService;
 
     // 답변 등록
     @Transactional
@@ -45,7 +54,6 @@ public class AnswerService {
                                 "해당하는 질문을 찾을 수 없습니다. questionId = " + questionId
                         )
                 );
-
 
         // 자기 질문에 답변 달기 금지
         if (userId.equals(question.getUser().getId())) {
@@ -63,26 +71,80 @@ public class AnswerService {
 
     // 해당 질문의 답변 조회 - 전체
     @Transactional(readOnly = true)
-    public Page<AnswerSummaryResponseDTO> getAnswerByQuestion(Long questionId, Pageable pageable) {
-        return answerRepository
-                .findByQuestion_IdOrderByAcceptedDescCreatedAtDesc(questionId, pageable)
-                .map(AnswerSummaryResponseDTO::from);
+    public Page<AnswerSummaryResponseDTO> getAnswerByQuestion(Long questionId, Long userId, Pageable pageable) {
+
+        Page<Answer> page = answerRepository
+                .findByQuestion_IdOrderByAcceptedDescCreatedAtDesc(questionId, pageable);
+
+        List<Answer> answers = page.getContent();
+        List<Long> ids = answers.stream().map(Answer::getId).toList();
+
+        if (ids.isEmpty()) {
+            return page.map(a -> AnswerSummaryResponseDTO.from(a, 0L, 0L, "NONE"));
+        }
+
+        Map<Long, Long> likeMap = reactionService.getLikeCountMap(TargetType.ANSWER, ids);
+        Map<Long, Long> dislikeMap = reactionService.getDislikeCountMap(TargetType.ANSWER, ids);
+
+        // ✅ 핵심: 람다에서 쓰려면 final/effectively final 이어야 함
+        final Map<Long, String> myMap =
+                (userId == null)
+                        ? Map.of()
+                        : reactionService.getMyReactionMap(userId, TargetType.ANSWER, ids)
+                        .entrySet().stream()
+                        .collect(Collectors.toMap(
+                                entry -> entry.getKey(),
+                                entry -> entry.getValue().name()
+                        ));
+
+        List<AnswerSummaryResponseDTO> dtoList = answers.stream()
+                .map(a -> AnswerSummaryResponseDTO.from(
+                        a,
+                        likeMap.getOrDefault(a.getId(), 0L),
+                        dislikeMap.getOrDefault(a.getId(), 0L),
+                        myMap.getOrDefault(a.getId(), "NONE")
+                ))
+                .toList();
+
+        return new PageImpl<>(dtoList, pageable, page.getTotalElements());
     }
 
-    //내 답변 목록 보기 - 마이페이지
+    // 내 답변 목록 보기 - 마이페이지
     @Transactional(readOnly = true)
     public Page<AnswerSummaryResponseDTO> getMyAnswers(Long userId, Pageable pageable) {
 
-        //user 존재 검증
-        //todo user errorcode 사용
-        userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("userID=" + userId));
+        Page<Answer> page = answerRepository.findByUser_IdOrderByCreatedAtDesc(userId, pageable);
 
-        return answerRepository
-                .findByUser_IdOrderByCreatedAtDesc(userId, pageable)
-                .map(AnswerSummaryResponseDTO::from);
+        List<Long> ids = page.getContent().stream().map(Answer::getId).toList();
+        if (ids.isEmpty()) {
+            return page.map(a -> AnswerSummaryResponseDTO.from(a, 0L, 0L, "NONE"));
+        }
+
+        Map<Long, Long> likeMap = reactionService.getLikeCountMap(TargetType.ANSWER, ids);
+        Map<Long, Long> dislikeMap = reactionService.getDislikeCountMap(TargetType.ANSWER, ids);
+
+        // ✅ 여기도 동일하게 final로
+        final Map<Long, String> myMap =
+                (userId == null)
+                        ? Map.of()
+                        : reactionService.getMyReactionMap(userId, TargetType.ANSWER, ids)
+                        .entrySet().stream()
+                        .collect(Collectors.toMap(
+                                entry -> entry.getKey(),
+                                entry -> entry.getValue().name()
+                        ));
+
+        List<AnswerSummaryResponseDTO> dtoList = page.getContent().stream()
+                .map(a -> AnswerSummaryResponseDTO.from(
+                        a,
+                        likeMap.getOrDefault(a.getId(), 0L),
+                        dislikeMap.getOrDefault(a.getId(), 0L),
+                        myMap.getOrDefault(a.getId(), "NONE")
+                ))
+                .toList();
+
+        return new PageImpl<>(dtoList, pageable, page.getTotalElements());
     }
-
 
     // 답변 수정 - 작성자만
     @Transactional
@@ -116,20 +178,36 @@ public class AnswerService {
         answerRepository.delete(answer);
     }
 
-    // 답변 단건 조회 (알림 클릭 시 사용)
+    // 답변 단건 조회 (알림 클릭 시 사용) - reaction 포함
     @Transactional(readOnly = true)
-    public AnswerDetailResponseDTO findOne(Long answerId) {
+    public AnswerDetailResponseDTO findOne(Long answerId, Long userId) {
         Answer answer = answerRepository.findById(answerId)
-                .orElseThrow(() ->
-                        new BusinessException(
-                                AnswerErrorCode.ANSWER_NOT_FOUND,
-                                "answerId=" + answerId
-                        )
-                );
-        return AnswerDetailResponseDTO.from(answer);
+                .orElseThrow(() -> new BusinessException(
+                        AnswerErrorCode.ANSWER_NOT_FOUND,
+                        "answerId=" + answerId
+                ));
+
+        long likeCount = reactionService.getLikeCountMap(TargetType.ANSWER, List.of(answerId))
+                .getOrDefault(answerId, 0L);
+
+        long dislikeCount = reactionService.getDislikeCountMap(TargetType.ANSWER, List.of(answerId))
+                .getOrDefault(answerId, 0L);
+
+        String myReactionType = "NONE";
+        if (userId != null) {
+            ReactionType my = reactionService
+                    .getMyReactionMap(userId, TargetType.ANSWER, List.of(answerId))
+                    .get(answerId);
+
+            if (my != null) {
+                myReactionType = my.name(); // LIKE / DISLIKE
+            }
+        }
+
+        return AnswerDetailResponseDTO.from(answer, likeCount, dislikeCount, myReactionType);
     }
 
-    //답변 존재 여부만 확인
+    // 답변 존재 여부만 확인
     @Transactional(readOnly = true)
     public void validateAnswerExists(Long answerId) {
         if (!answerRepository.existsById(answerId)) {
@@ -140,7 +218,7 @@ public class AnswerService {
         }
     }
 
-    //관리자에 의해 답변삭제 (soft)
+    // 관리자에 의해 답변삭제 (soft)
     @Transactional
     public void softDeleteAnswerByAdmin(Long answerId) {
         Answer answer = answerRepository.findById(answerId)
@@ -154,7 +232,6 @@ public class AnswerService {
         answer.softDeleteByAdmin();
     }
 
-
     @Transactional
     public void report(Long questionId, Long answerId, Long reporterId) {
         Answer answer = answerRepository.findById(answerId)
@@ -165,11 +242,10 @@ public class AnswerService {
                         )
                 );
 
-        //답변이 해당 질문 소속인지 검증
         Long actualQuestionId = answer.getQuestion().getId();
         if (!actualQuestionId.equals(questionId)) {
             throw new BusinessException(
-                    AnswerErrorCode.ANSWER_NOT_IN_QUESTION, // 너희 enum에 맞게
+                    AnswerErrorCode.ANSWER_NOT_IN_QUESTION,
                     "답변이 해당 질문에 속하지 않습니다. questionId=" + questionId + ", answerId=" + answerId
             );
         }
@@ -187,27 +263,19 @@ public class AnswerService {
         notificationService.createNotification(req);
     }
 
-
-
-
-
     // ===================== private helpers =====================
 
-    // 답변 작성자인지 검증
     private void validateOwner(Answer answer, Long userId) {
         Long ownerId = answer.getUser().getId();
         if (!ownerId.equals(userId)) {
             throw new BusinessException(AnswerErrorCode.ANSWER_OWNER_MISMATCH);
-
         }
     }
 
-    // 답변 등록 알림 전송
     private void notifyNewAnswer(Answer saved) {
-        Long receiverId = saved.getQuestion().getUser().getId(); // 질문 작성자
-        Long senderId = saved.getUser().getId();                 // 답변 작성자
+        Long receiverId = saved.getQuestion().getUser().getId();
+        Long senderId = saved.getUser().getId();
 
-        // 자기 자신에게 알림 X (방어적 정책)
         if (receiverId.equals(senderId)) {
             return;
         }
@@ -222,7 +290,6 @@ public class AnswerService {
         );
     }
 
-    // NEW_ANSWER 알림 content 생성 (임시 텍스트)
     private String buildNewAnswerContent(Answer saved) {
         return "내 질문(" + saved.getQuestion().getId()
                 + ")에 답변이 달렸습니다. answerId=" + saved.getId();
