@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserUpdateRequestDTO {
     @NotBlank
-    @Size(min = 10, max = 100)
+    @Size(min = 2, max = 20)
     @Pattern(
             regexp = "^[가-힣a-zA-Z0-9]+$",
             message = "닉네임은 한글, 영문, 숫자만 사용할 수 있습니다."

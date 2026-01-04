@@ -51,7 +51,7 @@ public class SecurityConfig {
                 })
                 // TODO: h2 콘솔 허용 설정 추후 교체
                 .headers(headers ->
-                        headers.frameOptions(frame -> frame.disable())
+                        headers.frameOptions(frame -> frame.sameOrigin())
                 )
                 // 폼 로그인 비활성화 (세션 안쓰고 JWT 사용)
                 .formLogin(form -> form.disable())
