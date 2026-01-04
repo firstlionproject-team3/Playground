@@ -2,7 +2,7 @@ package org.example.playground.domain.comment.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.playground.domain.answer.entity.Answer;
-//import org.example.playground.domain.answer.exception.AnswerNotFoundException;
+import org.example.playground.domain.answer.exception.AnswerNotFoundException;
 import org.example.playground.domain.answer.repository.AnswerRepository;
 import org.example.playground.domain.comment.dto.request.CommentRequestDTO;
 import org.example.playground.domain.comment.dto.response.CommentResponseDTO;
@@ -33,8 +33,8 @@ public class CommentService {
         //TODO: 나중에 UserErrorCode, AnswerErrorCode 넣어줘야함.
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("회원이 존재하지 않습니다."));
-        Answer answer = answerRepository.findById(answerId).get();
-                //.orElseThrow(() -> new AnswerNotFoundException(answerId));
+        Answer answer = answerRepository.findById(answerId)
+                .orElseThrow(() -> new AnswerNotFoundException(answerId));
 
         Comment createComment = Comment.create(commentRequestDTO.getContent(), user, answer);
 
