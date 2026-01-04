@@ -108,7 +108,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void deleteUser(Long userId) {
         User findUser = findUserOrThrow(userId);
-
+//todo 주석 풀기
 //        refreshTokenRepository.deleteByUserId(userId);
 
         findUser.softDeleteAndAnonymize();
@@ -156,7 +156,8 @@ public class UserServiceImpl implements UserService {
     }
 
     // 회원정보 검색하는 메서드
-    private User findUserOrThrow(Long id) {
+    @Transactional(readOnly = true)
+    public User findUserOrThrow(Long id) {
         return userRepository.findById(id).orElseThrow(() ->
                 new UserNotFoundException("존재하지 않는 회원입니다."));
     }

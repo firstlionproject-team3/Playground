@@ -2,8 +2,7 @@ package org.example.playground.domain.question.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.playground.domain.answer.entity.Answer;
-import org.example.playground.domain.answer.exception.AnswerNotFoundException;
-import org.example.playground.domain.answer.exception.AnswerNotInQuestionException;
+import org.example.playground.domain.answer.exception.AnswerErrorCode;
 import org.example.playground.domain.answer.repository.AnswerRepository;
 import org.example.playground.domain.notification.dto.NotificationRequestDTO;
 import org.example.playground.domain.notification.entity.NotificationType;
@@ -11,14 +10,11 @@ import org.example.playground.domain.notification.service.NotificationService;
 import org.example.playground.domain.question.dto.request.QuestionUpdateRequestDTO;
 import org.example.playground.domain.question.dto.response.QuestionDetailResponseDTO;
 import org.example.playground.domain.question.dto.response.QuestionSummaryResponseDTO;
-import org.example.playground.domain.question.exception.AnswerAcceptForbiddenException;
-import org.example.playground.domain.question.exception.AnswerAlreadyAcceptedException;
-import org.example.playground.domain.question.exception.QuestionNotFoundException;
-import org.example.playground.domain.question.exception.SelfAnswerAdoptNotAllowedException;
+import org.example.playground.domain.question.exception.*;
 import org.example.playground.domain.user.entity.User;
 import org.example.playground.domain.user.exception.UserNotFoundException;
 import org.example.playground.domain.user.repository.UserRepository;
-import org.example.playground.global.security.user.CustomUserDetails;
+import org.example.playground.global.exception.BusinessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +23,6 @@ import org.example.playground.domain.question.entity.Question;
 import org.example.playground.domain.question.repository.QuestionRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -41,9 +36,9 @@ public class QuestionService {
     //질문 생성
     @Transactional
     public QuestionDetailResponseDTO create(Long userId, QuestionCreateRequestDTO request) {
+        //todo 유저에러코드 사용해야함
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("userId=" + userId));
-        System.out.println("questionservice log");
         Question question = Question.create(user, request.title(), request.content());
         Question saved = questionRepository.save(question);
 
@@ -105,7 +100,13 @@ public class QuestionService {
     @Transactional
     public QuestionDetailResponseDTO findOne(Long id) {
         Question question = questionRepository.findById(id)
-                .orElseThrow(() -> new QuestionNotFoundException(id));
+                .orElseThrow(() ->
+                        new BusinessException(
+                                QuestionErrorCode.QUESTION_NOT_FOUND,
+                                "해당하는 질문을 찾을 수 없습니다. questionId = " + id
+                        )
+                );
+
 
         //조회수 증가++, 조회수는 변경되는작업이므로 (readOnly = true) 사용 X
         question.increaseViewCount();
@@ -120,7 +121,12 @@ public class QuestionService {
     @Transactional
     public QuestionDetailResponseDTO update(Long id, Long userId, QuestionUpdateRequestDTO request) {
         Question question = questionRepository.findById(id)
-                .orElseThrow(() -> new QuestionNotFoundException(id));
+                .orElseThrow(() ->
+                        new BusinessException(
+                                QuestionErrorCode.QUESTION_NOT_FOUND,
+                                "해당하는 질문을 찾을 수 없습니다. questionId = " + id
+                        )
+                );
 
         validateOwner(question, userId);
         question.update(request.title(), request.content());
@@ -131,7 +137,12 @@ public class QuestionService {
     @Transactional
     public void delete(Long questionId, Long userId) {
         Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new QuestionNotFoundException(questionId));
+                .orElseThrow(() ->
+                        new BusinessException(
+                                QuestionErrorCode.QUESTION_NOT_FOUND,
+                                "해당하는 질문을 찾을 수 없습니다. questionId = " + questionId
+                        )
+                );
 
         validateOwner(question, userId);
 
@@ -142,23 +153,56 @@ public class QuestionService {
     private void validateOwner(Question question, Long userId) {
         Long ownerId = question.getUser().getId();
         if (!ownerId.equals(userId)) {
-            //프로젝트 공통 예외로?
-            throw new RuntimeException("작성자만 가능합니다.");
+            throw new BusinessException(QuestionErrorCode.QUESTION_OWNER_MISMATCH);
         }
     }
+
+    //질문 존재 여부만 확인
+    @Transactional(readOnly = true)
+    public void validateQuestionExists(Long questionId) {
+        if (!questionRepository.existsById(questionId)) {
+            throw new BusinessException(
+                    QuestionErrorCode.QUESTION_NOT_FOUND,
+                    "해당하는 질문을 찾을 수 없습니다. questionId = " + questionId
+            );
+
+        }
+    }
+
+    //관리자에 의해 질문 삭제(hard)
+    @Transactional
+    public void deleteQuestionByAdmin(Long questionId) {
+        // 존재 확인(또는 findOrThrow로 엔티티 가져오기)
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() ->
+                        new BusinessException(
+                                QuestionErrorCode.QUESTION_NOT_FOUND,
+                                "해당하는 질문을 찾을 수 없습니다. questionId = " + questionId
+                        )
+                );
+
+
+        questionRepository.delete(question);
+    }
+
 
     //질문 신고
     @Transactional
     public void report(Long questionId, Long reporterId) {
         Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new QuestionNotFoundException(questionId));
+                .orElseThrow(() ->
+                        new BusinessException(
+                                QuestionErrorCode.QUESTION_NOT_FOUND,
+                                "해당하는 질문을 찾을 수 없습니다. questionId = " + questionId
+                        )
+                );
+
 
         //신고 처리 (도메인 상태 변경)
         //reportBy() : 질문이 신고된 횟수를 기록한 메서드
         question.reportBy(reporterId);
-        //TODO 신고 정책/중복신고/횟수 누적 등은 나중에
 
-        Long adminId = 1L; //임시 관리자 계정 ID (팀에서 확정 필요)
+        Long adminId = 1L; //임시 관리자 계정 ID, 어떻게 받아와야하지?
 
         // 알림 전송 (현재 NotificationService는 REPORT_RECEIVED만 지원)
         NotificationRequestDTO req = new NotificationRequestDTO(
@@ -176,25 +220,48 @@ public class QuestionService {
 
         // 1) 답변 존재 확인 (없으면 404 계열)
         Answer target = answerRepository.findById(answerId)
-                .orElseThrow(() -> new AnswerNotFoundException(answerId));
+                .orElseThrow(() ->
+                        new BusinessException(
+                                AnswerErrorCode.ANSWER_NOT_FOUND,
+                                "해당하는 답변을 찾을 수 없습니다. answerId = " + answerId
+                        )
+                );
+
 
         // 2) 답변이 해당 질문 소속인지 검증 (URL 조작 방지)
         if (!target.getQuestion().getId().equals(questionId)) {
-            throw new AnswerNotInQuestionException();
+            throw new BusinessException(
+                    AnswerErrorCode.ANSWER_NOT_IN_QUESTION,
+                    "answerId=" + answerId + ", questionId=" + questionId
+            );
         }
+
 
         // 3) 질문 존재 확인 (answer가 question을 들고있긴 하지만, 명시적으로 확인)
         Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new QuestionNotFoundException(questionId));
+                .orElseThrow(() ->
+                        new BusinessException(
+                                QuestionErrorCode.QUESTION_NOT_FOUND,
+                                "해당하는 질문을 찾을 수 없습니다. questionId = " + questionId
+                        )
+                );
+
 
         // 4) 권한: 질문 작성자만 가능
         if (!question.getUser().getId().equals(userId)) {
-            throw new AnswerAcceptForbiddenException();
+            throw new BusinessException(
+                    QuestionErrorCode.ANSWER_ACCEPT_FORBIDDEN,
+                    "questionOwnerId=" + question.getUser().getId() + ", requestUserId=" + userId
+            );
         }
+
 
         // 5) 자기 답변 채택 금지
         if (target.getUser().getId().equals(userId)) {
-            throw new SelfAnswerAdoptNotAllowedException();
+            throw new BusinessException(
+                    QuestionErrorCode.SELF_ANSWER_ADOPT_NOT_ALLOWED,
+                    "requestUserId=" + userId + ", answerOwnerId=" + target.getUser().getId()
+            );
         }
 
         //이미 내가 채택한 답변이면 그냥 성공 처리(원하면)
@@ -204,7 +271,9 @@ public class QuestionService {
 
         // 6) 중복 채택 방지 (취소/변경 불가 정책)
         if (answerRepository.existsByQuestion_IdAndAcceptedTrue(questionId)) {
-            throw new AnswerAlreadyAcceptedException();
+            throw new BusinessException(
+                    QuestionErrorCode.ANSWER_ALREADY_ACCEPTED
+            );
         }
 
         // 7) 채택 확정

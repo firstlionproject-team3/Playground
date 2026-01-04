@@ -43,6 +43,10 @@ public class Answer {
     @Column(nullable = false)
     private boolean accepted;
 
+    //삭제여부
+    @Column(nullable = false)
+    private boolean deleted;
+
     // 답변 생성
     public static Answer create(Question question, User user, String content) {
         LocalDateTime now = LocalDateTime.now();
@@ -52,6 +56,8 @@ public class Answer {
                 .content(content)
                 .createdAt(now)
                 .updatedAt(now)
+                .accepted(false)
+                .deleted(false)
                 .build();
     }
 
@@ -68,7 +74,15 @@ public class Answer {
         this.accepted = true;
     }
 
-    
+    //소프트삭제
+    public void softDeleteByAdmin() {
+        this.deleted = true;
+        this.content = "관리자에 의해 삭제된 답변입니다.";
+        this.updatedAt = LocalDateTime.now();
+    }
+
+
+
 
 }
 
