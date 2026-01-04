@@ -2,6 +2,7 @@ package org.example.playground.domain.user.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.playground.domain.refreshtoken.repository.RefreshTokenRepository;
 import org.example.playground.domain.user.dto.*;
 import org.example.playground.domain.user.entity.User;
 import org.example.playground.domain.user.exception.DuplicateUserException;
@@ -10,8 +11,10 @@ import org.example.playground.domain.user.exception.UserNotFoundException;
 import org.example.playground.domain.user.repository.RoleRepository;
 import org.example.playground.domain.user.repository.UserRepository;
 import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
@@ -30,14 +33,18 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final UserFactory userFactory;
+    private final RefreshTokenRepository refreshTokenRepository;
+
+    @Lazy
+    private final UserServiceImpl self;
 
     @Override
-    @Transactional
     public UserRegisterResponseDTO createUser(UserRegisterRequestDTO userDTO) {
         for (int attempt = 1; attempt <= NAME_RETRY; attempt++) {
             User user = userFactory.createLocal(userDTO, userFactory.newAutoNickname());
             try {
-                User saved = saveUserWithDefaultRole(user);
+                //1회 시도는 새 트랜잭션에서
+                User saved = self.saveUserWithDefaultRoleNewTx(user);
                 return userRegisterResponseDTOfromEntity(saved);
             } catch (DataIntegrityViolationException e) {
                 // loginId는 사용자 입력 → 즉시 실패
@@ -60,7 +67,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
     //OAuth2 인증을 성공한 유저가 회원이 아니라면 회원테이블에 추가하는 로직
     //반환타입은 토큰 발급에 필요한 두개의 필드를 가진 별도의 타입
     public SecurityResponseForJWT handleOAuth2Login(OAuth2UserInfo info) {
@@ -108,8 +114,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void deleteUser(Long userId) {
         User findUser = findUserOrThrow(userId);
-//todo 주석 풀기
-//        refreshTokenRepository.deleteByUserId(userId);
+        refreshTokenRepository.deleteByUserId(userId);
 
         findUser.softDeleteAndAnonymize();
         userRepository.save(findUser);
@@ -179,7 +184,8 @@ public class UserServiceImpl implements UserService {
         for (int attempt = 1; attempt <= NAME_RETRY; attempt++) {
             User user = userFactory.createOAuth(info, userFactory.newAutoNickname());
             try {
-                return saveUserWithDefaultRole(user);
+                //1회 시도는 새 트랜잭션에서
+                return self.saveUserWithDefaultRoleNewTx(user);
             } catch (DataIntegrityViolationException e) {
                 // provider/providerId 유니크 충돌: 다른 요청이 먼저 가입했을 확률 ↑ → 재조회로 회수
                 if (isProviderDuplicate(e)) {
@@ -204,6 +210,15 @@ public class UserServiceImpl implements UserService {
             }
         }
         throw new OAuth2SignedupException("소셜 로그인 처리 중 오류가 발생했습니다");
+    }
+
+    /**
+     * ✅ save+flush 1회 시도는 항상 새 트랜잭션에서 수행
+     * 그래야 유니크 위반/flush 예외가 rollback-only로 "바깥 트랜잭션"을 오염시키지 않음
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public User saveUserWithDefaultRoleNewTx(User user) {
+        return saveUserWithDefaultRole(user);
     }
 
     // 기본 ROLE_USER를 부여한 뒤 저장(즉시 flush하여 유니크 위반을 현재 스코프에서 감지)
