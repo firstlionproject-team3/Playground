@@ -3,6 +3,7 @@ package org.example.playground.domain.report;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import org.example.playground.domain.report.entity.EntityType;
 import org.example.playground.domain.report.entity.Report;
 import org.example.playground.domain.report.entity.ReportCategory;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder(access = AccessLevel.PRIVATE)
+@Getter
 public class ReportResponseDTO {
 
     private Long reportId;

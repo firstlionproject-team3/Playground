@@ -8,6 +8,18 @@ import org.springframework.data.annotation.CreatedDate;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(
+        name = "reports",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {
+                        "reporter_user_id",
+                        "reported_user_id",
+                        "entity_type",
+                        "entity_id"
+                }
+                )
+        }
+)
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -19,11 +31,11 @@ public class Report {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reporter_user_id",nullable = false)
+    @JoinColumn(name = "reporter_user_id", nullable = false)
     private User reporter;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reported_user_id",nullable = false)
+    @JoinColumn(name = "reported_user_id", nullable = false)
     private User reported;
 
     @Embedded
@@ -39,7 +51,7 @@ public class Report {
     @CreatedDate
     private LocalDateTime createdAt;
 
-    public static Report create(User reporter, User reported, ReportTarget target,ReportReason reason) {
+    public static Report create(User reporter, User reported, ReportTarget target, ReportReason reason) {
         return Report.builder()
                 .reporter(reporter)
                 .reported(reported)
