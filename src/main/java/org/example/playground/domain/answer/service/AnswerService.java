@@ -155,6 +155,42 @@ public class AnswerService {
     }
 
 
+    @Transactional
+    public void report(Long questionId, Long answerId, Long reporterId) {
+        Answer answer = answerRepository.findById(answerId)
+                .orElseThrow(() ->
+                        new BusinessException(
+                                AnswerErrorCode.ANSWER_NOT_FOUND,
+                                "해당하는 답변을 찾을 수 없습니다. answerId = " + answerId
+                        )
+                );
+
+        //답변이 해당 질문 소속인지 검증
+        Long actualQuestionId = answer.getQuestion().getId();
+        if (!actualQuestionId.equals(questionId)) {
+            throw new BusinessException(
+                    AnswerErrorCode.ANSWER_NOT_IN_QUESTION, // 너희 enum에 맞게
+                    "답변이 해당 질문에 속하지 않습니다. questionId=" + questionId + ", answerId=" + answerId
+            );
+        }
+
+        answer.reportBy(reporterId);
+
+        Long adminId = 5L; // 임시
+
+        NotificationRequestDTO req = new NotificationRequestDTO(
+                adminId,
+                reporterId,
+                NotificationType.REPORT_RECEIVED,
+                "답변 신고가 접수되었습니다. questionId=" + questionId + ", answerId=" + answerId
+        );
+        notificationService.createNotification(req);
+    }
+
+
+
+
+
     // ===================== private helpers =====================
 
     // 답변 작성자인지 검증

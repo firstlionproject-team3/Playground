@@ -202,7 +202,8 @@ public class QuestionService {
         //reportBy() : 질문이 신고된 횟수를 기록한 메서드
         question.reportBy(reporterId);
 
-        Long adminId = 1L; //임시 관리자 계정 ID, 어떻게 받아와야하지?
+        //5L = db에 박아놓은 admin id
+        Long adminId = 5L; //임시 관리자 계정 ID, 민섭님한테 관리자계정 찾는 로직 부탁하기
 
         // 알림 전송 (현재 NotificationService는 REPORT_RECEIVED만 지원)
         NotificationRequestDTO req = new NotificationRequestDTO(
