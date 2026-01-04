@@ -1,7 +1,11 @@
 package org.example.playground.domain.user.exception;
 
-public class UserNotFoundException extends RuntimeException {
+import org.example.playground.global.exception.BusinessException;
+
+import static org.example.playground.domain.user.exception.UserErrorCode.USER_NOT_FOUND;
+
+public class UserNotFoundException extends BusinessException {
     public UserNotFoundException(String message) {
-        super(message);
+        super(USER_NOT_FOUND);
     }
 }
