@@ -7,7 +7,8 @@ import org.example.playground.domain.answer.repository.AnswerRepository;
 import org.example.playground.domain.comment.dto.request.CommentRequestDTO;
 import org.example.playground.domain.comment.dto.response.CommentResponseDTO;
 import org.example.playground.domain.comment.entity.Comment;
-import org.example.playground.domain.comment.exception.CommentNotFoundException;
+import org.example.playground.domain.comment.exception.CommentErrorCode;
+import org.example.playground.domain.comment.exception.CommentException;
 import org.example.playground.domain.comment.repository.CommentRepository;
 import org.example.playground.domain.user.entity.User;
 import org.example.playground.domain.user.exception.UserNotFoundException;
@@ -29,6 +30,7 @@ public class CommentService {
     // 댓글 생성
     public CommentResponseDTO createComment(CommentRequestDTO commentRequestDTO,
                                             Long userId, Long answerId) {
+        //TODO: 나중에 UserErrorCode, AnswerErrorCode 넣어줘야함.
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("회원이 존재하지 않습니다."));
         Answer answer = answerRepository.findById(answerId)
@@ -44,7 +46,7 @@ public class CommentService {
     @Transactional(readOnly = true)
     public Comment getComment(Long answerId) {
         return commentRepository.findById(answerId)
-                .orElseThrow(() -> new CommentNotFoundException("댓글이 존재하지 않습니다."));
+                .orElseThrow(() -> new CommentException(CommentErrorCode.COMMENT_NOT_FOUND));
     }
 
     // 댓글 조회
@@ -55,22 +57,33 @@ public class CommentService {
                 .toList();
     }
 
-
     // 댓글 수정
     public CommentResponseDTO updateComment(CommentRequestDTO commentRequestDTO, Long commentId) {
-
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new CommentNotFoundException("댓글이 존재하지 않습니다."));
+                .orElseThrow(() -> new CommentException(CommentErrorCode.COMMENT_NOT_FOUND));
         comment.update(commentRequestDTO.getContent());
 
         return CommentResponseDTO.from(comment);
     }
 
-
     // 댓글 삭제 - 버튼을 작성자만 보이게하면 어떨까
     public void deleteComment(Long commentId) {
-        commentRepository.deleteById(commentId);
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new CommentException(CommentErrorCode.COMMENT_NOT_FOUND));
+        commentRepository.delete(comment);
     }
 
+    // 소프트삭제 -> 관리자에 의해 삭제된 댓글입니다. 로 변경
+    // 소프트삭제되면 수정,신고,추천,비추천 버튼 화면에서 없애기?
+    public void softDeleteComment(Long commentId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new CommentException(CommentErrorCode.COMMENT_NOT_FOUND));
+        comment.softDelete();
+    }
 
+    // 댓글 존재여부
+    @Transactional(readOnly = true)
+    public boolean existsByCommentId(Long commentId) {
+        return commentRepository.existsById(commentId);
+    }
 }
