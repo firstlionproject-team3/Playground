@@ -2,13 +2,7 @@ package org.example.playground.domain.report;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.playground.domain.answer.entity.Answer;
-import org.example.playground.domain.answer.exception.AnswerNotFoundException;
-import org.example.playground.domain.answer.repository.AnswerRepository;
 import org.example.playground.domain.answer.service.AnswerService;
-import org.example.playground.domain.question.entity.Question;
-import org.example.playground.domain.question.exception.QuestionNotFoundException;
-import org.example.playground.domain.question.repository.QuestionRepository;
 import org.example.playground.domain.question.service.QuestionService;
 import org.example.playground.domain.report.entity.*;
 import org.example.playground.domain.report.repository.ReportRepository;
@@ -28,15 +22,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class ReportServiceImpl implements ReportService {
 
     private final ReportRepository reportRepository;
-/*    private final UserService userService;
     private final QuestionService questionService;
     private final AnswerService answerService;
-    */
 
-/*    private final UserRepository userRepository;
-    private final QuestionRepository questionRepository;
-    private final AnswerRepository answerRepository;*/
-    //private final CommentService commentRepository;
+    /*private final UserService userService;
+    private final CommentService commentRepository;*/
+
+    private final UserRepository userRepository;
 
 
     @Override
@@ -48,17 +40,18 @@ public class ReportServiceImpl implements ReportService {
         //2. user 조회
         // userService.getUser(dto.getReporterId()); -->???????
         //todo: 교체해야함
-        /*User reporter = userRepository.findById(dto.getReporterId()).orElseThrow(() -> new UserNotFoundException("..."));
-        User reported = userRepository.findById(dto.getReportedId()).orElseThrow(() -> new UserNotFoundException("..."));*/
+        log.info("Validating entity of {}", dto.getEntityType());
+        User reporter = userRepository.findById(dto.getReporterId()).orElseThrow(() -> new UserNotFoundException("..."));
+        User reported = userRepository.findById(dto.getReportedId()).orElseThrow(() -> new UserNotFoundException("..."));
 
-        User reporter = null;
-        User reported = null;
         //3. 자기 자신 체크 확인
+        log.info("checking self report... ");
         if (reporter.equals(reported)) {
             throw new RuntimeException("...");
         }
 
         //4. 중복 신고 체크
+        log.info("already reported");
         EntityType entityType = dto.getEntityType();
         Long entityId = dto.getEntityId();
         ReportTarget target = new ReportTarget(entityId, entityType);
@@ -71,13 +64,14 @@ public class ReportServiceImpl implements ReportService {
         ReportReason reason = new ReportReason(category, reasonDetail);
 
         Report report = Report.create(reporter, reported, target, reason);
+        log.info("creating report");
         return reportRepository.save(report);
     }
 
     @Override
     public void approve(Long reportId) {
 
-        Report report = reportRepository.findById(reportId).orElseThrow(() -> new RuntimeException("report not found"));
+        Report report = reportRepository.findUserByIdForUpdate(reportId).orElseThrow(() -> new UserNotFoundException("..."));
 
         //일단 대기 상태가 아니라면 승인 불가
         if (report.getStatus() != ReportStatus.PENDING) {
@@ -97,7 +91,7 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public void reject(Long reportId) {
 
-        Report report = reportRepository.findById(reportId).orElseThrow(() -> new RuntimeException("report not found"));
+        Report report = reportRepository.findUserByIdForUpdate(reportId).orElseThrow(() -> new UserNotFoundException("..."));
 
         //일단 대기 상태가 아니라면 거부 불가
         if (report.getStatus() != ReportStatus.PENDING) {
@@ -109,25 +103,20 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public Page<ReportResponseDTO> getPendingReports(Pageable pageable) {
-
+        //오래된 순으로 가져와야함.
         return reportRepository.findAllByStatus(ReportStatus.PENDING, pageable)
                 .map(ReportResponseDTO::from);
     }
 
     private void validateEntityExists(EntityType entityType, Long entityId) {
-
+        
+        //검증 실패 시 예외 발생
         switch (entityType) {
             case QUESTION:
-                //todo: 교체해야함
-/*                if (!questionRepository.existsById(entityId)) {
-                    throw new IllegalArgumentException("해당 질문이 존재하지 않습니다");
-                }*/
+                questionService.validateQuestionExists(entityId);
                 break;
             case ANSWER:
-                //todo: 교체해야함
-/*                if (!answerRepository.existsById(entityId)) {
-                    throw new IllegalArgumentException("해당 답변이 존재하지 않습니다");
-                }*/
+                answerService.validateAnswerExists(entityId);
                 break;
 /*            case COMMENT:
                 if (!commentRepository.existsById(entityId)) {
@@ -148,17 +137,13 @@ public class ReportServiceImpl implements ReportService {
     private void deleteReportedContent(ReportTarget target) {
         switch (target.getEntityType()) {
             case QUESTION:
-
-                //해당 질문 처리
-                //질문이 신고당했을 때 -> 질문 삭제
+                //질문 데이터 삭제
+                questionService.deleteQuestionByAdmin(target.getEntityId());
                 break;
 
             case ANSWER:
-                //todo: 교체해야함
-/*                Answer answer = answerRepository.findById(target.getEntityId())
-                        .orElseThrow(() -> new AnswerNotFoundException(target.getEntityId()));*/
-                //해당 답변 처리
-                //답변이 신고 당했을 때 -> 관리자에 의해 삭제된 답변입니다.
+                //소프트 삭제, 관리자에 의해 삭제된 답변입니다. 로 답변 내용 교체
+                answerService.softDeleteAnswerByAdmin(target.getEntityId());
                 break;
 
             case COMMENT:
