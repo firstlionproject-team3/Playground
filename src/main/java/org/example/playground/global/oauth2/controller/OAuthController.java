@@ -3,8 +3,8 @@ package org.example.playground.global.oauth2.controller;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.playground.global.oauth2.CodeInfo;
-import org.example.playground.global.oauth2.TempCodeStore;
+import org.example.playground.global.oauth2.store.CodeInfo;
+import org.example.playground.global.oauth2.store.TempCodeStore;
 import org.example.playground.global.security.jwt.JwtTokenProvider;
 import org.example.playground.global.security.jwt.dto.TokenDTO;
 import org.example.playground.global.util.CookieUtil;
@@ -20,7 +20,7 @@ import java.util.Map;
 @RequestMapping("/oauth")
 @RequiredArgsConstructor
 @Slf4j
-public class AuthController {
+public class OAuthController {
 
     private final TempCodeStore tempCodeStore;
     private final JwtTokenProvider jwtTokenProvider;
@@ -28,8 +28,7 @@ public class AuthController {
 
     @PostMapping("/token")
     public ResponseEntity<Map<String, String>> exchangeToken(@RequestParam String code,
-                              HttpServletResponse response) throws IOException {
-
+                                                             HttpServletResponse response) throws IOException {
         // ... 코드 검증 및 토큰 생성
         CodeInfo codeInfo = tempCodeStore.getCodeInfoAndRemove(code);
         //TODO: 이건 나중에 tempCodeStore 안에 넣어야할지 고민하기

@@ -3,14 +3,13 @@ package org.example.playground.global.oauth2.controller;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.playground.global.oauth2.CodeInfo;
-import org.example.playground.global.oauth2.TempCodeStore;
+import org.example.playground.global.oauth2.store.CodeInfo;
+import org.example.playground.global.oauth2.store.TempCodeStore;
 import org.example.playground.global.security.jwt.JwtTokenProvider;
 import org.example.playground.global.security.jwt.dto.TokenDTO;
 import org.example.playground.global.util.CookieUtil;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
