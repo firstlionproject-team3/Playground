@@ -1,10 +1,11 @@
-package org.example.playground.global.oauth2;
+package org.example.playground.global.oauth2.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.playground.domain.user.dto.OAuth2UserInfo;
 import org.example.playground.domain.user.dto.SecurityResponseForJWT;
 import org.example.playground.domain.user.service.UserService;
+import org.example.playground.global.oauth2.entity.CustomOAuth2User;
 import org.example.playground.global.oauth2.exception.OAuthAttributesMappingException;
 import org.example.playground.global.oauth2.exception.OAuthErrorCode;
 import org.example.playground.global.oauth2.exception.OAuthProviderIdMappingException;

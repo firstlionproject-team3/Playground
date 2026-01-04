@@ -1,7 +1,8 @@
 package org.example.playground.global.oauth2;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import org.example.playground.global.oauth2.entity.CustomOAuth2User;
+import org.example.playground.global.oauth2.handler.OAuth2SuccessHandler;
+import org.example.playground.global.oauth2.store.TempCodeStore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

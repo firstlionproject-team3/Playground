@@ -1,5 +1,6 @@
 package org.example.playground.global.oauth2;
 
+import org.example.playground.global.oauth2.handler.OAuth2FailureHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

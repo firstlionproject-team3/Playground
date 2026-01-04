@@ -1,4 +1,4 @@
-package org.example.playground.global.oauth2;
+package org.example.playground.global.oauth2.store;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;
