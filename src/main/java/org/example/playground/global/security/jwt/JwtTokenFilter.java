@@ -10,6 +10,8 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.example.playground.domain.user.entity.UserStatus;
+import org.example.playground.domain.user.repository.UserRepository;
 import org.example.playground.global.security.user.CustomUserDetails;
 import org.example.playground.global.security.jwt.exception.JwtExceptionCode;
 import org.example.playground.global.util.CookieUtil;
@@ -32,6 +34,7 @@ import java.util.List;
 public class JwtTokenFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final UserRepository userRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -78,9 +81,10 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         Claims claims = jwtTokenProvider.parseAccessToken(token);
         Long userId = Long.parseLong(claims.getSubject());
 
-        // 지금 당장은 필요없을듯하고 나중에 controller에서 authentication으로 더 많은 정보를 가져오고 싶다 할때 추가 할 수 있다.
-        // String email = claims.get("email", String.class);
-        // String username = claims.get("loginId", String.class);
+        boolean active = userRepository.existsByIdAndStatus(userId, UserStatus.ACTIVE);
+        if(!active){
+             throw new BadCredentialsException("이미 탈퇴한 회원입니다.");
+        }
 
         List<GrantedAuthority> authorities = new ArrayList<>();
         for (String role : (List<String>) claims.get("roles")) {
