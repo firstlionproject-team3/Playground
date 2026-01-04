@@ -1,7 +1,7 @@
 package org.example.playground.global.config;
 
-import org.example.playground.global.oauth2.OAuth2FailureHandler;
-import org.example.playground.global.oauth2.OAuth2SuccessHandler;
+import org.example.playground.global.oauth2.handler.OAuth2FailureHandler;
+import org.example.playground.global.oauth2.handler.OAuth2SuccessHandler;
 import org.example.playground.global.security.jwt.JwtTokenFilter;
 import org.example.playground.global.security.jwt.exception.JwtAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;

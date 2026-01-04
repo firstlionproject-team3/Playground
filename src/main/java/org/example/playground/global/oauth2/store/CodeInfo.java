@@ -1,4 +1,4 @@
-package org.example.playground.global.oauth2;
+package org.example.playground.global.oauth2.store;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
