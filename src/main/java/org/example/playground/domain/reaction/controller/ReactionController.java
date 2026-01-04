@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -32,6 +33,9 @@ public class ReactionController {
             @Valid @RequestBody ReactionRequestDto request
     ) {
         reactionService.toggleReaction(principal.getId(), request);
+
+        //Countable interface 사용
+//        reactionService.toggleReactionCountable(principal.getId(), request);
     }
 
     /**
@@ -81,6 +85,58 @@ public class ReactionController {
             @RequestParam Long targetId
     ) {
         reactionService.deleteReaction(principal.getId(), targetType, targetId);
+    }
+
+    /**
+     * 여러 대상의 추천 수 맵 조회 (N+1 문제 방지)
+     * GET /reaction/counts/likes?targetType=QUESTION&targetIds=1,2,3
+     */
+    @GetMapping("/counts/likes")
+    public ResponseEntity<Map<Long, Long>> getLikeCountMap(
+            @RequestParam TargetType targetType,
+            @RequestParam List<Long> targetIds
+    ) {
+        Map<Long, Long> likeCountMap = reactionService.getLikeCountMap(targetType, targetIds);
+        return ResponseEntity.ok(likeCountMap);
+    }
+
+    /**
+     * 여러 대상의 비추천 수 맵 조회 (N+1 문제 방지)
+     * GET /reaction/counts/dislikes?targetType=ANSWER&targetIds=10,11,12
+     */
+    @GetMapping("/counts/dislikes")
+    public ResponseEntity<Map<Long, Long>> getDislikeCountMap(
+            @RequestParam TargetType targetType,
+            @RequestParam List<Long> targetIds
+    ) {
+        Map<Long, Long> dislikeCountMap = reactionService.getDislikeCountMap(targetType, targetIds);
+        return ResponseEntity.ok(dislikeCountMap);
+    }
+
+    /**
+     * 현재 사용자가 여러 대상에 대해 남긴 추천/비추천 타입 맵 조회 (N+1 문제 방지)
+     * GET /reaction/me/map?targetType=COMMENT&targetIds=20,21,22
+     */
+    @GetMapping("/me/map")
+    public ResponseEntity<Map<Long, String>> getMyReactionMap(
+            @AuthenticationPrincipal CustomUserDetails principal,
+            @RequestParam TargetType targetType,
+            @RequestParam List<Long> targetIds
+    ) {
+        Map<Long, ReactionType> reactionMap = reactionService.getMyReactionMap(
+                principal.getId(),
+                targetType,
+                targetIds
+        );
+
+        // ReactionType을 String으로 변환
+        Map<Long, String> result = reactionMap.entrySet().stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue().name()
+                ));
+
+        return ResponseEntity.ok(result);
     }
 }
 
