@@ -2,6 +2,8 @@ package org.example.playground.domain.user.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.playground.domain.answer.dto.response.AnswerSummaryResponseDTO;
+import org.example.playground.domain.answer.service.AnswerService;
 import org.example.playground.domain.question.dto.response.QuestionSummaryResponseDTO;
 import org.example.playground.domain.question.service.QuestionService;
 import org.example.playground.domain.user.dto.UserMyPageResponseDTO;
@@ -26,7 +28,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
     private final UserService userService;
     private final QuestionService questionService;
-//    private final AnswerService answerService;
+    private final AnswerService answerService;
 
     //회원 가입
     @PostMapping
@@ -61,14 +63,14 @@ public class UserController {
         return ResponseEntity.ok(questionService.getMyQuestions(userDetails.getId(), pageable));
     }
 
-//    // GET /me/answers?page=0&size=20 (마이페이지 에서 내가 쓴 댓글 클릭시 - 댓글 목록)
-//    @GetMapping("me/answers")
-//    public ResponseEntity<Page<AnswerSummaryResponseDTO>> getMyAnswerss(
-//            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
-//            @AuthenticationPrincipal CustomUserDetails userDetails
-//    ){
-//        return ResponseEntity.ok(answerService.getMyAnswers(userDetails, pageable));
-//    }
+    // GET /me/answers?page=0&size=20 (마이페이지 에서 내가 쓴 댓글 클릭시 - 댓글 목록)
+    @GetMapping("me/answers")
+    public ResponseEntity<Page<AnswerSummaryResponseDTO>> getMyAnswerss(
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ){
+        return ResponseEntity.ok(answerService.getMyAnswers(userDetails.getId(), pageable));
+    }
 
     //마이페이지에서 삭제
     @DeleteMapping("/me")
