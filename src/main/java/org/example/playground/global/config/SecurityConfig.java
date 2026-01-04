@@ -65,6 +65,8 @@ public class SecurityConfig {
                         .requestMatchers("/oauth2/authorization/**","/login/oauth2/code/**").permitAll()
                         // h2 콘솔 - 테스트용
                         .requestMatchers("/h2-console/**").permitAll()
+                        // 에러 리다이렉트 허용
+                        .requestMatchers("/error").permitAll()
                         // 인증된 사용자만 접근 가능
                         // (Authorization 헤더에 유효한 accessToken 필요)
                         .anyRequest().authenticated())
