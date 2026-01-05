@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.example.playground.domain.user.dto.ForAdminDTO;
 import org.example.playground.domain.user.dto.UserMyPageResponseDTO;
 import org.example.playground.domain.user.service.AdminUserService;
-import org.example.playground.domain.user.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;

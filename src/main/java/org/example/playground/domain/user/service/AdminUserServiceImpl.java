@@ -1,6 +1,7 @@
 package org.example.playground.domain.user.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.playground.domain.refreshtoken.repository.RefreshTokenRepository;
 import org.example.playground.domain.user.dto.UserMyPageResponseDTO;
 import org.example.playground.domain.user.entity.User;
 import org.example.playground.domain.user.exception.UserNotFoundException;
@@ -15,8 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AdminUserServiceImpl implements AdminUserService{
     private final UserRepository userRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
-    //TODO 관리자만 유저 목록 조회
+    // 관리자만 유저 목록 조회
     @Override
     @Transactional(readOnly = true)
     @PreAuthorize("hasRole('ADMIN')") // 내부적으로 "ROLE_ADMIN"을 기대함
@@ -38,6 +40,8 @@ public class AdminUserServiceImpl implements AdminUserService{
     @PreAuthorize("hasRole('ADMIN')") // 내부적으로 "ROLE_ADMIN"을 기대함
     public void deleteUser(Long id) {
         User findUser = findUserFromDB(id);
+        refreshTokenRepository.deleteByUserId(id);
+
         findUser.softDeleteAndAnonymize();
         userRepository.save(findUser);
     }
