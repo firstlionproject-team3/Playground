@@ -7,7 +7,7 @@ import org.example.playground.domain.user.dto.*;
 import org.example.playground.domain.user.entity.User;
 import org.example.playground.domain.user.exception.DuplicateUserException;
 import org.example.playground.domain.user.exception.OAuth2SignedupException;
-import org.example.playground.domain.user.exception.UserNotFoundException;
+import org.example.playground.domain.user.exception.UserException;
 import org.example.playground.domain.user.repository.RoleRepository;
 import org.example.playground.domain.user.repository.UserRepository;
 import org.hibernate.exception.ConstraintViolationException;
@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Objects;
 
 import static org.example.playground.domain.user.dto.UserRegisterResponseDTO.userRegisterResponseDTOfromEntity;
+import static org.example.playground.domain.user.exception.UserErrorCode.USER_NOT_FOUND;
 
 @Service
 @Slf4j
@@ -165,7 +166,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public User findUserOrThrow(Long id) {
         return userRepository.findById(id).orElseThrow(() ->
-                new UserNotFoundException("존재하지 않는 회원입니다."));
+                new UserException(USER_NOT_FOUND));
     }
 
     //로그인한 유저인지 찾는 메서드
