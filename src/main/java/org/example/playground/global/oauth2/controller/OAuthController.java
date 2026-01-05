@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.playground.global.oauth2.store.CodeInfo;
 import org.example.playground.global.oauth2.store.TempCodeStore;
+import org.example.playground.global.security.auth.service.AuthService;
 import org.example.playground.global.security.jwt.JwtTokenProvider;
 import org.example.playground.global.security.jwt.dto.TokenDTO;
 import org.example.playground.global.util.CookieUtil;
@@ -23,7 +24,7 @@ import java.util.Map;
 public class OAuthController {
 
     private final TempCodeStore tempCodeStore;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final AuthService authService;
 
 
     @PostMapping("/token")
@@ -31,7 +32,6 @@ public class OAuthController {
                                                              HttpServletResponse response) throws IOException {
         // ... 코드 검증 및 토큰 생성
         CodeInfo codeInfo = tempCodeStore.getCodeInfoAndRemove(code);
-        //TODO: 이건 나중에 tempCodeStore 안에 넣어야할지 고민하기
         if (codeInfo == null) {
             return ResponseEntity.badRequest()
                     .body(Map.of("message", "Invalid or expired code"));
@@ -39,22 +39,8 @@ public class OAuthController {
         Long userId = codeInfo.getUserId();
         List<String> userRoles = codeInfo.getRoles();
 
-        TokenDTO accessToken = jwtTokenProvider.createAccessToken(userId, userRoles);
-        TokenDTO refreshToken = jwtTokenProvider.createRefreshToken(userId);
-        Date expiration = refreshToken.getExpiration();
-
-        CookieUtil.addRefreshToken(response,refreshToken);
-        //TODO: refresh token DB 저장 방식으로 전환 예정
-        /** DB 저장 보류
-         *         RefreshToken refreshTokenEntity =
-         *                 RefreshToken.from(
-         *                         user.getId(),
-         *                         refreshToken.getToken(),
-         *                         expiration);
-         *         refreshTokenService.createRefreshToken(refreshTokenEntity);
-         */
-
-
+        //토큰 발급...
+        authService
         Map<String, String> body = Map.of("accessToken", accessToken.getToken());
 
 
