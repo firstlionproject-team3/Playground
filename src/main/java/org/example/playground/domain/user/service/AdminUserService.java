@@ -10,4 +10,5 @@ public interface AdminUserService{
     Page<User> getAllUsers(Pageable pageable);
     UserMyPageResponseDTO getUser(Long id);
     void deleteUser(Long id);
+    User findUserOrThrow(Long id);
 }
