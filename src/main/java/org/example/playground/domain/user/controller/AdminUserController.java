@@ -14,9 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RequestMapping("/admin/users")
 public class AdminUserController {
-    //TODO 관리자 계정용 User목록 조회?
     private final AdminUserService adminUserService;
-    private final UserService userService;
 
     //관리자의 유저 목록 보기
     @GetMapping
@@ -38,6 +36,4 @@ public class AdminUserController {
         adminUserService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
-    //todo 관리자 컨트롤러에 조치 컨트롤러 추가. 신고 서비스 받아내서 사용.
-    //-> 신고 DTO 신고 서비스 메서드 이름 알면.
 }
