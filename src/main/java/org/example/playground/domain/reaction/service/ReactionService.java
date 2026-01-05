@@ -28,40 +28,40 @@ public class ReactionService {
     private final ReactionTargetFinder reactionTargetFinder;
 
     // 추천/비추천 생성 또는 변경
+//    @Transactional
+//    public void toggleReaction(Long userId, ReactionRequestDto request) {
+//        User user = userRepository.findById(userId)
+//                .orElseThrow(() -> new UserNotFoundException("userID=" + userId));
+//
+//        // 기존 추천/비추천이 있는지 확인
+//        Optional<Reaction> existingReaction = reactionRepository.findByUserIdAndTargetTypeAndTargetId(
+//                userId,
+//                request.targetType(),
+//                request.targetId()
+//        );
+//
+//        if (existingReaction.isPresent()) {
+//            Reaction reaction = existingReaction.get();
+//            // 같은 타입이면 삭제, 다른 타입이면 변경
+//            if (reaction.getReactionType().equals(request.reactionType())) {
+//                reactionRepository.delete(reaction);
+//            } else {
+//                reaction.update(request.reactionType());
+//            }
+//        } else {
+//            // 새로운 추천/비추천 생성
+//            Reaction reaction = Reaction.create(
+//                    user,
+//                    request.targetType(),
+//                    request.targetId(),
+//                    request.reactionType()
+//            );
+//            reactionRepository.save(reaction);
+//        }
+//    }
+
     @Transactional
     public void toggleReaction(Long userId, ReactionRequestDto request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("userID=" + userId));
-
-        // 기존 추천/비추천이 있는지 확인
-        Optional<Reaction> existingReaction = reactionRepository.findByUserIdAndTargetTypeAndTargetId(
-                userId,
-                request.targetType(),
-                request.targetId()
-        );
-
-        if (existingReaction.isPresent()) {
-            Reaction reaction = existingReaction.get();
-            // 같은 타입이면 삭제, 다른 타입이면 변경
-            if (reaction.getReactionType().equals(request.reactionType())) {
-                reactionRepository.delete(reaction);
-            } else {
-                reaction.update(request.reactionType());
-            }
-        } else {
-            // 새로운 추천/비추천 생성
-            Reaction reaction = Reaction.create(
-                    user,
-                    request.targetType(),
-                    request.targetId(),
-                    request.reactionType()
-            );
-            reactionRepository.save(reaction);
-        }
-    }
-
-    @Transactional
-    public void toggleReactionCountable(Long userId, ReactionRequestDto request) {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("userID=" + userId));
