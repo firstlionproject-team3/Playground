@@ -1,9 +1,8 @@
 package org.example.playground.domain.report.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.playground.domain.report.ReportResponseDTO;
-import org.example.playground.domain.report.ReportService;
-import org.example.playground.domain.report.entity.ReportStatus;
+import org.example.playground.domain.report.dto.ReportResponseDTO;
+import org.example.playground.domain.report.service.ReportService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;

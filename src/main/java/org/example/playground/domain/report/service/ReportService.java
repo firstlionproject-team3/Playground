@@ -1,5 +1,7 @@
-package org.example.playground.domain.report;
+package org.example.playground.domain.report.service;
 
+import org.example.playground.domain.report.dto.ReportCreateRequestDTO;
+import org.example.playground.domain.report.dto.ReportResponseDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

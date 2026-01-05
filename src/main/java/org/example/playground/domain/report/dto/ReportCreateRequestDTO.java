@@ -1,4 +1,4 @@
-package org.example.playground.domain.report;
+package org.example.playground.domain.report.dto;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;

@@ -1,4 +1,4 @@
-package org.example.playground.domain.report;
+package org.example.playground.domain.report.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -7,6 +7,8 @@ import org.example.playground.domain.comment.service.CommentService;
 import org.example.playground.domain.notification.entity.NotificationType;
 import org.example.playground.domain.notification.service.NotificationService;
 import org.example.playground.domain.question.service.QuestionService;
+import org.example.playground.domain.report.dto.ReportCreateRequestDTO;
+import org.example.playground.domain.report.dto.ReportResponseDTO;
 import org.example.playground.domain.report.entity.*;
 import org.example.playground.domain.report.exception.ReportErrorCode;
 import org.example.playground.domain.report.exception.ReportException;
