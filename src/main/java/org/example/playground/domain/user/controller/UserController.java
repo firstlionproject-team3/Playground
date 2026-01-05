@@ -55,7 +55,7 @@ public class UserController {
     }
 
     // GET /me/questions?page=0&size=20 (마이페이지 - 질문 목록)
-    @GetMapping("me/questions")
+    @GetMapping("/me/questions")
     public ResponseEntity<Page<QuestionSummaryResponseDTO>> getMyQuestions(
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
             @AuthenticationPrincipal CustomUserDetails userDetails
@@ -64,7 +64,7 @@ public class UserController {
     }
 
     // GET /me/answers?page=0&size=20 (마이페이지 에서 내가 쓴 댓글 클릭시 - 댓글 목록)
-    @GetMapping("me/answers")
+    @GetMapping("/me/answers")
     public ResponseEntity<Page<AnswerSummaryResponseDTO>> getMyAnswerss(
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
             @AuthenticationPrincipal CustomUserDetails userDetails
