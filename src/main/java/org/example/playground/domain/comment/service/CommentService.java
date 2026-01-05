@@ -2,7 +2,7 @@ package org.example.playground.domain.comment.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.playground.domain.answer.entity.Answer;
-import org.example.playground.domain.answer.exception.AnswerNotFoundException;
+import org.example.playground.domain.answer.exception.AnswerErrorCode;
 import org.example.playground.domain.answer.repository.AnswerRepository;
 import org.example.playground.domain.comment.dto.request.CommentRequestDTO;
 import org.example.playground.domain.comment.dto.response.CommentResponseDTO;
@@ -11,8 +11,9 @@ import org.example.playground.domain.comment.exception.CommentErrorCode;
 import org.example.playground.domain.comment.exception.CommentException;
 import org.example.playground.domain.comment.repository.CommentRepository;
 import org.example.playground.domain.user.entity.User;
-import org.example.playground.domain.user.exception.UserNotFoundException;
+import org.example.playground.domain.user.exception.UserErrorCode;
 import org.example.playground.domain.user.repository.UserRepository;
+import org.example.playground.global.exception.BusinessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,11 +31,11 @@ public class CommentService {
     // 댓글 생성
     public CommentResponseDTO createComment(CommentRequestDTO commentRequestDTO,
                                             Long userId, Long answerId) {
-        //TODO: 나중에 UserErrorCode, AnswerErrorCode 넣어줘야함.
+        //TODO: 나중에 UserErrorCode 넣어줘야함.
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("회원이 존재하지 않습니다."));
+                .orElseThrow(() -> new BusinessException(UserErrorCode.USER_NOT_FOUND));
         Answer answer = answerRepository.findById(answerId)
-                .orElseThrow(() -> new AnswerNotFoundException(answerId));
+                .orElseThrow(() -> new BusinessException(AnswerErrorCode.ANSWER_NOT_FOUND));
 
         Comment createComment = Comment.create(commentRequestDTO.getContent(), user, answer);
 

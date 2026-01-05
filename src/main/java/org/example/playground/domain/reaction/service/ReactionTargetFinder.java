@@ -1,9 +1,9 @@
 package org.example.playground.domain.reaction.service;
 
 import lombok.RequiredArgsConstructor;
-import org.example.playground.domain.answer.exception.AnswerNotFoundException;
+//import org.example.playground.domain.answer.exception.AnswerNotFoundException;
 import org.example.playground.domain.answer.repository.AnswerRepository;
-import org.example.playground.domain.question.exception.QuestionNotFoundException;
+//import org.example.playground.domain.question.exception.QuestionNotFoundException;
 import org.example.playground.domain.question.repository.QuestionRepository;
 import org.example.playground.domain.reaction.entity.ReactionCountable;
 import org.example.playground.domain.reaction.entity.TargetType;

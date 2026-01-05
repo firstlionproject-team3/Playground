@@ -161,6 +161,7 @@ public class UserServiceImpl implements UserService {
     }
 
     // 회원정보 검색하는 메서드
+    @Override
     @Transactional(readOnly = true)
     public User findUserOrThrow(Long id) {
         return userRepository.findById(id).orElseThrow(() ->

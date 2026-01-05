@@ -47,6 +47,9 @@ public class Answer {
     @Column(nullable = false)
     private boolean deleted;
 
+    //신고횟수, 관리자가 판단할때의 근거
+    private int reportCount = 0;
+
     // 답변 생성
     public static Answer create(Question question, User user, String content) {
         LocalDateTime now = LocalDateTime.now();
@@ -81,7 +84,10 @@ public class Answer {
         this.updatedAt = LocalDateTime.now();
     }
 
-
+    //질문 신고 횟수 증가
+    public void reportBy(Long reporterId) {
+        this.reportCount++;
+    }
 
 
 }
