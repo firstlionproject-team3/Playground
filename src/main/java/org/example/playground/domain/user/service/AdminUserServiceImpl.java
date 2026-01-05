@@ -38,7 +38,8 @@ public class AdminUserServiceImpl implements AdminUserService{
     @PreAuthorize("hasRole('ADMIN')") // 내부적으로 "ROLE_ADMIN"을 기대함
     public void deleteUser(Long id) {
         User findUser = findUserFromDB(id);
-        userRepository.delete(findUser);
+        findUser.softDeleteAndAnonymize();
+        userRepository.save(findUser);
     }
 
     // 회원정보 검색하는 메서드

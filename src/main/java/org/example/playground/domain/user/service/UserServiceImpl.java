@@ -7,11 +7,10 @@ import org.example.playground.domain.user.dto.*;
 import org.example.playground.domain.user.entity.User;
 import org.example.playground.domain.user.exception.DuplicateUserException;
 import org.example.playground.domain.user.exception.OAuth2SignedupException;
-import org.example.playground.domain.user.exception.UserNotFoundException;
+import org.example.playground.domain.user.exception.UserException;
 import org.example.playground.domain.user.repository.RoleRepository;
 import org.example.playground.domain.user.repository.UserRepository;
 import org.hibernate.exception.ConstraintViolationException;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -20,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Objects;
 
 import static org.example.playground.domain.user.dto.UserRegisterResponseDTO.userRegisterResponseDTOfromEntity;
+import static org.example.playground.domain.user.exception.UserErrorCode.USER_NOT_FOUND;
 
 @Service
 @Slf4j
@@ -35,8 +35,7 @@ public class UserServiceImpl implements UserService {
     private final UserFactory userFactory;
     private final RefreshTokenRepository refreshTokenRepository;
 
-    @Lazy
-    private final UserServiceImpl self;
+    private final UserTxService userTxService;
 
     @Override
     public UserRegisterResponseDTO createUser(UserRegisterRequestDTO userDTO) {
@@ -44,7 +43,7 @@ public class UserServiceImpl implements UserService {
             User user = userFactory.createLocal(userDTO, userFactory.newAutoNickname());
             try {
                 //1회 시도는 새 트랜잭션에서
-                User saved = self.saveUserWithDefaultRoleNewTx(user);
+                User saved = userTxService.saveUserWithDefaultRoleNewTx(user);
                 return userRegisterResponseDTOfromEntity(saved);
             } catch (DataIntegrityViolationException e) {
                 // loginId는 사용자 입력 → 즉시 실패
@@ -165,7 +164,7 @@ public class UserServiceImpl implements UserService {
     @Transactional(readOnly = true)
     public User findUserOrThrow(Long id) {
         return userRepository.findById(id).orElseThrow(() ->
-                new UserNotFoundException("존재하지 않는 회원입니다."));
+                new UserException(USER_NOT_FOUND));
     }
 
     //로그인한 유저인지 찾는 메서드
@@ -186,7 +185,7 @@ public class UserServiceImpl implements UserService {
             User user = userFactory.createOAuth(info, userFactory.newAutoNickname());
             try {
                 //1회 시도는 새 트랜잭션에서
-                return self.saveUserWithDefaultRoleNewTx(user);
+                return userTxService.saveUserWithDefaultRoleNewTx(user);
             } catch (DataIntegrityViolationException e) {
                 // provider/providerId 유니크 충돌: 다른 요청이 먼저 가입했을 확률 ↑ → 재조회로 회수
                 if (isProviderDuplicate(e)) {
@@ -211,27 +210,6 @@ public class UserServiceImpl implements UserService {
             }
         }
         throw new OAuth2SignedupException("소셜 로그인 처리 중 오류가 발생했습니다");
-    }
-
-    /**
-     * ✅ save+flush 1회 시도는 항상 새 트랜잭션에서 수행
-     * 그래야 유니크 위반/flush 예외가 rollback-only로 "바깥 트랜잭션"을 오염시키지 않음
-     */
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public User saveUserWithDefaultRoleNewTx(User user) {
-        return saveUserWithDefaultRole(user);
-    }
-
-    // 기본 ROLE_USER를 부여한 뒤 저장(즉시 flush하여 유니크 위반을 현재 스코프에서 감지)
-    private User saveUserWithDefaultRole(User user) {
-        addUserRole(user);
-        return userRepository.saveAndFlush(user);
-    }
-
-    //기본적으로 USER 권한 부여
-    private void addUserRole(User user) {
-        user.addRole(roleRepository.findByName("ROLE_USER").orElseThrow(()
-                -> new IllegalStateException("ROLE_USER가 존재하지 않습니다. DB 초기화 상태를 확인하세요.")));
     }
 }
 
