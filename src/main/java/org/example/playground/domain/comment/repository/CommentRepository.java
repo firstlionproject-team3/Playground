@@ -17,7 +17,7 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
         select c
         from Comment c
         join fetch c.user
-        where c.answer.id = :answerIds
+        where c.answer.id in :answerIds
         order by c.createdAt asc
 """)
     List<Comment> findByAnswerIdInWithUserOrderByCreatedAtAsc(List<Long> answerIds);
