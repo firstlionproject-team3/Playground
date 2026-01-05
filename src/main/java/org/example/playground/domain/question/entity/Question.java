@@ -106,6 +106,7 @@ public class Question {
         this.reportCount++;
     }
 
+    /*
     public void acceptAnswer(Answer answer, Long requesterId) {
         // 질문 작성자만
         if (!this.user.getId().equals(requesterId)) {
@@ -129,5 +130,7 @@ public class Question {
 
         this.acceptedAnswer = answer;
     }
+
+     */
 
 }

@@ -25,9 +25,14 @@ public class AnswerController {
     @GetMapping("/questions/{questionId}/answers")
     public Page<AnswerSummaryResponseDTO> getAnswers(
             @PathVariable Long questionId,
+            @AuthenticationPrincipal CustomUserDetails principal,
             @PageableDefault(size = 10) Pageable pageable
     ) {
-        return answerService.getAnswerByQuestion(questionId, pageable);
+        return answerService.getAnswerByQuestion(
+                questionId,
+                principal.getId(),
+                pageable
+        );
     }
 
     //답변 생성(등록)
@@ -61,15 +66,17 @@ public class AnswerController {
         answerService.delete(answerId, principal.getId());
     }
 
-    //답변 신고
+    // 답변 신고
     @PatchMapping("/questions/{questionId}/answers/{answerId}/report")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void report(
             @PathVariable Long questionId,
-            @PathVariable Long answerId
+            @PathVariable Long answerId,
+            @AuthenticationPrincipal CustomUserDetails principal
     ) {
-        //TODO 신고 정책 확정 후 구현
+        answerService.report(questionId, answerId, principal.getId());
     }
+
 
 
 

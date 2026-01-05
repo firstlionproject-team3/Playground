@@ -1,7 +1,6 @@
 package org.example.playground.domain.question.dto.response;
 
 import org.example.playground.domain.answer.dto.response.AnswerSummaryResponseDTO;
-import org.example.playground.domain.answer.entity.Answer;
 import org.example.playground.domain.question.entity.Question;
 
 import java.time.LocalDateTime;
@@ -13,36 +12,37 @@ public record QuestionDetailResponseDTO(
         String title,
         String content,
         Long viewCount,
+
+        long likeCount,
+        long dislikeCount,
+        String myReactionType, // LIKE | DISLIKE | NONE
+
         List<AnswerSummaryResponseDTO> answers,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
-    public static QuestionDetailResponseDTO from(Question question, List<Answer> answers) {
+    /**
+     * Service에서 계산한 reaction 정보 + 답변 DTO 리스트를 주입받아 생성
+     */
+    public static QuestionDetailResponseDTO from(
+            Question question,
+            long likeCount,
+            long dislikeCount,
+            String myReactionType,
+            List<AnswerSummaryResponseDTO> answers
+    ) {
         return new QuestionDetailResponseDTO(
                 question.getId(),
                 question.getUser().getNickname(),
                 question.getTitle(),
                 question.getContent(),
                 question.getViewCount(),
-                answers.stream()
-                        .map(AnswerSummaryResponseDTO::from)
-                        .toList(),
+                likeCount,
+                dislikeCount,
+                myReactionType,
+                answers,
                 question.getCreatedAt(),
                 question.getUpdatedAt()
         );
     }
-
-    public static QuestionDetailResponseDTO from(Question question) {
-        return new QuestionDetailResponseDTO(
-                question.getId(),
-                question.getUser().getNickname(),
-                question.getTitle(),
-                question.getContent(),
-                question.getViewCount(),
-                List.of(), // 답변 없음
-                question.getCreatedAt(),
-                question.getUpdatedAt()
-        );
-    }
-
 }
