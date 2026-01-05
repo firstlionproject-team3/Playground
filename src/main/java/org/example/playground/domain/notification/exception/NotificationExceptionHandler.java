@@ -21,11 +21,6 @@ public class NotificationExceptionHandler {
         return buildErrorResponse(e.getErrorCode(), HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleUserNotFoundException(UserNotFoundException e) {
-        return buildErrorResponse(e.getErrorCode(), HttpStatus.BAD_REQUEST);
-    }
-
     @ExceptionHandler(NotificationNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleNotificationNotFoundException(NotificationNotFoundException e) {
         return buildErrorResponse(e.getErrorCode(), HttpStatus.BAD_REQUEST);

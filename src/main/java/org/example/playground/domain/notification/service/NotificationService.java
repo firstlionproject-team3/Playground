@@ -9,6 +9,7 @@ import org.example.playground.domain.notification.entity.NotificationType;
 import org.example.playground.domain.notification.exception.*;
 import org.example.playground.domain.notification.repository.NotificationRepository;
 import org.example.playground.domain.user.entity.User;
+import org.example.playground.domain.user.exception.UserNotFoundException;
 import org.example.playground.domain.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,7 +68,7 @@ public class NotificationService {
     public NotificationListResponseDTO getNotifications(Long userId) {
         // 사용자 존재 여부 확인
         userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND, userId));
+                .orElseThrow(() -> new UserNotFoundException("존재하지 않는 회원입니다."));
 
         List<Notification> notifications = notificationRepository
                 .findByReceiverIdOrderByCreatedAtDesc(userId);
@@ -86,7 +87,7 @@ public class NotificationService {
     @Transactional(readOnly = true)
     public void validateUser(Long userId) {
         userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND, userId));
+                .orElseThrow(() -> new UserNotFoundException("존재하지 않는 회원입니다."));
     }
 
     /**
@@ -97,7 +98,7 @@ public class NotificationService {
     @Transactional(readOnly = true)
     public User findUserById(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND, userId));
+                .orElseThrow(() -> new UserNotFoundException("존재하지 않는 회원입니다."));
     }
 
 
