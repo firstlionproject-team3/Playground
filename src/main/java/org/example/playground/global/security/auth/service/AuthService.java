@@ -49,19 +49,11 @@ public class AuthService {
                 .toList();
 
         // 토큰 발급
-        TokenDTO accessToken = jwtTokenProvider.createAccessToken(user.getId(), roles);
-        TokenDTO refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
-        Date expiration = refreshToken.getExpiration();
+        AccessAndRefreshTokenDTO token = createToken(user.getId(), roles);
+        String accessToken = token.getAccessToken();
+        TokenDTO refreshToken = token.getRefreshToken();
 
-        // RefreshToken DB에 저장
-        RefreshToken refreshTokenEntity =
-                RefreshToken.from(
-                        user.getId(),
-                        refreshToken.getToken(),
-                        expiration);
-        refreshTokenRepository.save(refreshTokenEntity);
-
-        return AccessAndRefreshTokenDTO.from(accessToken.getToken(), refreshToken);
+        return AccessAndRefreshTokenDTO.from(accessToken, refreshToken);
     }
 
     public void logout(HttpServletRequest request, HttpServletResponse response) {
@@ -76,5 +68,21 @@ public class AuthService {
 
         // 쿠키에 있는 리프레시 토큰 제거
         CookieUtil.deleteRefreshToken(response);
+    }
+
+    public AccessAndRefreshTokenDTO createToken(Long id, List<String> roles) {
+        TokenDTO accessToken = jwtTokenProvider.createAccessToken(id, roles);
+        TokenDTO refreshToken = jwtTokenProvider.createRefreshToken(id);
+        Date expiration = refreshToken.getExpiration();
+
+        // RefreshToken DB에 저장
+        RefreshToken refreshTokenEntity =
+                RefreshToken.from(
+                        id,
+                        refreshToken.getToken(),
+                        expiration);
+        refreshTokenRepository.save(refreshTokenEntity);
+
+        return AccessAndRefreshTokenDTO.from(accessToken.getToken(), refreshToken);
     }
 }
