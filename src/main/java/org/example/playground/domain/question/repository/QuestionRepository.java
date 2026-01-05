@@ -4,7 +4,10 @@ import org.example.playground.domain.question.entity.Question;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import java.util.Optional;
 
 public interface QuestionRepository extends JpaRepository<Question,Long> {
     //제목 검색
@@ -21,5 +24,14 @@ public interface QuestionRepository extends JpaRepository<Question,Long> {
     //특정회원이 작성한 질문들을 최신순으로 조회
     //정확히 누구의 글인가? 로그인아이디로 조회, db에서 딱 그사람을 가리키는 값, 닉네임으로 설정하면 변경했을때 예전 글이 안나오는 문제
     Page<Question> findByUser_IdOrderByCreatedAtDesc(Long userId, Pageable pageable);
+
+    // User fetch join
+    @Query("""
+        select q
+        from Question q
+        join fetch q.user
+        where q.id = :id
+""")
+    Optional<Question> findByIdWithUser(Long id);
 
 }

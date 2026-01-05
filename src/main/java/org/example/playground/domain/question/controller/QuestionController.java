@@ -6,6 +6,7 @@ import org.example.playground.domain.question.dto.request.QuestionCreateRequestD
 import org.example.playground.domain.question.dto.request.QuestionUpdateRequestDTO;
 import org.example.playground.domain.question.dto.response.IdResponse;
 import org.example.playground.domain.question.dto.response.QuestionDetailResponseDTO;
+import org.example.playground.domain.question.dto.response.QuestionResponseDTO;
 import org.example.playground.domain.question.dto.response.QuestionSummaryResponseDTO;
 import org.example.playground.domain.question.service.QuestionService;
 import org.example.playground.global.security.user.CustomUserDetails;
@@ -47,12 +48,18 @@ public class QuestionController {
 
     //질문 상세 조회(1건) //responseBody로 json으로 변환 - 프론트에 넘겨줌,
     //responseentity라는 스프링이 자체적으로 갖고있는 클래스가있음
-    @GetMapping("/{id}")
+    // @GetMapping("/{id}")
     public QuestionDetailResponseDTO one(
             @PathVariable Long id,
             @AuthenticationPrincipal CustomUserDetails principal
     ) {
         return questionService.findOne(id, principal.getId());
+    }
+
+    // 질문 상세 조회 버전 2
+    @GetMapping("/{id}")
+    public QuestionResponseDTO getQuestion(@PathVariable Long id) {
+        return questionService.getQuestion(id);
     }
 
     //질문 수정 - 작성자만
