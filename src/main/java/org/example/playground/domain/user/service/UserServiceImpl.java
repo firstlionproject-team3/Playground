@@ -5,21 +5,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.playground.domain.refreshtoken.repository.RefreshTokenRepository;
 import org.example.playground.domain.user.dto.*;
 import org.example.playground.domain.user.entity.User;
-import org.example.playground.domain.user.exception.DuplicateUserException;
-import org.example.playground.domain.user.exception.OAuth2SignedupException;
 import org.example.playground.domain.user.exception.UserException;
-import org.example.playground.domain.user.repository.RoleRepository;
 import org.example.playground.domain.user.repository.UserRepository;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
 
 import static org.example.playground.domain.user.dto.UserRegisterResponseDTO.userRegisterResponseDTOfromEntity;
-import static org.example.playground.domain.user.exception.UserErrorCode.USER_NOT_FOUND;
+import static org.example.playground.domain.user.exception.UserErrorCode.*;
 
 @Service
 @Slf4j
@@ -31,7 +27,6 @@ public class UserServiceImpl implements UserService {
     private static final String UK_PROVIDER = "uk_user_provider_providerId";
 
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
     private final UserFactory userFactory;
     private final RefreshTokenRepository refreshTokenRepository;
 
@@ -48,7 +43,7 @@ public class UserServiceImpl implements UserService {
             } catch (DataIntegrityViolationException e) {
                 // loginId는 사용자 입력 → 즉시 실패
                 if (isLoginIdDuplicate(e)) {
-                    throw new DuplicateUserException("이미 존재하는 로그인 ID입니다");
+                    throw new UserException(USER_DUPLICATE);
                 }
 
                 // nickname은 자동 생성 → 재시도
@@ -62,7 +57,7 @@ public class UserServiceImpl implements UserService {
             }
         }
 
-        throw new IllegalStateException("이름 생성 충돌이 반복되어 회원가입에 실패했습니다. 잠시 후 다시 시도하세요.");
+        throw new UserException(NAME_RETRY_FAILED);
     }
 
     @Override
@@ -96,7 +91,7 @@ public class UserServiceImpl implements UserService {
                 userRepository.flush();
             } catch (DataIntegrityViolationException e) {
                 if (isNicknameDuplicate(e)) {
-                    throw new DuplicateUserException("이미 사용 중인 이름입니다");
+                    throw new UserException(USER_DUPLICATE);
                 }
                 throw e;
             }
@@ -172,7 +167,7 @@ public class UserServiceImpl implements UserService {
         return userRepository.findUserByProviderAndProviderId(info.getProvider(), info.getProviderId())
                 .map(found -> {
                     if (found.isDeleted()) {
-                        throw new OAuth2SignedupException("탈퇴한 계정입니다.");
+                        throw new UserException(DELETED_USER);
                     }
                     return found;
                 })
@@ -209,7 +204,7 @@ public class UserServiceImpl implements UserService {
                 throw e;
             }
         }
-        throw new OAuth2SignedupException("소셜 로그인 처리 중 오류가 발생했습니다");
+        throw new UserException(OAUTH2_SIGNED_UP);
     }
 }
 

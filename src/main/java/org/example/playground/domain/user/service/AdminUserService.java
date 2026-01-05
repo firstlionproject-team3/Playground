@@ -7,7 +7,8 @@ import org.springframework.data.domain.Pageable;
 
 public interface AdminUserService{
     //모든 회원 목록
-    Page<User> getAllUsers(Pageable pageable);
-    UserMyPageResponseDTO getUser(Long id);
-    void deleteUser(Long id);
+    Page<User> getAllUsersByAdmin(Pageable pageable);
+    UserMyPageResponseDTO getUserByAdmin(Long id);
+    void deleteUserByAdmin(Long id);
+    User findUserOrThrowByAdmin(Long id);
 }
