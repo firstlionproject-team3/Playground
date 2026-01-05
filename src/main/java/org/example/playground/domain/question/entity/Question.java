@@ -3,6 +3,7 @@ package org.example.playground.domain.question.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.playground.domain.answer.entity.Answer;
+import org.example.playground.domain.reaction.entity.ReactionCountable;
 import org.example.playground.domain.user.entity.User;
 
 import java.time.LocalDateTime;
@@ -15,7 +16,7 @@ import java.util.List;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder(access = AccessLevel.PRIVATE)
 @Table(name = "question")
-public class Question {
+public class Question implements ReactionCountable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -54,6 +55,10 @@ public class Question {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "accepted_answer_id")
     private Answer acceptedAnswer;
+
+    private int likeCount;
+
+    private int dislikeCount;
 
     //엔티티 저장 전 기본값 보장
     //Builder 사용 시 null이 될 수 있는 필드(createdAt, updatedAt, viewCount)를
@@ -104,6 +109,26 @@ public class Question {
     //질문 신고 횟수 증가
     public void reportBy(Long reporterId) {
         this.reportCount++;
+    }
+
+    @Override
+    public void increaseLike() {
+        likeCount++;
+    }
+
+    @Override
+    public void decreaseLike() {
+        likeCount--;
+    }
+
+    @Override
+    public void increaseDislike() {
+        dislikeCount++;
+    }
+
+    @Override
+    public void decreaseDislike() {
+        dislikeCount--;
     }
 
     /*

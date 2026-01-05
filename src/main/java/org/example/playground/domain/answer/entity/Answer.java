@@ -3,6 +3,7 @@ package org.example.playground.domain.answer.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.playground.domain.question.entity.Question;
+import org.example.playground.domain.reaction.entity.ReactionCountable;
 import org.example.playground.domain.user.entity.User;
 
 import java.time.LocalDateTime;
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder(access =  AccessLevel.PROTECTED)
 @Table(name = "answer")
-public class Answer {
+public class Answer implements ReactionCountable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -49,6 +50,10 @@ public class Answer {
 
     //신고횟수, 관리자가 판단할때의 근거
     private int reportCount = 0;
+
+    private int likeCount;
+
+    private int dislikeCount;
 
     // 답변 생성
     public static Answer create(Question question, User user, String content) {
@@ -90,5 +95,24 @@ public class Answer {
     }
 
 
+    @Override
+    public void increaseLike() {
+        likeCount++;
+    }
+
+    @Override
+    public void decreaseLike() {
+        likeCount--;
+    }
+
+    @Override
+    public void increaseDislike() {
+        dislikeCount++;
+    }
+
+    @Override
+    public void decreaseDislike() {
+        dislikeCount--;
+    }
 }
 
