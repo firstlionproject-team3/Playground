@@ -4,7 +4,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.playground.domain.comment.dto.request.CommentRequestDTO;
 import org.example.playground.domain.comment.dto.response.CommentResponseDTO;
-import org.example.playground.domain.comment.entity.Comment;
 import org.example.playground.domain.comment.service.CommentService;
 import org.example.playground.global.security.user.CustomUserDetails;
 import org.springframework.http.HttpStatus;
@@ -49,10 +48,4 @@ public class CommentController {
         commentService.deleteComment(commentId);
         return ResponseEntity.noContent().build();
     }
-
-    // 댓글 신고
-
-    // 댓글 추천
-
-    // 댓글 비추천
 }
