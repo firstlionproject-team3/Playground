@@ -19,6 +19,10 @@ public class CommentResponseDTO {
 
     private String content;
 
+    private int likeCount;
+
+    private int dislikeCount;
+
     private LocalDateTime createdAt;
 
     public static CommentResponseDTO from(Comment comment) {
@@ -26,6 +30,8 @@ public class CommentResponseDTO {
                 .id(comment.getId())
                 .nickname(comment.getUser().getNickname())
                 .content(comment.getContent())
+                .likeCount(comment.getLikeCount())
+                .dislikeCount(comment.getDislikeCount())
                 .createdAt(comment.getCreatedAt())
                 .build();
     }
