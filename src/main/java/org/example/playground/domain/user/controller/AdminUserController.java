@@ -18,7 +18,7 @@ public class AdminUserController {
     //관리자의 유저 목록 보기
     @GetMapping
     public ResponseEntity<Page<ForAdminDTO>> getUserList(Pageable pageable) {
-        Page<ForAdminDTO> page = adminUserService.getAllUsers(pageable)
+        Page<ForAdminDTO> page = adminUserService.getAllUsersByAdmin(pageable)
                 .map(ForAdminDTO::forAdminDTOFromEntity);
         return ResponseEntity.ok(page);
     }
@@ -26,13 +26,13 @@ public class AdminUserController {
     //관리자의 유저 상세 보기
     @GetMapping("/{id}")
     public ResponseEntity<UserMyPageResponseDTO> getOneUser(@PathVariable("id") Long id){
-        return ResponseEntity.ok(adminUserService.getUser(id));
+        return ResponseEntity.ok(adminUserService.getUserByAdmin(id));
     }
 
     //관리자가 직접 유저 계정 삭제
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable("id") Long id){
-        adminUserService.deleteUser(id);
+        adminUserService.deleteUserByAdmin(id);
         return ResponseEntity.noContent().build();
     }
 }

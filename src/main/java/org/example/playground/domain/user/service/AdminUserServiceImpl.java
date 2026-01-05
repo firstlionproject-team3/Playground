@@ -24,15 +24,15 @@ public class AdminUserServiceImpl implements AdminUserService{
     @Override
     @Transactional(readOnly = true)
     @PreAuthorize("hasRole('ADMIN')") // 내부적으로 "ROLE_ADMIN"을 기대함
-    public Page<User> getAllUsers(Pageable pageable) {
+    public Page<User> getAllUsersByAdmin(Pageable pageable) {
         return userRepository.findAll(pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
     @PreAuthorize("hasRole('ADMIN')")
-    public UserMyPageResponseDTO getUser(Long id) {
-        User findUser = findUserOrThrow(id);
+    public UserMyPageResponseDTO getUserByAdmin(Long id) {
+        User findUser = findUserOrThrowByAdmin(id);
 
         return UserMyPageResponseDTO.userMyPageDTOFromEntity(findUser);
     }
@@ -40,8 +40,8 @@ public class AdminUserServiceImpl implements AdminUserService{
     @Override
     @Transactional
     @PreAuthorize("hasRole('ADMIN')") // 내부적으로 "ROLE_ADMIN"을 기대함
-    public void deleteUser(Long id) {
-        User findUser = findUserOrThrow(id);
+    public void deleteUserByAdmin(Long id) {
+        User findUser = findUserOrThrowByAdmin(id);
         refreshTokenRepository.deleteByUserId(id);
 
         findUser.softDeleteAndAnonymize();
@@ -51,7 +51,7 @@ public class AdminUserServiceImpl implements AdminUserService{
     // 회원정보 검색하는 메서드
     @Override
     @Transactional(readOnly = true)
-    public User findUserOrThrow(Long id) {
+    public User findUserOrThrowByAdmin(Long id) {
         return userRepository.findById(id).orElseThrow(() ->
                 new UserException(USER_NOT_FOUND));
     }
