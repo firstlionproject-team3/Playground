@@ -2,9 +2,17 @@ package org.example.playground.domain.report;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.playground.domain.answer.service.AnswerService;
+import org.example.playground.domain.comment.service.CommentService;
+import org.example.playground.domain.notification.entity.NotificationType;
+import org.example.playground.domain.notification.service.NotificationService;
+import org.example.playground.domain.question.service.QuestionService;
 import org.example.playground.domain.report.entity.*;
+import org.example.playground.domain.report.exception.ReportErrorCode;
+import org.example.playground.domain.report.exception.ReportException;
 import org.example.playground.domain.report.repository.ReportRepository;
 import org.example.playground.domain.user.entity.User;
+import org.example.playground.domain.user.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -18,42 +26,38 @@ import org.springframework.transaction.annotation.Transactional;
 public class ReportServiceImpl implements ReportService {
 
     private final ReportRepository reportRepository;
-/*    private final UserService userService;
+    private final UserService userService;
+    private final CommentService commentService;
     private final QuestionService questionService;
     private final AnswerService answerService;
-    */
-
-/*    private final UserRepository userRepository;
-    private final QuestionRepository questionRepository;
-    private final AnswerRepository answerRepository;*/
-    //private final CommentService commentRepository;
+    private final NotificationService notificationService;
 
 
     @Override
-    public Report reportUser(ReportCreateRequestDTO dto) {
+    public ReportResponseDTO reportUser(ReportCreateRequestDTO dto) {
 
         //1. 신고 대상 확인
         validateEntityExists(dto.getEntityType(), dto.getEntityId());
 
         //2. user 조회
-        // userService.getUser(dto.getReporterId()); -->???????
-        //todo: 교체해야함
-        /*User reporter = userRepository.findById(dto.getReporterId()).orElseThrow(() -> new UserNotFoundException("..."));
-        User reported = userRepository.findById(dto.getReportedId()).orElseThrow(() -> new UserNotFoundException("..."));*/
+        log.info("Validating entity of {}", dto.getEntityType());
 
-        User reporter = null;
-        User reported = null;
+        User reporter = userService.findUserOrThrow(dto.getReporterId());
+        User reported = userService.findUserOrThrow(dto.getReportedId());
+
         //3. 자기 자신 체크 확인
+        log.info("checking self report... ");
         if (reporter.equals(reported)) {
-            throw new RuntimeException("...");
+            throw new ReportException(ReportErrorCode.SELF_REPORT_NOT_ALLOWED);
         }
 
         //4. 중복 신고 체크
+        log.info("already reported");
         EntityType entityType = dto.getEntityType();
         Long entityId = dto.getEntityId();
         ReportTarget target = new ReportTarget(entityId, entityType);
         if (existsReport(reporter, reported, target)) {
-            throw new RuntimeException("Report already exists");
+            throw new ReportException(ReportErrorCode.DUPLICATE_REPORT);
         }
 
         ReportCategory category = dto.getCategory();
@@ -61,17 +65,28 @@ public class ReportServiceImpl implements ReportService {
         ReportReason reason = new ReportReason(category, reasonDetail);
 
         Report report = Report.create(reporter, reported, target, reason);
-        return reportRepository.save(report);
+        log.info("creating report");
+        reportRepository.save(report);
+
+        //5. 관리자에게 알림 전송
+        log.info("send report notification...");
+
+
+        NotificationType notificationType = NotificationType.REPORT_RECEIVED;
+        String msg = "[신고]" + reporter.getNickname() + " 요청으로 신고가 발생했습니다.";
+        notificationService.sendToAllAdmins(notificationType, reporter, msg);
+
+        return ReportResponseDTO.from(report);
     }
 
     @Override
     public void approve(Long reportId) {
 
-        Report report = reportRepository.findById(reportId).orElseThrow(() -> new RuntimeException("report not found"));
+        Report report = reportRepository.findUserByIdForUpdate(reportId).orElseThrow(() -> new ReportException(ReportErrorCode.REPORT_NOT_FOUND));
 
-        //일단 대기 상태가 아니라면 승인 불가
+        //대기 상태가 아니라면 승인 불가
         if (report.getStatus() != ReportStatus.PENDING) {
-            throw new RuntimeException("report status is not PENDING");
+            throw new ReportException(ReportErrorCode.REPORT_NOT_PENDING);
         }
 
         report.approve();
@@ -87,44 +102,40 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public void reject(Long reportId) {
 
-        Report report = reportRepository.findById(reportId).orElseThrow(() -> new RuntimeException("report not found"));
+        Report report = reportRepository.findUserByIdForUpdate(reportId).orElseThrow(() -> new ReportException(ReportErrorCode.REPORT_NOT_FOUND));
 
-        //일단 대기 상태가 아니라면 거부 불가
+        //대기 상태가 아니라면 거부 불가
         if (report.getStatus() != ReportStatus.PENDING) {
-            throw new RuntimeException("report status is not PENDING");
+            throw new ReportException(ReportErrorCode.REPORT_NOT_PENDING);
         }
 
         report.reject();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<ReportResponseDTO> getPendingReports(Pageable pageable) {
-
         return reportRepository.findAllByStatus(ReportStatus.PENDING, pageable)
                 .map(ReportResponseDTO::from);
     }
 
     private void validateEntityExists(EntityType entityType, Long entityId) {
 
+        //검증 실패 시 예외 발생
         switch (entityType) {
             case QUESTION:
-                //todo: 교체해야함
-/*                if (!questionRepository.existsById(entityId)) {
-                    throw new IllegalArgumentException("해당 질문이 존재하지 않습니다");
-                }*/
+                questionService.validateQuestionExists(entityId);
                 break;
             case ANSWER:
-                //todo: 교체해야함
-/*                if (!answerRepository.existsById(entityId)) {
-                    throw new IllegalArgumentException("해당 답변이 존재하지 않습니다");
-                }*/
+                answerService.validateAnswerExists(entityId);
                 break;
-/*            case COMMENT:
-                if (!commentRepository.existsById(entityId)) {
-                    throw new IllegalArgumentException("해당 댓글이 존재하지 않습니다");
-                }
-                break;*/
+            case COMMENT:
+                commentService.existsByCommentId(entityId);
+                break;
+            default:
+                throw new ReportException(ReportErrorCode.INVALID_REPORT_TARGET_TYPE);
         }
+
     }
 
     //이미 신고된 안건인지 확인.
@@ -138,32 +149,26 @@ public class ReportServiceImpl implements ReportService {
     private void deleteReportedContent(ReportTarget target) {
         switch (target.getEntityType()) {
             case QUESTION:
-
-                //해당 질문 처리
-                //질문이 신고당했을 때 -> 질문 삭제
+                //질문 데이터 삭제
+                questionService.deleteQuestionByAdmin(target.getEntityId());
                 break;
 
             case ANSWER:
-                //todo: 교체해야함
-/*                Answer answer = answerRepository.findById(target.getEntityId())
-                        .orElseThrow(() -> new AnswerNotFoundException(target.getEntityId()));*/
-                //해당 답변 처리
-                //답변이 신고 당했을 때 -> 관리자에 의해 삭제된 답변입니다.
+                //소프트 삭제, 관리자에 의해 삭제된 답변입니다. 로 내용 교체
+                answerService.softDeleteAnswerByAdmin(target.getEntityId());
                 break;
 
             case COMMENT:
-                // Comment comment = commentRepository.findById(target.getEntityId())...
-                // comment.delete();
-                //댓글이 신고 당했을 때 ->  관리자에 의해 삭제된 댓글 -> 댓글 삭제
+                //댓글 삭제, 관리자에 의해 삭제된 댓글입니다. 로 내용 교체
+                commentService.softDeleteComment(target.getEntityId());
                 break;
         }
     }
 
     private void punishReportedUser(User user) {
 
-        log.info("진짜 처벌됨 userId = {}",user.getId());
-        //userService.deleteUser(user.getId());
-        //userRepository.delete(user);
+        log.info("punished userId = {}", user.getId());
+        userService.deleteUser(user.getId());
     }
 
 }
