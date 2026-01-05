@@ -442,46 +442,6 @@ playground.oauth.fail.url=/test/oauth/fail
 - GlobalExceptionHandler로 중앙 처리
 - 일관된 에러 응답 형식
 
-## 📝 개선 제안
-
-### 1. 추가 고려 사항
-
-```
-src/main/java/org/example/playground/
-├── global/
-│   ├── config/
-│   │   ├── SecurityConfig.java
-│   │   ├── JpaConfig.java          # JPA 추가 설정 (필요 시)
-│   │   ├── WebConfig.java          # WebMvc 설정 (필요 시)
-│   │   └── CorsConfig.java         # CORS 설정 분리 (선택)
-│   │
-│   └── validation/                 # 커스텀 Validator (필요 시)
-│       └── ...
-```
-
-### 2. 테스트 구조 개선
-
-```
-src/test/java/org/example/playground/
-├── domain/
-│   ├── user/
-│   │   ├── UserServiceTest.java
-│   │   └── UserControllerTest.java
-│   └── question/
-│       └── ...
-└── global/
-    └── ...
-```
-
-### 3. 설정 파일 분리
-
-```
-src/main/resources/
-├── application.properties
-├── application-dev.properties
-├── application-prod.properties
-└── application-test.yml
-```
 
 ## 🔍 주요 패턴 및 관례
 
