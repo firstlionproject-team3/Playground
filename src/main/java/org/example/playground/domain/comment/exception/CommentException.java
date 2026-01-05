@@ -1,22 +1,12 @@
 package org.example.playground.domain.comment.exception;
 
-import org.springframework.http.HttpStatus;
+import org.example.playground.global.exception.BusinessException;
+import org.example.playground.global.exception.ErrorCode;
 
-public class CommentException extends RuntimeException {
+public class CommentException extends BusinessException {
 
-    // TODO: 타입 ErrorCode로 변경 예정
-    private final CommentErrorCode errorCode;
-
-    public CommentException(CommentErrorCode errorCode) {
-        super(errorCode.getMessage());
-        this.errorCode = errorCode;
+    public CommentException(ErrorCode errorCode) {
+        super(errorCode);
     }
 
-    public HttpStatus getStatus() {
-        return errorCode.getStatus();
-    }
-
-    public String getCode() {
-        return errorCode.getCode();
-    }
 }
