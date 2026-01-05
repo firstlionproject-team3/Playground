@@ -4,6 +4,7 @@ import org.example.playground.domain.answer.entity.Answer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
@@ -25,5 +26,15 @@ public interface AnswerRepository extends JpaRepository<Answer, Long> {
     List<Answer> findByQuestion_IdOrderByAcceptedDescCreatedAtDesc(Long questionId);
 
     Page<Answer> findByQuestion_IdOrderByAcceptedDescCreatedAtDesc(Long questionId, Pageable pageable);
+
+    // User fetch join
+    @Query("""
+        select a
+        from Answer a
+        join fetch a.user
+        where a.question.id = :questionId
+        order by a.accepted desc , a.createdAt desc
+""")
+    List<Answer> findByQuestionIdWithUserOrderByAcceptedDescCreatedAtDesc(Long questionId);
 
 }
