@@ -12,10 +12,10 @@ public interface UserService {
 
     SecurityResponseForJWT handleOAuth2Login(OAuth2UserInfo oAuthUserInfo);
 
-    //TODO 회원 마이페이지용 유저 정보 조회 메서드
+    // 회원 마이페이지용 유저 정보 조회 메서드
     UserMyPageResponseDTO getUser(Long id);
 
-    //TODO 회원정보 수정 메서드
+    // 회원정보 수정 메서드
     UserMyPageResponseDTO updateUser(Long id, UserUpdateRequestDTO userUpdateRequestDTO);
 
     //회원 탈퇴
