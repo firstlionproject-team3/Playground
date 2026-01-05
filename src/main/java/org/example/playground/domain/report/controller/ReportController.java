@@ -1,7 +1,10 @@
-package org.example.playground.domain.report;
+package org.example.playground.domain.report.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.playground.domain.report.service.ReportService;
+import org.example.playground.domain.report.dto.ReportCreateRequestDTO;
+import org.example.playground.domain.report.dto.ReportResponseDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
