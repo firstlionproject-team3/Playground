@@ -5,11 +5,14 @@ import org.example.playground.domain.answer.dto.response.AnswerSummaryResponseDT
 import org.example.playground.domain.answer.entity.Answer;
 import org.example.playground.domain.answer.exception.AnswerErrorCode;
 import org.example.playground.domain.answer.repository.AnswerRepository;
+import org.example.playground.domain.comment.entity.Comment;
+import org.example.playground.domain.comment.repository.CommentRepository;
 import org.example.playground.domain.notification.dto.NotificationRequestDTO;
 import org.example.playground.domain.notification.entity.NotificationType;
 import org.example.playground.domain.notification.service.NotificationService;
 import org.example.playground.domain.question.dto.request.QuestionUpdateRequestDTO;
 import org.example.playground.domain.question.dto.response.QuestionDetailResponseDTO;
+import org.example.playground.domain.question.dto.response.QuestionResponseDTO;
 import org.example.playground.domain.question.dto.response.QuestionSummaryResponseDTO;
 import org.example.playground.domain.question.exception.*;
 import org.example.playground.domain.reaction.entity.ReactionType;
@@ -39,6 +42,7 @@ public class QuestionService {
     private final NotificationService notificationService;
     private final AnswerRepository answerRepository;
     private final ReactionService reactionService;
+    private final CommentRepository commentRepository;
 
     //질문 생성
     @Transactional
@@ -158,6 +162,36 @@ public class QuestionService {
                 qMyReaction,
                 answerDtos
         );
+    }
+
+    // 질문 상세 조회 버전 2 - repository에 fetch join 쿼리 추가
+    @Transactional(readOnly = true)
+    public QuestionResponseDTO getQuestion(Long questionId) {
+
+        // 질문
+        Question question = questionRepository.findByIdWithUser(questionId)
+                .orElseThrow(() -> new BusinessException(
+                        QuestionErrorCode.QUESTION_NOT_FOUND,
+                        "해당하는 질문을 찾을 수 없습니다. questionId = " + questionId
+                ));
+        // 조회수 증가
+        question.increaseViewCount();
+
+        // 답변 목록(채택 우선, 최신순)
+        List<Answer> answers = answerRepository
+                .findByQuestionIdWithUserOrderByAcceptedDescCreatedAtDesc(questionId);
+
+        // 답변들의 id 리스트
+        List<Long> answerIds = answers.stream()
+                .map(Answer::getId)
+                .toList();
+
+        // 댓글 목록
+        List<Comment> comments = answerIds.isEmpty()
+                ? List.of()
+                : commentRepository.findByAnswerIdInWithUserOrderByCreatedAtAsc(answerIds);
+
+        return QuestionResponseDTO.from(question, answers, comments);
     }
 
     //질문 수정
