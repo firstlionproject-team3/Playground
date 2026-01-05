@@ -5,8 +5,12 @@ import io.jsonwebtoken.MalformedJwtException;
 import lombok.RequiredArgsConstructor;
 import org.example.playground.domain.refreshtoken.dto.AccessAndRefreshTokenDTO;
 import org.example.playground.domain.refreshtoken.entity.RefreshToken;
+import org.example.playground.domain.refreshtoken.exception.RefreshTokenErrorCode;
+import org.example.playground.domain.refreshtoken.exception.RefreshTokenException;
 import org.example.playground.domain.refreshtoken.repository.RefreshTokenRepository;
 import org.example.playground.domain.user.entity.User;
+import org.example.playground.domain.user.exception.UserErrorCode;
+import org.example.playground.domain.user.exception.UserException;
 import org.example.playground.domain.user.exception.UserNotFoundException;
 import org.example.playground.domain.user.repository.UserRepository;
 import org.example.playground.global.security.jwt.JwtTokenProvider;
@@ -34,7 +38,7 @@ public class RefreshTokenService {
     @Transactional(readOnly = true)
     public RefreshToken getRefreshToken(String token) {
         return refreshTokenRepository.findByToken(token)
-                .orElseThrow(() -> new IllegalArgumentException("토큰이 존재하지 않습니다."));
+                .orElseThrow(() -> new RefreshTokenException(RefreshTokenErrorCode.REFRESH_TOKEN_NOT_FOUND));
     }
 
     // 토큰 삭제
@@ -54,7 +58,7 @@ public class RefreshTokenService {
 
         // RefreshToken의 Claims에는 권한이 없기때문에 id로 db에 접근해 권한을 가져와야한다.
         User user = userRepository.findById(sub)
-                .orElseThrow(() -> new UserNotFoundException("토큰 재발급 중 오류 발생!"));
+                .orElseThrow(() -> new UserException(UserErrorCode.USER_NOT_FOUND));
         List<String> roles = user.getRoles().stream()
                 .map(userRole -> userRole.getRole().getName())
                 .toList();
@@ -62,9 +66,9 @@ public class RefreshTokenService {
         // 쿠키에서 꺼낸 토큰으로 db에 저장된 토큰과 일치하는지 검증
         // 일치하지 않는다면 -> 에러반환
         RefreshToken dbToken = refreshTokenRepository.findByToken(refreshToken)
-                .orElseThrow(() -> new IllegalArgumentException("토큰이 존재하지 않습니다."));
+                .orElseThrow(() -> new RefreshTokenException(RefreshTokenErrorCode.REFRESH_TOKEN_NOT_FOUND));
         if (!dbToken.getToken().equals(refreshToken)) {
-            throw new MalformedJwtException("유효하지 않은 Refresh Token 입니다.");
+            throw new RefreshTokenException(RefreshTokenErrorCode.REFRESH_TOKEN_MISMATCH);
         }
 
         // 로테이션 - 한 번 사용된 RefreshToken은 즉시 폐기하고 새로 발급하여 DB에 교체해주는 방식.
