@@ -26,16 +26,22 @@ public class ReactionController {
      * 추천/비추천 생성 또는 변경
      * 같은 타입이면 삭제, 다른 타입이면 변경
      */
-    @PostMapping
+    @PostMapping("/like")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void toggleReaction(
+    public void toggleLikeReaction(
             @AuthenticationPrincipal CustomUserDetails principal,
             @Valid @RequestBody ReactionRequestDto request
     ) {
         reactionService.toggleReaction(principal.getId(), request);
+    }
 
-        //Countable interface 사용
-//        reactionService.toggleReactionCountable(principal.getId(), request);
+    @PostMapping("/dislike")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void toggleDisLikeReaction(
+            @AuthenticationPrincipal CustomUserDetails principal,
+            @Valid @RequestBody ReactionRequestDto request
+    ) {
+        reactionService.toggleReaction(principal.getId(), request);
     }
 
     /**
