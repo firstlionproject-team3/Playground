@@ -29,21 +29,23 @@ public class SecurityConfig {
     private final OAuth2FailureHandler oAuth2FailureHandler;
     private final JwtTokenFilter jwtTokenFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-    private final CorsConfigurationSource configurationSource;
 
     // 순환 참조 방지, 의도적으로 생성자 작성
     public SecurityConfig(@Lazy OAuth2SuccessHandler oAuth2SuccessHandler, OAuth2FailureHandler oAuth2FailureHandler, JwtTokenFilter jwtTokenFilter,
-                          JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint, CorsConfigurationSource configurationSource) {
+                          JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) {
         this.oAuth2SuccessHandler = oAuth2SuccessHandler;
         this.oAuth2FailureHandler = oAuth2FailureHandler;
         this.jwtTokenFilter = jwtTokenFilter;
         this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
-        this.configurationSource = configurationSource;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                // cors 설정 적용 - 다른 출처에서의 요청을 허용
+                // 생성자 주입 방식을 사용하면 CorsConfig 빈이 만들어지기 전에 주입이 된다.(프록시 객체 등인 상태로 주입됨)
+                // Bean으로 주입받지 않고 직접 호출 해주는것으로 변경
+                .cors(cors -> cors.configurationSource(configurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .oauth2Login(oauth -> {
                     oauth.successHandler(oAuth2SuccessHandler);
@@ -75,8 +77,6 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                // cors 설정 적용 - 다른 출처에서의 요청을 허용
-                .cors(cors -> cors.configurationSource(configurationSource))
                 // JWT 인증 필터 등록
                 // UsernamePasswordAuthenticationFilter 전에 실행되어
                 // 요청마다 accessToken을 검증하고 SecurityContext에 인증 정보 저장
@@ -93,7 +93,6 @@ public class SecurityConfig {
         return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 
-    @Bean
     public CorsConfigurationSource configurationSource() {
         CorsConfiguration config = new CorsConfiguration();
 
