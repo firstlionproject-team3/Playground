@@ -3,6 +3,7 @@ package org.example.playground.domain.comment.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.playground.domain.answer.entity.Answer;
+import org.example.playground.domain.reaction.entity.ReactionCountable;
 import org.example.playground.domain.user.entity.User;
 
 import java.time.LocalDateTime;
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder(access = AccessLevel.PRIVATE)
 @Table(name = "comments")
-public class Comment {
+public class Comment implements ReactionCountable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,6 +24,10 @@ public class Comment {
     private String content;
 
     private boolean deleted;
+
+    private int likeCount;
+
+    private int dislikeCount;
 
     @Column(nullable = false)
     @Builder.Default
@@ -59,5 +64,25 @@ public class Comment {
         this.content = "관리자에 의해 삭제된 댓글입니다.";
         this.deleted = true;
         this.updatedAt = LocalDateTime.now();
+    }
+
+    @Override
+    public void increaseLike() {
+        likeCount++;
+    }
+
+    @Override
+    public void decreaseLike() {
+        likeCount--;
+    }
+
+    @Override
+    public void increaseDislike() {
+        dislikeCount++;
+    }
+
+    @Override
+    public void decreaseDislike() {
+        dislikeCount--;
     }
 }
