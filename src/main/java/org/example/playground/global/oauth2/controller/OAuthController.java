@@ -3,6 +3,7 @@ package org.example.playground.global.oauth2.controller;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.playground.domain.refreshtoken.dto.AccessAndRefreshTokenDTO;
 import org.example.playground.global.oauth2.store.CodeInfo;
 import org.example.playground.global.oauth2.store.TempCodeStore;
 import org.example.playground.global.security.auth.service.AuthService;
@@ -39,9 +40,15 @@ public class OAuthController {
         Long userId = codeInfo.getUserId();
         List<String> userRoles = codeInfo.getRoles();
 
-        //토큰 발급...
-        authService
-        Map<String, String> body = Map.of("accessToken", accessToken.getToken());
+        //토큰 발급
+        AccessAndRefreshTokenDTO token = authService.createToken(userId, userRoles);
+
+        String accessToken = token.getAccessToken();
+        TokenDTO refreshToken = token.getRefreshToken();
+
+        CookieUtil.addRefreshToken(response,refreshToken);
+
+        Map<String, String> body = Map.of("accessToken", accessToken);
 
 
         return ResponseEntity.ok(body);
