@@ -1,0 +1,41 @@
+.admin-user-list-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.admin-user-list-loading {
+  text-align: center;
+  padding: 4rem;
+  color: #666;
+}
+
+.admin-user-table {
+  width: 100%;
+  background: white;
+  border-collapse: collapse;
+  margin: 2rem 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.admin-user-table th,
+.admin-user-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.admin-user-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+.admin-user-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
+
