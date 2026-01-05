@@ -1,7 +1,6 @@
 package org.example.playground.domain.report.repository;
 
 import jakarta.persistence.LockModeType;
-import org.example.playground.domain.report.ReportResponseDTO;
 import org.example.playground.domain.report.entity.Report;
 import org.example.playground.domain.report.entity.ReportStatus;
 import org.example.playground.domain.report.entity.ReportTarget;

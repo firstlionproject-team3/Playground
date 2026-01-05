@@ -4,10 +4,12 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.example.playground.domain.user.entity.User;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(
         name = "reports",
         uniqueConstraints = {
