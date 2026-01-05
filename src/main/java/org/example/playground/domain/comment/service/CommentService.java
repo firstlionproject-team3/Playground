@@ -85,6 +85,9 @@ public class CommentService {
     // 댓글 존재여부
     @Transactional(readOnly = true)
     public boolean existsByCommentId(Long commentId) {
-        return commentRepository.existsById(commentId);
+        if (!commentRepository.existsById(commentId)) {
+            throw new CommentException(CommentErrorCode.COMMENT_NOT_FOUND);
+        }
+        return true;
     }
 }
