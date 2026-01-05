@@ -1,6 +1,7 @@
 package org.example.playground.domain.user.service;
 
 import org.example.playground.domain.user.dto.*;
+import org.example.playground.domain.user.entity.User;
 
 public interface UserService {
     //회원 가입
@@ -20,7 +21,5 @@ public interface UserService {
     //회원 탈퇴
     void deleteUser(Long id);
 
-    //회원의 모든 댓글 조회
-
-    //회원의 모든 게시글 조회
+    User findUserOrThrow(Long id);
 }
