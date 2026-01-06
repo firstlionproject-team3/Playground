@@ -1,7 +1,7 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { authApi } from '@/api/auth';
-import { Bell, LogOut, User, PlusCircle, Trash2, Shield } from 'lucide-react';
+import { Bell, LogOut, User, PlusCircle, Trash2, Shield, Check } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { notificationApi } from '@/api/notification';
 import { Notification } from '@/types';
@@ -17,6 +17,7 @@ export default function Layout() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [badgeAnimation, setBadgeAnimation] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const reconnectAttemptsRef = useRef(0);
@@ -156,14 +157,53 @@ export default function Layout() {
     eventSource.onopen = () => {
       // 연결 성공 시 재연결 시도 횟수 초기화
       reconnectAttemptsRef.current = 0;
-      console.log('SSE 연결 성공');
+      console.log('✅ SSE 연결 성공');
     };
 
+    // 커스텀 이벤트 리스너 추가
+    eventSource.addEventListener('connect', (event: any) => {
+      console.log('🔗 SSE 연결 확인:', event.data);
+    });
+
+    eventSource.addEventListener('notification', (event: any) => {
+      try {
+        console.log('🔔 실시간 알림 수신:', event.data);
+        const notification = JSON.parse(event.data) as Notification;
+        setNotifications((prev) => [notification, ...prev]);
+        setUnreadCount((prev) => prev + 1);
+        
+        // 배지 애니메이션 트리거
+        setBadgeAnimation(true);
+        setTimeout(() => {
+          setBadgeAnimation(false);
+        }, 600);
+        
+        toast.success(notification.content, {
+          icon: '🔔',
+          duration: 3000,
+        });
+      } catch (error) {
+        console.error('알림 파싱 실패:', error);
+      }
+    });
+
+    eventSource.addEventListener('keepConnect', (event: any) => {
+      console.log('💓 SSE 연결 유지:', event.data);
+    });
+
+    // 기본 message 이벤트도 처리 (백업용)
     eventSource.onmessage = (event) => {
       try {
         const notification = JSON.parse(event.data) as Notification;
         setNotifications((prev) => [notification, ...prev]);
         setUnreadCount((prev) => prev + 1);
+        
+        // 배지 애니메이션 트리거
+        setBadgeAnimation(true);
+        setTimeout(() => {
+          setBadgeAnimation(false);
+        }, 600);
+        
         toast.success(notification.content, {
           icon: '🔔',
           duration: 3000,
@@ -215,6 +255,25 @@ export default function Layout() {
     }
   };
 
+  const handleMarkAsRead = async (notification: Notification, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!notification.isRead) {
+      try {
+        await notificationApi.markAsRead(notification.id);
+        setNotifications((prev) =>
+          prev.map((n) =>
+            n.id === notification.id ? { ...n, isRead: true } : n
+          )
+        );
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+        toast.success('알림을 읽음 처리했습니다.');
+      } catch (error) {
+        console.error('알림 읽음 처리 실패:', error);
+        toast.error('알림 읽음 처리에 실패했습니다.');
+      }
+    }
+  };
+
   const handleNotificationClick = async (notification: Notification) => {
     if (!notification.isRead) {
       try {
@@ -225,15 +284,17 @@ export default function Layout() {
           )
         );
         setUnreadCount((prev) => Math.max(0, prev - 1));
-        // 알림 읽음 상태를 즉시 반영하기 위해 다시 로드
-        await loadNotifications();
       } catch (error) {
         console.error('알림 읽음 처리 실패:', error);
       }
     }
     setShowNotifications(false);
+    
     // 알림 타입에 따라 적절한 페이지로 이동
-    if (notification.questionId) {
+    if (notification.type === 'REPORT_RECEIVED') {
+      // 신고 알림은 관리자 페이지로 이동
+      navigate('/admin');
+    } else if (notification.questionId) {
       navigate(`/questions/${notification.questionId}`);
     } else if (notification.type === 'NEW_ANSWER' || notification.type === 'ANSWER_ACCEPTED') {
       // 질문 상세 페이지로 이동
@@ -283,7 +344,13 @@ export default function Layout() {
                     >
                       <Bell className="w-5 h-5" />
                       {unreadCount > 0 && (
-                        <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                        <span 
+                          className={`absolute top-0 right-0 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-semibold transition-all duration-300 ${
+                            badgeAnimation 
+                              ? 'animate-badge-pop animate-badge-pulse' 
+                              : ''
+                          }`}
+                        >
                           {unreadCount > 9 ? '9+' : unreadCount}
                         </span>
                       )}
@@ -323,23 +390,35 @@ export default function Layout() {
                                     {new Date(notification.createdAt).toLocaleString('ko-KR')}
                                   </p>
                                 </button>
-                                <button
-                                  onClick={async (e) => {
-                                    e.stopPropagation();
-                                    try {
-                                      await notificationApi.delete(notification.id);
-                                      setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
-                                      if (!notification.isRead) {
-                                        setUnreadCount((prev) => Math.max(0, prev - 1));
+                                <div className="flex items-center space-x-1 ml-2">
+                                  {!notification.isRead && (
+                                    <button
+                                      onClick={(e) => handleMarkAsRead(notification, e)}
+                                      className="p-1 text-gray-400 hover:text-primary-600 transition-colors"
+                                      title="읽음 처리"
+                                    >
+                                      <Check className="w-4 h-4" />
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={async (e) => {
+                                      e.stopPropagation();
+                                      try {
+                                        await notificationApi.delete(notification.id);
+                                        setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
+                                        if (!notification.isRead) {
+                                          setUnreadCount((prev) => Math.max(0, prev - 1));
+                                        }
+                                      } catch (error) {
+                                        console.error('알림 삭제 실패:', error);
                                       }
-                                    } catch (error) {
-                                      console.error('알림 삭제 실패:', error);
-                                    }
-                                  }}
-                                  className="ml-2 p-1 text-gray-400 hover:text-red-600 transition-colors"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
+                                    }}
+                                    className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                                    title="삭제"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
                               </div>
                             ))
                           )}
