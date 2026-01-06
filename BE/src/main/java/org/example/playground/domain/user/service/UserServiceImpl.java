@@ -61,6 +61,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     //OAuth2 인증을 성공한 유저가 회원이 아니라면 회원테이블에 추가하는 로직
     //반환타입은 토큰 발급에 필요한 두개의 필드를 가진 별도의 타입
     public SecurityResponseForJWT handleOAuth2Login(OAuth2UserInfo info) {
