@@ -12,14 +12,14 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
-  const [searchType, setSearchType] = useState<'title' | 'content' | 'all'>('all');
+  const [searchType, setSearchType] = useState<'title' | 'content'>('title');
   const [keyword, setKeyword] = useState('');
   const [searchInput, setSearchInput] = useState('');
 
   // 페이지 변경 시에만 질문 목록 로드
   useEffect(() => {
     loadQuestions();
-  }, [page, keyword]);
+  }, [page, keyword, searchType]);
 
   const loadQuestions = async () => {
     setLoading(true);
@@ -27,7 +27,7 @@ export default function HomePage() {
       const data: PageResponse<QuestionSummary> = await questionApi.getQuestions(
         page,
         10,
-        searchType,
+        keyword ? searchType : undefined,
         keyword || undefined
       );
       setQuestions(data.content);
@@ -43,6 +43,17 @@ export default function HomePage() {
     e.preventDefault();
     setKeyword(searchInput);
     setPage(0); // 검색 시 첫 페이지로 리셋
+  };
+
+  const handleSearchTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSearchType(e.target.value as 'title' | 'content');
+    setPage(0); // 타입 변경 시 첫 페이지로 리셋
+  };
+
+  const handleClearSearch = () => {
+    setKeyword('');
+    setSearchInput('');
+    setPage(0);
   };
 
   return (
@@ -68,10 +79,9 @@ export default function HomePage() {
           <div className="flex-1 flex space-x-2">
             <select
               value={searchType}
-              onChange={(e) => setSearchType(e.target.value as 'title' | 'content' | 'all')}
+              onChange={handleSearchTypeChange}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
-              <option value="all">전체</option>
               <option value="title">제목</option>
               <option value="content">내용</option>
             </select>
@@ -89,6 +99,15 @@ export default function HomePage() {
           <button type="submit" className="btn-primary">
             검색
           </button>
+          {keyword && (
+            <button 
+              type="button"
+              onClick={handleClearSearch}
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              전체 글 보기
+            </button>
+          )}
         </form>
       </div>
 
@@ -99,8 +118,10 @@ export default function HomePage() {
         </div>
       ) : questions.length === 0 ? (
         <div className="card text-center py-12">
-          <p className="text-gray-500">질문이 없습니다.</p>
-          {isAuthenticated && (
+          <p className="text-gray-500">
+            {keyword ? '검색 결과가 없습니다.' : '질문이 없습니다.'}
+          </p>
+          {isAuthenticated && !keyword && (
             <Link to="/questions/create" className="mt-4 inline-block btn-primary">
               첫 질문 작성하기
             </Link>
@@ -114,7 +135,7 @@ export default function HomePage() {
             ))}
           </div>
 
-          {totalPages > 1 && (
+          {totalPages > 0 && (
             <div className="flex justify-center space-x-2">
               <button
                 onClick={() => setPage((p) => Math.max(0, p - 1))}

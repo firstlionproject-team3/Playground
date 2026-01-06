@@ -6,6 +6,7 @@ import { validateNickname, validateEmail } from '@/utils/validation';
 import toast from 'react-hot-toast';
 import { Edit, Save, X, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuthStore } from '@/store/authStore';
 
 export default function MyPage() {
   const [user, setUser] = useState<UserMyPageResponse | null>(null);
@@ -80,6 +81,8 @@ export default function MyPage() {
       const updated = await userApi.updateMyPage(editData);
       setUser(updated);
       setIsEditing(false);
+      // 닉네임 변경 시 상단에 반영
+      setUserStore(updated);
       toast.success('정보가 수정되었습니다.');
     } catch (error: any) {
       toast.error(error.response?.data?.message || '수정에 실패했습니다.');
