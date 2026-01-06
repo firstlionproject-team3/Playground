@@ -24,5 +24,11 @@ export const commentApi = {
   delete: async (commentId: number): Promise<void> => {
     await apiClient.delete(`/comments/${commentId}`);
   },
+
+  // 댓글 단건 조회
+  getComment: async (commentId: number): Promise<CommentResponse> => {
+    const response = await apiClient.get<CommentResponse>(`/comments/${commentId}`);
+    return response.data;
+  },
 };
 

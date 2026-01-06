@@ -40,5 +40,11 @@ export const answerApi = {
   report: async (questionId: number, answerId: number): Promise<void> => {
     await apiClient.patch(`/questions/${questionId}/answers/${answerId}/report`);
   },
+
+  // 답변 단건 조회
+  getAnswer: async (answerId: number): Promise<AnswerDetail> => {
+    const response = await apiClient.get<AnswerDetail>(`/answers/${answerId}`);
+    return response.data;
+  },
 };
 

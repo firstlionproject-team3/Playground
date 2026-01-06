@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { userApi } from '@/api/user';
 import { validateLoginId, validatePassword, validateEmail } from '@/utils/validation';
 import toast from 'react-hot-toast';
@@ -63,6 +64,13 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
+        <button
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white rounded-lg border border-gray-300 shadow-sm hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>뒤로가기</span>
+        </button>
         <div className="text-center">
           <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl flex items-center justify-center mb-4">
             <span className="text-white font-bold text-2xl">P</span>
