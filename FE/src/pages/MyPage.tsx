@@ -16,8 +16,8 @@ export default function MyPage() {
   const [activeTab, setActiveTab] = useState<'questions' | 'answers'>('questions');
   const [questions, setQuestions] = useState<QuestionSummary[]>([]);
   const [answers, setAnswers] = useState<AnswerSummary[]>([]);
-  const [questionsPage, setQuestionsPage] = useState(0);
-  const [answersPage, setAnswersPage] = useState(0);
+  const questionsPage = 0;
+  const answersPage = 0;
 
   useEffect(() => {
     loadUser();
@@ -29,7 +29,7 @@ export default function MyPage() {
     } else {
       loadAnswers();
     }
-  }, [activeTab, questionsPage, answersPage]);
+  }, [activeTab]);
 
   const loadUser = async () => {
     setLoading(true);

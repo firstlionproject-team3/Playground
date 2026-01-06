@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { questionApi } from '@/api/question';
 import { answerApi } from '@/api/answer';
 import { commentApi } from '@/api/comment';
-import { QuestionResponse, AnswerDetail, CommentResponse } from '@/types';
+import { QuestionResponse } from '@/types';
 import { formatDate, formatRelativeTime } from '@/utils/date';
 import ReactionButton from '@/components/ReactionButton';
 import { useAuthStore } from '@/store/authStore';

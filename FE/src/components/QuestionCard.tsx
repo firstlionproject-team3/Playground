@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { formatRelativeTime } from '@/utils/date';
 import { QuestionSummary } from '@/types';
-import { MessageSquare, Eye } from 'lucide-react';
 
 interface QuestionCardProps {
   question: QuestionSummary;

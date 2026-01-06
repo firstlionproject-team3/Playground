@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { adminApi } from '@/api/admin';
 import { PageResponse } from '@/types';
 import toast from 'react-hot-toast';
-import { Trash2, Eye } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 
 export default function AdminPage() {
   const [users, setUsers] = useState<any[]>([]);
