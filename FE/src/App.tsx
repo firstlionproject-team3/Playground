@@ -18,7 +18,7 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 }
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   // 관리자 체크는 백엔드에서 하지만, 프론트엔드에서도 UX를 위해 체크
   // 실제로는 user 객체에 role 정보가 있어야 함
   if (!isAuthenticated) {
