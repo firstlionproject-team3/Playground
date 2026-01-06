@@ -43,6 +43,8 @@ export interface UserMyPageResponse {
   nickname: string;
   email?: string;
   joinedDate: string;
+  loginId?: string;
+  roles?: string[];
 }
 
 export interface UserUpdateRequest {

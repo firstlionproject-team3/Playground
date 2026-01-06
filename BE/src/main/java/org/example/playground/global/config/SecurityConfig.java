@@ -67,6 +67,11 @@ public class SecurityConfig {
                         .requestMatchers("/h2-console/**").permitAll()
                         // 에러 리다이렉트 허용
                         .requestMatchers("/error").permitAll()
+                        // 관리자 접근 허용
+                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        // 신고 관련
+                        .requestMatchers(HttpMethod.POST,"/reports/**").hasAnyRole("USER","ADMIN")
+                        .requestMatchers("/reports/**").hasRole("ADMIN")
                         // 인증된 사용자만 접근 가능
                         // (Authorization 헤더에 유효한 accessToken 필요)
                         .anyRequest().authenticated())

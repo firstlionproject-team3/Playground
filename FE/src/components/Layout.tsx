@@ -1,19 +1,30 @@
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { authApi } from '@/api/auth';
-import { Bell, LogOut, User, PlusCircle, Trash2 } from 'lucide-react';
+import { Bell, LogOut, User, PlusCircle, Trash2, Shield } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { notificationApi } from '@/api/notification';
 import { Notification } from '@/types';
 import toast from 'react-hot-toast';
+import { userApi } from '@/api/user';
 
 export default function Layout() {
-  const { isAuthenticated, user, logout: logoutStore } = useAuthStore();
+  const { isAuthenticated, user, logout: logoutStore, setUser } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // 새로고침 시 user 정보 로드
+  useEffect(() => {
+    if (isAuthenticated && !user) {
+      loadUser();
+    } else if (isAuthenticated && user) {
+      checkAdmin();
+    }
+  }, [isAuthenticated, user]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -28,12 +39,34 @@ export default function Layout() {
     };
   }, [isAuthenticated]);
 
-  // 새로고침 시 알림 다시 로드
-  useEffect(() => {
-    if (isAuthenticated) {
-      loadNotifications();
+  const loadUser = async () => {
+    try {
+      const userData = await userApi.getMyPage();
+      setUser(userData);
+      checkAdmin(userData);
+    } catch (error) {
+      console.error('사용자 정보 로드 실패:', error);
     }
-  }, []);
+  };
+
+  const checkAdmin = async (userData?: any) => {
+    try {
+      const testUser = userData || user;
+      if (testUser) {
+        // 백엔드에서 role 정보를 제공하는 경우
+        if (testUser.roles && Array.isArray(testUser.roles)) {
+          setIsAdmin(testUser.roles.includes('ROLE_ADMIN'));
+        } else if (testUser.loginId === 'admin') {
+          // 임시로 loginId가 'admin'인 경우 관리자로 간주
+          setIsAdmin(true);
+        } else {
+          setIsAdmin(false);
+        }
+      }
+    } catch (error) {
+      setIsAdmin(false);
+    }
+  };
 
   const loadNotifications = async () => {
     try {
@@ -94,6 +127,8 @@ export default function Layout() {
           )
         );
         setUnreadCount((prev) => Math.max(0, prev - 1));
+        // 알림 읽음 상태를 즉시 반영하기 위해 다시 로드
+        await loadNotifications();
       } catch (error) {
         console.error('알림 읽음 처리 실패:', error);
       }
@@ -102,15 +137,17 @@ export default function Layout() {
     // 알림 타입에 따라 적절한 페이지로 이동
     if (notification.questionId) {
       navigate(`/questions/${notification.questionId}`);
+    } else if (notification.targetId) {
+      navigate(`/questions/${notification.targetId}`);
     } else if (notification.type === 'NEW_ANSWER' || notification.type === 'ANSWER_ACCEPTED') {
-      // 질문 상세 페이지로 이동 (senderId를 임시로 사용)
-      if (notification.senderId) {
-        navigate(`/questions/${notification.senderId}`);
+      // 질문 상세 페이지로 이동
+      if (notification.questionId) {
+        navigate(`/questions/${notification.questionId}`);
       }
     } else if (notification.type === 'COMMENT_ADDED') {
       // 답변 상세 페이지로 이동
-      if (notification.senderId) {
-        navigate(`/questions/${notification.senderId}`);
+      if (notification.questionId) {
+        navigate(`/questions/${notification.questionId}`);
       }
     }
   };
@@ -215,6 +252,16 @@ export default function Layout() {
                       </>
                     )}
                   </div>
+
+                  {isAdmin && (
+                    <Link
+                      to="/admin"
+                      className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-100 transition-colors flex items-center space-x-2"
+                    >
+                      <Shield className="w-4 h-4" />
+                      <span>관리자</span>
+                    </Link>
+                  )}
 
                   <Link
                     to="/me"
