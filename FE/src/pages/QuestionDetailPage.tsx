@@ -219,16 +219,6 @@ export default function QuestionDetailPage() {
     }
   };
 
-  const handleReportAnswer = async (answerId: number) => {
-    if (!id) return;
-    try {
-      await answerApi.report(Number(id), answerId);
-      toast.success('신고가 접수되었습니다.');
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || '신고에 실패했습니다.');
-    }
-  };
-
   if (loading) {
     return (
       <div className="text-center py-12">
