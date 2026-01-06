@@ -25,18 +25,31 @@ public class QuestionResponseDTO {
     private long viewCount;
     private int likeCount;
     private int dislikeCount;
+    private String myReactionType; // LIKE | DISLIKE | NONE
     private List<AnswerResponseDTO> answers;
 
-    public static QuestionResponseDTO from(Question question, List<Answer> answers, List<Comment> comments) {
+    public static QuestionResponseDTO from(
+            Question question, 
+            List<Answer> answers, 
+            List<Comment> comments,
+            String myReactionType,
+            Map<Long, String> answerMyReactionMap,
+            Map<Long, String> commentMyReactionMap
+    ) {
         // comment를 answerId 기준으로 그룹핑
         Map<Long, List<Comment>> commentMap = comments.stream()
                 .collect(Collectors.groupingBy(c -> c.getAnswer().getId()));
 
         List<AnswerResponseDTO> answerDTOs = answers.stream()
-                .map(a -> AnswerResponseDTO.from(
-                        // 답변이 있는데 댓글은 0개다 그러면 빈 리스트 반환
-                        a, commentMap.getOrDefault(a.getId(), List.of())
-                )).toList();
+                .map(a -> {
+                    List<Comment> answerComments = commentMap.getOrDefault(a.getId(), List.of());
+                    return AnswerResponseDTO.from(
+                            a, 
+                            answerComments,
+                            answerMyReactionMap.getOrDefault(a.getId(), "NONE"),
+                            commentMyReactionMap
+                    );
+                }).toList();
 
         return QuestionResponseDTO.builder()
                 .id(question.getId())
@@ -47,6 +60,7 @@ public class QuestionResponseDTO {
                 .viewCount(question.getViewCount())
                 .likeCount(question.getLikeCount())
                 .dislikeCount(question.getDislikeCount())
+                .myReactionType(myReactionType != null ? myReactionType : "NONE")
                 .answers(answerDTOs)
                 .build();
     }

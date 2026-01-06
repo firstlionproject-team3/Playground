@@ -147,6 +147,9 @@ export interface CommentResponse {
   id: number;
   nickname: string;
   content: string;
+  likeCount?: number;
+  dislikeCount?: number;
+  myReactionType?: 'LIKE' | 'DISLIKE' | 'NONE';
   createdAt: string;
 }
 
