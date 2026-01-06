@@ -15,6 +15,8 @@ public class CommentResponseDTO {
 
     private Long id;
 
+    private Long userId;
+
     private String nickname;
 
     private String content;
@@ -28,6 +30,7 @@ public class CommentResponseDTO {
     public static CommentResponseDTO from(Comment comment) {
         return CommentResponseDTO.builder()
                 .id(comment.getId())
+                .userId(comment.getUser().getId())
                 .nickname(comment.getUser().getNickname()) // 댓글 개수만큼 쿼리
                 .content(comment.getContent())
                 .likeCount(comment.getLikeCount())

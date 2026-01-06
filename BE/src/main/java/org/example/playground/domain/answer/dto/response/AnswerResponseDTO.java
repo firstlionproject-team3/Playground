@@ -16,6 +16,7 @@ import java.util.List;
 public class AnswerResponseDTO {
 
     private Long id;
+    private Long userId;
     private String content;
     private String nickname;
     private int likeCount;
@@ -25,6 +26,7 @@ public class AnswerResponseDTO {
     public static AnswerResponseDTO from(Answer answer, List<Comment> comments) {
         return AnswerResponseDTO.builder()
                 .id(answer.getId())
+                .userId(answer.getUser().getId())
                 .content(answer.getContent())
                 .nickname(answer.getUser().getNickname()) // 답변 개수만큼 쿼리
                 .likeCount(answer.getLikeCount())

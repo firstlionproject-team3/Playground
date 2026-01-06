@@ -135,12 +135,43 @@ export default function QuestionDetailPage() {
   };
 
   const submitReport = async () => {
-    if (!reportTarget || !user) return;
+    if (!reportTarget || !user || !question) return;
+    
+    // 신고 대상의 작성자 ID 찾기
+    let reportedUserId: number | undefined;
+    
+    if (reportTarget.type === 'QUESTION') {
+      reportedUserId = question.userId;
+    } else if (reportTarget.type === 'ANSWER') {
+      const answer = question.answers.find(a => a.id === reportTarget.id);
+      reportedUserId = answer?.userId;
+    } else if (reportTarget.type === 'COMMENT') {
+      // 댓글의 경우 답변을 찾아서 댓글을 찾아야 함
+      for (const answer of question.answers) {
+        const comment = answer.comments?.find(c => c.id === reportTarget.id);
+        if (comment) {
+          reportedUserId = comment.userId;
+          break;
+        }
+      }
+    }
+    
+    if (!reportedUserId) {
+      toast.error('신고 대상의 작성자 정보를 찾을 수 없습니다.');
+      return;
+    }
+    
+    // 자기 자신을 신고하는 경우 방지
+    if (reportedUserId === user.id) {
+      toast.error('자기 자신을 신고할 수 없습니다.');
+      return;
+    }
+    
     try {
       const { reportApi } = await import('@/api/report');
       await reportApi.create({
         reporterId: user.id || 0,
-        reportedId: 0, // 백엔드에서 처리
+        reportedId: reportedUserId,
         entityType: reportTarget.type,
         entityId: reportTarget.id,
         category: reportCategory,
