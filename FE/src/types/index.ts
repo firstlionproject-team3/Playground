@@ -84,6 +84,7 @@ export interface QuestionDetail {
 
 export interface QuestionResponse {
   id: number;
+  userId?: number;
   nickname: string;
   title: string;
   content: string;
@@ -124,6 +125,7 @@ export interface AnswerSummary {
 
 export interface AnswerDetail {
   id: number;
+  userId?: number;
   nickname: string;
   content: string;
   accepted: boolean;
@@ -145,6 +147,7 @@ export interface AnswerUpdateRequest {
 // Comment Types
 export interface CommentResponse {
   id: number;
+  userId?: number;
   nickname: string;
   content: string;
   likeCount?: number;
