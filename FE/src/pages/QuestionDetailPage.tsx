@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { questionApi } from '@/api/question';
 import { answerApi } from '@/api/answer';
 import { commentApi } from '@/api/comment';
-import { QuestionResponse } from '@/types';
+import { QuestionResponse, ReportCategory } from '@/types';
 import { formatDate, formatRelativeTime } from '@/utils/date';
 import ReactionButton from '@/components/ReactionButton';
 import { useAuthStore } from '@/store/authStore';
@@ -30,7 +30,7 @@ export default function QuestionDetailPage() {
   const [answerSortOrder, setAnswerSortOrder] = useState<'latest' | 'popular'>('latest');
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportTarget, setReportTarget] = useState<{ type: 'QUESTION' | 'ANSWER' | 'COMMENT'; id: number } | null>(null);
-  const [reportCategory, setReportCategory] = useState<'SPAM' | 'ABUSE' | 'INAPPROPRIATE' | 'HARASSMENT' | 'OTHER'>('SPAM');
+  const [reportCategory, setReportCategory] = useState<ReportCategory>('SPAM');
   const [reportReason, setReportReason] = useState('');
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editCommentContent, setEditCommentContent] = useState<Record<number, string>>({});
@@ -170,7 +170,6 @@ export default function QuestionDetailPage() {
     try {
       const { reportApi } = await import('@/api/report');
       await reportApi.create({
-        reporterId: user.id || 0,
         reportedId: reportedUserId,
         entityType: reportTarget.type,
         entityId: reportTarget.id,
@@ -850,14 +849,15 @@ export default function QuestionDetailPage() {
                   </label>
                   <select
                     value={reportCategory}
-                    onChange={(e) => setReportCategory(e.target.value as any)}
+                    onChange={(e) => setReportCategory(e.target.value as ReportCategory)}
                     className="w-full input-field"
                   >
-                    <option value="SPAM">스팸</option>
+                    <option value="SPAM">스팸/광고</option>
                     <option value="ABUSE">욕설/비방</option>
                     <option value="INAPPROPRIATE">부적절한 내용</option>
-                    <option value="HARASSMENT">괴롭힘</option>
-                    <option value="OTHER">기타</option>
+                    <option value="COPYRIGHT">저작권 침해</option>
+                    <option value="MISINFORMATION">허위 정보</option>
+                    <option value="ETC">기타</option>
                   </select>
                 </div>
                 <div>
