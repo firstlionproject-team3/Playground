@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 public interface ReportService {
     
     //유저 -> 신고 생성
-    ReportResponseDTO reportUser(ReportCreateRequestDTO reportCreateRequestDTO);
+    ReportResponseDTO reportUser(Long reporterId, ReportCreateRequestDTO reportCreateRequestDTO);
 
     //관리자 -> 신고 승인 메소드
     void approve(Long reportId);

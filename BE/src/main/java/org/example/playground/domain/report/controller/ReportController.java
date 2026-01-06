@@ -10,7 +10,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.example.playground.global.security.user.CustomUserDetails;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -26,9 +28,11 @@ public class ReportController {
      */
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     @PostMapping
-    public ResponseEntity<ReportResponseDTO> createReport(@Valid @RequestBody ReportCreateRequestDTO reportCreateRequestDTO) {
+    public ResponseEntity<ReportResponseDTO> createReport(
+            @AuthenticationPrincipal CustomUserDetails principal,
+            @Valid @RequestBody ReportCreateRequestDTO reportCreateRequestDTO) {
 
-        ReportResponseDTO reportResponseDTO = reportService.reportUser(reportCreateRequestDTO);
+        ReportResponseDTO reportResponseDTO = reportService.reportUser(principal.getId(), reportCreateRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(reportResponseDTO);
     }
 

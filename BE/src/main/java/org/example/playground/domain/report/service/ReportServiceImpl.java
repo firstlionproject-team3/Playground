@@ -36,7 +36,7 @@ public class ReportServiceImpl implements ReportService {
 
 
     @Override
-    public ReportResponseDTO reportUser(ReportCreateRequestDTO dto) {
+    public ReportResponseDTO reportUser(Long reporterId, ReportCreateRequestDTO dto) {
 
         //1. 신고 대상 확인
         validateEntityExists(dto.getEntityType(), dto.getEntityId());
@@ -44,7 +44,7 @@ public class ReportServiceImpl implements ReportService {
         //2. user 조회
         log.info("Validating entity of {}", dto.getEntityType());
 
-        User reporter = userService.findUserOrThrow(dto.getReporterId());
+        User reporter = userService.findUserOrThrow(reporterId);
         User reported = userService.findUserOrThrow(dto.getReportedId());
 
         //3. 자기 자신 체크 확인
