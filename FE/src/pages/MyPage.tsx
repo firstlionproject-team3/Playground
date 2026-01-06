@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 
 export default function MyPage() {
+  const { setUser: setUserStore } = useAuthStore();
   const [user, setUser] = useState<UserMyPageResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
