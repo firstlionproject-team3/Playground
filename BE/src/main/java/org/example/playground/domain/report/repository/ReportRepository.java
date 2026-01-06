@@ -5,6 +5,7 @@ import org.example.playground.domain.report.entity.Report;
 import org.example.playground.domain.report.entity.ReportStatus;
 import org.example.playground.domain.report.entity.ReportTarget;
 import org.example.playground.domain.user.entity.User;
+import org.example.playground.domain.user.entity.UserStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -28,8 +29,8 @@ public interface ReportRepository extends JpaRepository<Report,Long> {
     JOIN r.reporter reporter
     JOIN r.reported reported
     WHERE r.status = :status
-    AND reporter.status <> 'DELETED'
-    AND reported.status <> 'DELETED'
+    AND reporter.status = org.example.playground.domain.user.entity.UserStatus.ACTIVE
+    AND reported.status = org.example.playground.domain.user.entity.UserStatus.ACTIVE
     """)
     Page<Report> findAllByStatusExcludingDeletedUsers(
             @Param("status") ReportStatus status,
