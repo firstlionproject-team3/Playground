@@ -93,21 +93,7 @@ export default function ReactionButton({
     }
   };
 
-  return (
-    <div className="flex items-center space-x-2">
-      <button
-        onClick={() => handleReaction('DISLIKE')}
-        disabled={loading}
-        className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg transition-colors ${
-          myReaction === 'DISLIKE'
-            ? 'bg-red-100 text-red-700'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-        } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-      >
-        <ThumbsDown className="w-4 h-4" />
-        <span className="text-sm font-medium">{dislikeCount}</span>
-      </button>
-    </div>
-  );
+  // 비추천 버튼 완전히 제거
+  return null;
 }
 

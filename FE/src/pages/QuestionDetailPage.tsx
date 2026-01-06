@@ -5,7 +5,6 @@ import { answerApi } from '@/api/answer';
 import { commentApi } from '@/api/comment';
 import { QuestionResponse, ReportCategory } from '@/types';
 import { formatDate, formatRelativeTime } from '@/utils/date';
-import ReactionButton from '@/components/ReactionButton';
 import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
 import { Edit, Trash2, Flag, CheckCircle, MessageSquare, Send, ArrowLeft } from 'lucide-react';
@@ -352,26 +351,7 @@ export default function QuestionDetailPage() {
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-          <ReactionButton
-            key={`question-${question.id}`}
-            targetType="QUESTION"
-            targetId={question.id}
-            initialLikeCount={question.likeCount || 0}
-            initialDislikeCount={question.dislikeCount || 0}
-            initialMyReaction={question.myReactionType || 'NONE'}
-            onUpdate={(likeCount, dislikeCount, myReaction) => {
-              setQuestion((prev) => {
-                if (!prev) return prev;
-                return {
-                  ...prev,
-                  likeCount,
-                  dislikeCount,
-                  myReactionType: myReaction,
-                };
-              });
-            }}
-          />
+        <div className="flex items-center justify-end pt-4 border-t border-gray-200">
           <div className="flex space-x-2">
             {isOwner && !isEditing && (
               <>
@@ -475,7 +455,7 @@ export default function QuestionDetailPage() {
             return (
             <div
               key={answer.id}
-              className={`card ${answer.accepted ? 'border-2 border-green-500 bg-gradient-to-br from-green-50 to-green-100 shadow-xl ring-2 ring-green-300' : 'border border-gray-200 bg-white'}`}
+              className={`card ${answer.accepted ? 'border-4 border-green-500 bg-gradient-to-br from-green-50 via-green-100 to-green-50 shadow-2xl ring-4 ring-green-300 ring-opacity-50 transform scale-[1.02]' : 'border border-gray-200 bg-white'}`}
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
@@ -483,9 +463,9 @@ export default function QuestionDetailPage() {
                     <div className="flex items-center space-x-2 mb-2">
                       <span className="text-lg font-bold text-gray-900">{answer.nickname}</span>
                       {answer.accepted && (
-                        <span className="px-3 py-1 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-bold rounded-full flex items-center space-x-1 shadow-md">
-                          <CheckCircle className="w-4 h-4" />
-                          <span>채택된 답변</span>
+                        <span className="px-4 py-2 bg-gradient-to-r from-green-500 via-green-600 to-green-500 text-white text-sm font-bold rounded-lg flex items-center space-x-2 shadow-lg animate-pulse">
+                          <CheckCircle className="w-5 h-5" />
+                          <span>✓ 채택된 답변</span>
                         </span>
                       )}
                     </div>
@@ -571,28 +551,7 @@ export default function QuestionDetailPage() {
               </div>
 
             {!isEditingAnswer && (
-              <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                <ReactionButton
-                  key={`answer-${answer.id}`}
-                  targetType="ANSWER"
-                  targetId={answer.id}
-                  initialLikeCount={answer.likeCount}
-                  initialDislikeCount={answer.dislikeCount}
-                  initialMyReaction={answer.myReactionType || 'NONE'}
-                  onUpdate={(likeCount, dislikeCount, myReaction) => {
-                    setQuestion((prev) => {
-                      if (!prev) return prev;
-                      return {
-                        ...prev,
-                        answers: prev.answers.map((a) =>
-                          a.id === answer.id
-                            ? { ...a, likeCount, dislikeCount, myReactionType: myReaction }
-                            : a
-                        ),
-                      };
-                    });
-                  }}
-                />
+              <div className="flex items-center justify-end pt-4 border-t border-gray-200">
                 <div className="flex space-x-2">
                   {isAnswerOwner && (
                     <>
@@ -618,7 +577,7 @@ export default function QuestionDetailPage() {
                       </button>
                     </>
                   )}
-                  {isOwner && !hasAcceptedAnswer && !answer.accepted && (
+                  {isOwner && !hasAcceptedAnswer && (
                     <button
                       onClick={() => handleAcceptAnswer(answer.id)}
                       className="flex items-center space-x-1 px-3 py-1.5 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors"
