@@ -31,8 +31,14 @@ public class CommentController {
 
     // 댓글 조회
     @GetMapping("/answers/{answerId}/comments")
-    public ResponseEntity<List<CommentResponseDTO>> getComment(@PathVariable Long answerId) {
+    public ResponseEntity<List<CommentResponseDTO>> getComments(@PathVariable Long answerId) {
         return ResponseEntity.ok(commentService.getComments(answerId));
+    }
+
+    // 댓글 단건 조회
+    @GetMapping("/comments/{commentId}")
+    public ResponseEntity<CommentResponseDTO> getComment(@PathVariable Long answerId) {
+        return ResponseEntity.ok(commentService.getComment(answerId));
     }
 
     // 댓글 수정

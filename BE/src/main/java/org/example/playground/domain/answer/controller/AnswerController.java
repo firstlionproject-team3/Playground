@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.playground.domain.answer.dto.request.AnswerCreateRequestDTO;
 import org.example.playground.domain.answer.dto.request.AnswerUpdateRequestDTO;
 import org.example.playground.domain.answer.dto.response.AnswerDetailResponseDTO;
+import org.example.playground.domain.answer.dto.response.AnswerDetailResponseDTO2;
 import org.example.playground.domain.answer.dto.response.AnswerSummaryResponseDTO;
 import org.example.playground.domain.answer.service.AnswerService;
 import org.example.playground.global.security.user.CustomUserDetails;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,6 +35,12 @@ public class AnswerController {
                 principal.getId(),
                 pageable
         );
+    }
+
+    // 답변 단건 조회
+    @GetMapping("/answers/{answerId}")
+    public ResponseEntity<AnswerDetailResponseDTO2> getAnswer(@PathVariable Long answerId) {
+        return ResponseEntity.ok(answerService.getAnswer(answerId));
     }
 
     //답변 생성(등록)

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.playground.domain.answer.dto.request.AnswerCreateRequestDTO;
 import org.example.playground.domain.answer.dto.request.AnswerUpdateRequestDTO;
 import org.example.playground.domain.answer.dto.response.AnswerDetailResponseDTO;
+import org.example.playground.domain.answer.dto.response.AnswerDetailResponseDTO2;
 import org.example.playground.domain.answer.dto.response.AnswerSummaryResponseDTO;
 import org.example.playground.domain.answer.entity.Answer;
 import org.example.playground.domain.answer.exception.AnswerErrorCode;
@@ -205,6 +206,18 @@ public class AnswerService {
         }
 
         return AnswerDetailResponseDTO.from(answer, likeCount, dislikeCount, myReactionType);
+    }
+
+    // 답변 단건 조회
+    @Transactional(readOnly = true)
+    public AnswerDetailResponseDTO2 getAnswer(Long answerId) {
+        Answer answer = answerRepository.findById(answerId)
+                .orElseThrow(() -> new BusinessException(
+                        AnswerErrorCode.ANSWER_NOT_FOUND,
+                        "answerId=" + answerId
+                ));
+
+        return AnswerDetailResponseDTO2.from(answer);
     }
 
     // 답변 존재 여부만 확인
