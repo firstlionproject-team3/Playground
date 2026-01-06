@@ -2,11 +2,14 @@ package org.example.playground.domain.answer.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.playground.domain.comment.entity.Comment;
 import org.example.playground.domain.question.entity.Question;
 import org.example.playground.domain.reaction.entity.ReactionCountable;
 import org.example.playground.domain.user.entity.User;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -29,6 +32,9 @@ public class Answer implements ReactionCountable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "userId", nullable = false)
     private User user;
+
+    @OneToMany(mappedBy = "answer", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments = new ArrayList<>();
 
     @Lob
     @Column(nullable = false)
