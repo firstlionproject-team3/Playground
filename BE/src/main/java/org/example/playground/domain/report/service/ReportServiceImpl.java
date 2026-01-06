@@ -49,7 +49,7 @@ public class ReportServiceImpl implements ReportService {
 
         //3. 자기 자신 체크 확인
         log.info("checking self report... ");
-        if (reporter.equals(reported)) {
+        if(reporter.getId() == reported.getId()) {
             throw new ReportException(ReportErrorCode.SELF_REPORT_NOT_ALLOWED);
         }
 
