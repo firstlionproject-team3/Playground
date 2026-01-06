@@ -23,15 +23,18 @@ public class CommentResponseDTO {
 
     private int dislikeCount;
 
+    private String myReactionType; // LIKE | DISLIKE | NONE
+
     private LocalDateTime createdAt;
 
-    public static CommentResponseDTO from(Comment comment) {
+    public static CommentResponseDTO from(Comment comment, String myReactionType) {
         return CommentResponseDTO.builder()
                 .id(comment.getId())
                 .nickname(comment.getUser().getNickname()) // 댓글 개수만큼 쿼리
                 .content(comment.getContent())
                 .likeCount(comment.getLikeCount())
                 .dislikeCount(comment.getDislikeCount())
+                .myReactionType(myReactionType != null ? myReactionType : "NONE")
                 .createdAt(comment.getCreatedAt())
                 .build();
     }

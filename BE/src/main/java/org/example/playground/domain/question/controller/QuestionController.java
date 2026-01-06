@@ -58,8 +58,12 @@ public class QuestionController {
 
     // 질문 상세 조회 버전 2
     @GetMapping("/{id}")
-    public QuestionResponseDTO getQuestion(@PathVariable Long id) {
-        return questionService.getQuestion(id);
+    public QuestionResponseDTO getQuestion(
+            @PathVariable Long id,
+            @AuthenticationPrincipal(required = false) CustomUserDetails principal
+    ) {
+        Long userId = principal != null ? principal.getId() : null;
+        return questionService.getQuestion(id, userId);
     }
 
     //질문 수정 - 작성자만

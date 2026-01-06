@@ -166,7 +166,7 @@ public class QuestionService {
 
     // 질문 상세 조회 버전 2 - repository에 fetch join 쿼리 추가
     @Transactional(readOnly = true)
-    public QuestionResponseDTO getQuestion(Long questionId) {
+    public QuestionResponseDTO getQuestion(Long questionId, Long userId) {
 
         // 질문
         Question question = questionRepository.findByIdWithUser(questionId)
@@ -191,7 +191,46 @@ public class QuestionService {
                 ? List.of()
                 : commentRepository.findByAnswerIdInWithUserOrderByCreatedAtAsc(answerIds);
 
-        return QuestionResponseDTO.from(question, answers, comments);
+        // 댓글들의 id 리스트
+        List<Long> commentIds = comments.stream()
+                .map(Comment::getId)
+                .toList();
+
+        // 1) 질문의 myReactionType 조회
+        String questionMyReaction = userId != null
+                ? reactionService.getUserReactionType(userId, TargetType.QUESTION, questionId)
+                        .map(ReactionType::name)
+                        .orElse("NONE")
+                : "NONE";
+
+        // 2) 답변들의 myReactionType 조회 (배치, N+1 방지)
+        Map<Long, String> answerMyReactionMap = userId != null && !answerIds.isEmpty()
+                ? reactionService.getMyReactionMap(userId, TargetType.ANSWER, answerIds)
+                        .entrySet().stream()
+                        .collect(java.util.stream.Collectors.toMap(
+                                Map.Entry::getKey,
+                                entry -> entry.getValue().name()
+                        ))
+                : java.util.Map.of();
+
+        // 3) 댓글들의 myReactionType 조회 (배치, N+1 방지)
+        Map<Long, String> commentMyReactionMap = userId != null && !commentIds.isEmpty()
+                ? reactionService.getMyReactionMap(userId, TargetType.COMMENT, commentIds)
+                        .entrySet().stream()
+                        .collect(java.util.stream.Collectors.toMap(
+                                Map.Entry::getKey,
+                                entry -> entry.getValue().name()
+                        ))
+                : java.util.Map.of();
+
+        return QuestionResponseDTO.from(
+                question, 
+                answers, 
+                comments,
+                questionMyReaction,
+                answerMyReactionMap,
+                commentMyReactionMap
+        );
     }
 
     //질문 수정

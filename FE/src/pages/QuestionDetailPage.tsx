@@ -324,12 +324,23 @@ export default function QuestionDetailPage() {
 
         <div className="flex items-center justify-between pt-4 border-t border-gray-200">
           <ReactionButton
-            key={`question-${question.id}-${isEditing}`}
+            key={`question-${question.id}`}
             targetType="QUESTION"
             targetId={question.id}
             initialLikeCount={question.likeCount || 0}
             initialDislikeCount={question.dislikeCount || 0}
             initialMyReaction={question.myReactionType || 'NONE'}
+            onUpdate={(likeCount, dislikeCount, myReaction) => {
+              setQuestion((prev) => {
+                if (!prev) return prev;
+                return {
+                  ...prev,
+                  likeCount,
+                  dislikeCount,
+                  myReactionType: myReaction,
+                };
+              });
+            }}
           />
           <div className="flex space-x-2">
             {isOwner && !isEditing && (
@@ -532,11 +543,25 @@ export default function QuestionDetailPage() {
             {!isEditingAnswer && (
               <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                 <ReactionButton
+                  key={`answer-${answer.id}`}
                   targetType="ANSWER"
                   targetId={answer.id}
                   initialLikeCount={answer.likeCount}
                   initialDislikeCount={answer.dislikeCount}
                   initialMyReaction={answer.myReactionType || 'NONE'}
+                  onUpdate={(likeCount, dislikeCount, myReaction) => {
+                    setQuestion((prev) => {
+                      if (!prev) return prev;
+                      return {
+                        ...prev,
+                        answers: prev.answers.map((a) =>
+                          a.id === answer.id
+                            ? { ...a, likeCount, dislikeCount, myReactionType: myReaction }
+                            : a
+                        ),
+                      };
+                    });
+                  }}
                 />
                 <div className="flex space-x-2">
                   {isAnswerOwner && (
