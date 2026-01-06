@@ -65,24 +65,4 @@ public class AnswerController {
     ) {
         answerService.delete(answerId, principal.getId());
     }
-
-    // 답변 신고
-    @PatchMapping("/questions/{questionId}/answers/{answerId}/report")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void report(
-            @PathVariable Long questionId,
-            @PathVariable Long answerId,
-            @AuthenticationPrincipal CustomUserDetails principal
-    ) {
-        answerService.report(questionId, answerId, principal.getId());
-    }
-
-
-
-
-
-
-
-
-
 }

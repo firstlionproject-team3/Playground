@@ -165,7 +165,7 @@ public class QuestionService {
     }
 
     // 질문 상세 조회 버전 2 - repository에 fetch join 쿼리 추가
-    @Transactional(readOnly = true)
+    @Transactional
     public QuestionResponseDTO getQuestion(Long questionId) {
 
         // 질문
