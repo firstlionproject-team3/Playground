@@ -110,11 +110,12 @@ export default function Layout() {
   const loadNotifications = async () => {
     try {
       const data = await notificationApi.getNotifications();
-      // 알림 내용에서 ID 제거
+      // 알림 내용에서 ID 제거 (예: "questionId=123", "질문(36)" 같은 패턴 제거)
       const cleanedNotifications = data.notifications.map((n) => ({
         ...n,
         content: n.content
           .replace(/\s*(questionId|answerId|commentId|userId|id)=[0-9]+/gi, '')
+          .replace(/\([0-9]+\)/g, '') // "질문(36)" 같은 패턴 제거
           .replace(/,\s*,/g, ',')
           .replace(/,\s*$/g, '')
           .trim(),
@@ -178,9 +179,10 @@ export default function Layout() {
       try {
         console.log('🔔 실시간 알림 수신:', event.data);
         const notification = JSON.parse(event.data) as Notification;
-        // 알림 내용에서 ID 제거 (예: "questionId=123" 또는 "answerId=456" 같은 패턴 제거)
+        // 알림 내용에서 ID 제거 (예: "questionId=123", "질문(36)" 같은 패턴 제거)
         const cleanedContent = notification.content
           .replace(/\s*(questionId|answerId|commentId|userId|id)=[0-9]+/gi, '')
+          .replace(/\([0-9]+\)/g, '') // "질문(36)" 같은 패턴 제거
           .replace(/,\s*,/g, ',')
           .replace(/,\s*$/g, '')
           .trim();
@@ -211,9 +213,10 @@ export default function Layout() {
     eventSource.onmessage = (event) => {
       try {
         const notification = JSON.parse(event.data) as Notification;
-        // 알림 내용에서 ID 제거
+        // 알림 내용에서 ID 제거 (예: "questionId=123", "질문(36)" 같은 패턴 제거)
         const cleanedContent = notification.content
           .replace(/\s*(questionId|answerId|commentId|userId|id)=[0-9]+/gi, '')
+          .replace(/\([0-9]+\)/g, '') // "질문(36)" 같은 패턴 제거
           .replace(/,\s*,/g, ',')
           .replace(/,\s*$/g, '')
           .trim();
