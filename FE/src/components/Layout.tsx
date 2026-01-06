@@ -2,7 +2,7 @@ import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { authApi } from '@/api/auth';
 import { Bell, LogOut, User, PlusCircle, Trash2, Shield } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { notificationApi } from '@/api/notification';
 import { Notification } from '@/types';
 import toast from 'react-hot-toast';
@@ -16,6 +16,11 @@ export default function Layout() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectAttemptsRef = useRef(0);
+  const MAX_RECONNECT_ATTEMPTS = 5;
+  const RECONNECT_DELAY = 3000; // 3초
 
   // 새로고침 시 user 정보 로드
   useEffect(() => {
@@ -30,12 +35,13 @@ export default function Layout() {
     if (isAuthenticated) {
       loadNotifications();
       setupSSE();
+    } else {
+      // 인증되지 않은 경우 SSE 연결 종료
+      closeSSE();
     }
 
     return () => {
-      if (isAuthenticated) {
-        notificationApi.unsubscribe().catch(() => {});
-      }
+      closeSSE();
     };
   }, [isAuthenticated]);
 
@@ -78,29 +84,89 @@ export default function Layout() {
     }
   };
 
+  const closeSSE = () => {
+    // 재연결 타이머 정리
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+
+    // EventSource 연결 종료
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
+    }
+
+    // 백엔드에 연결 종료 알림 (선택사항)
+    if (isAuthenticated) {
+      notificationApi.unsubscribe().catch(() => {});
+    }
+  };
+
   const setupSSE = () => {
-    // EventSource는 헤더를 직접 설정할 수 없으므로, 
-    // 백엔드에서 쿠키 기반 인증을 사용하거나 별도의 인증 방식이 필요합니다.
-    // 여기서는 기본 구조만 제공합니다.
+    // 이미 연결되어 있으면 기존 연결 종료
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
+    }
+
+    // 재연결 시도 횟수 초기화
+    reconnectAttemptsRef.current = 0;
+
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://3.35.4.73:8080';
     const eventSource = new EventSource(
       `${apiBaseUrl}/notification/subscribe`,
       { withCredentials: true }
     );
 
-    eventSource.onmessage = (event) => {
-      const notification = JSON.parse(event.data) as Notification;
-      setNotifications((prev) => [notification, ...prev]);
-      setUnreadCount((prev) => prev + 1);
-      toast.success(notification.content, {
-        icon: '🔔',
-        duration: 3000,
-      });
+    eventSourceRef.current = eventSource;
+
+    eventSource.onopen = () => {
+      // 연결 성공 시 재연결 시도 횟수 초기화
+      reconnectAttemptsRef.current = 0;
+      console.log('SSE 연결 성공');
     };
 
-    eventSource.onerror = () => {
-      eventSource.close();
-      // 재연결 로직은 필요시 구현
+    eventSource.onmessage = (event) => {
+      try {
+        const notification = JSON.parse(event.data) as Notification;
+        setNotifications((prev) => [notification, ...prev]);
+        setUnreadCount((prev) => prev + 1);
+        toast.success(notification.content, {
+          icon: '🔔',
+          duration: 3000,
+        });
+      } catch (error) {
+        console.error('알림 파싱 실패:', error);
+      }
+    };
+
+    eventSource.onerror = (error) => {
+      console.error('SSE 연결 오류:', error);
+      
+      // EventSource가 이미 닫혔는지 확인
+      if (eventSource.readyState === EventSource.CLOSED) {
+        // 연결이 닫혔고, 인증된 상태이고, 재연결 시도 횟수가 최대값보다 적으면 재연결
+        if (isAuthenticated && reconnectAttemptsRef.current < MAX_RECONNECT_ATTEMPTS) {
+          reconnectAttemptsRef.current += 1;
+          
+          // 재연결 타이머 정리
+          if (reconnectTimeoutRef.current) {
+            clearTimeout(reconnectTimeoutRef.current);
+          }
+
+          // 지연 후 재연결
+          reconnectTimeoutRef.current = setTimeout(() => {
+            console.log(`SSE 재연결 시도 ${reconnectAttemptsRef.current}/${MAX_RECONNECT_ATTEMPTS}`);
+            if (isAuthenticated && !eventSourceRef.current) {
+              setupSSE();
+            }
+          }, RECONNECT_DELAY);
+        } else if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
+          console.error('SSE 재연결 최대 시도 횟수 초과');
+          toast.error('알림 연결에 실패했습니다. 페이지를 새로고침해주세요.');
+        }
+      }
     };
   };
 
@@ -137,8 +203,6 @@ export default function Layout() {
     // 알림 타입에 따라 적절한 페이지로 이동
     if (notification.questionId) {
       navigate(`/questions/${notification.questionId}`);
-    } else if (notification.targetId) {
-      navigate(`/questions/${notification.targetId}`);
     } else if (notification.type === 'NEW_ANSWER' || notification.type === 'ANSWER_ACCEPTED') {
       // 질문 상세 페이지로 이동
       if (notification.questionId) {

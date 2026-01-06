@@ -15,12 +15,27 @@ export const apiClient: AxiosInstance = axios.create({
 // Access Token 저장소 (메모리)
 let accessToken: string | null = null;
 
+// 쿠키 설정 헬퍼 함수
+const setCookie = (name: string, value: string, days: number = 1) => {
+  const expires = new Date();
+  expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+  document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
+};
+
+// 쿠키 삭제 헬퍼 함수
+const deleteCookie = (name: string) => {
+  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
+};
+
 export const setAccessToken = (token: string | null) => {
   accessToken = token;
   if (token) {
     localStorage.setItem('accessToken', token);
+    // SSE를 위해 쿠키에도 저장 (백엔드에서 쿠키 기반 인증 사용)
+    setCookie('accessToken', token, 1);
   } else {
     localStorage.removeItem('accessToken');
+    deleteCookie('accessToken');
   }
 };
 
