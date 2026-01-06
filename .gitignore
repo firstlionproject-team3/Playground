@@ -25,4 +25,7 @@ node_modules/
 
 #
 DEPLOYMENT.md
-QuickStart.md
+QUICK_START.md
+deploy.sh
+ec2-setup.sh
+docker-compose.yml
