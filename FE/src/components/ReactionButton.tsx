@@ -44,39 +44,46 @@ export default function ReactionButton({
         reactionType,
       };
 
-      if (myReaction === reactionType) {
+      const currentLikeCount = likeCount;
+      const currentDislikeCount = dislikeCount;
+      const currentMyReaction = myReaction;
+
+      if (currentMyReaction === reactionType) {
         // 같은 타입이면 삭제 (토글)
         await reactionApi.delete(targetType, targetId);
         if (reactionType === 'LIKE') {
           setLikeCount((prev) => Math.max(0, prev - 1));
           setMyReaction('NONE');
+          onUpdate?.(currentLikeCount - 1, currentDislikeCount, 'NONE');
         } else {
           setDislikeCount((prev) => Math.max(0, prev - 1));
           setMyReaction('NONE');
+          onUpdate?.(currentLikeCount, currentDislikeCount - 1, 'NONE');
         }
-        onUpdate?.(likeCount - (reactionType === 'LIKE' ? 1 : 0), dislikeCount - (reactionType === 'DISLIKE' ? 1 : 0), 'NONE');
       } else {
         // 다른 타입이면 변경 또는 생성
         if (reactionType === 'LIKE') {
           await reactionApi.toggleLike(request);
-          if (myReaction === 'DISLIKE') {
+          if (currentMyReaction === 'DISLIKE') {
             setDislikeCount((prev) => Math.max(0, prev - 1));
             setLikeCount((prev) => prev + 1);
+            onUpdate?.(currentLikeCount + 1, currentDislikeCount - 1, 'LIKE');
           } else {
             setLikeCount((prev) => prev + 1);
+            onUpdate?.(currentLikeCount + 1, currentDislikeCount, 'LIKE');
           }
           setMyReaction('LIKE');
-          onUpdate?.(likeCount + (myReaction === 'DISLIKE' ? 0 : 1), dislikeCount - (myReaction === 'DISLIKE' ? 1 : 0), 'LIKE');
         } else {
           await reactionApi.toggleDislike(request);
-          if (myReaction === 'LIKE') {
+          if (currentMyReaction === 'LIKE') {
             setLikeCount((prev) => Math.max(0, prev - 1));
             setDislikeCount((prev) => prev + 1);
+            onUpdate?.(currentLikeCount - 1, currentDislikeCount + 1, 'DISLIKE');
           } else {
             setDislikeCount((prev) => prev + 1);
+            onUpdate?.(currentLikeCount, currentDislikeCount + 1, 'DISLIKE');
           }
           setMyReaction('DISLIKE');
-          onUpdate?.(likeCount - (myReaction === 'LIKE' ? 1 : 0), dislikeCount + (myReaction === 'LIKE' ? 0 : 1), 'DISLIKE');
         }
       }
     } catch (error: any) {

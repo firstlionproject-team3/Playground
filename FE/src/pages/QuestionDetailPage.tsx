@@ -34,6 +34,7 @@ export default function QuestionDetailPage() {
   const [reportReason, setReportReason] = useState('');
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editCommentContent, setEditCommentContent] = useState<Record<number, string>>({});
+  const [visibleCommentCounts, setVisibleCommentCounts] = useState<Record<number, number>>({});
 
   useEffect(() => {
     if (id) {
@@ -49,6 +50,10 @@ export default function QuestionDetailPage() {
       setQuestion(data);
       setEditTitle(data.title);
       setEditContent(data.content);
+      // 댓글 표시 상태 초기화
+      setShowAllComments({});
+      setShowComments({});
+      setVisibleCommentCounts({});
     } catch (error) {
       console.error('질문 로드 실패:', error);
       toast.error('질문을 불러오는데 실패했습니다.');
@@ -219,6 +224,11 @@ export default function QuestionDetailPage() {
     }
   };
 
+  const handleLoadMoreComments = (answerId: number, currentCount: number, totalCount: number) => {
+    const newCount = Math.min(currentCount + 10, totalCount);
+    setVisibleCommentCounts((prev) => ({ ...prev, [answerId]: newCount }));
+  };
+
   if (loading) {
     return (
       <div className="text-center py-12">
@@ -241,6 +251,7 @@ export default function QuestionDetailPage() {
 
   // 본인 인식: user 객체의 nickname과 question의 nickname 비교
   const isOwner = user && question && user.nickname === question.nickname;
+  const hasAcceptedAnswer = question.answers.some(a => a.accepted);
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -417,6 +428,8 @@ export default function QuestionDetailPage() {
             .map((answer) => {
             const isAnswerOwner = answer.nickname === user?.nickname;
             const isEditingAnswer = editingAnswerId === answer.id;
+            const visibleCommentCount = visibleCommentCounts[answer.id] || 0;
+            const totalCommentCount = answer.comments?.length || 0;
             
             return (
             <div
@@ -425,16 +438,18 @@ export default function QuestionDetailPage() {
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <span className="font-medium text-gray-900">{answer.nickname}</span>
-                    {answer.accepted && (
-                      <span className="px-3 py-1 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-bold rounded-full flex items-center space-x-1 shadow-md">
-                        <CheckCircle className="w-4 h-4" />
-                        <span>채택된 답변</span>
-                      </span>
-                    )}
+                  <div className="mb-3 pb-3 border-b border-gray-200">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <span className="text-lg font-bold text-gray-900">{answer.nickname}</span>
+                      {answer.accepted && (
+                        <span className="px-3 py-1 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-bold rounded-full flex items-center space-x-1 shadow-md">
+                          <CheckCircle className="w-4 h-4" />
+                          <span>채택된 답변</span>
+                        </span>
+                      )}
+                    </div>
                     <span className="text-sm text-gray-500">
-                      {formatRelativeTime(answer.createdAt)}
+                      {formatDate(answer.createdAt)}
                     </span>
                   </div>
                   {isEditingAnswer ? (
@@ -473,7 +488,7 @@ export default function QuestionDetailPage() {
                       </div>
                     </div>
                   ) : (
-                    <div>
+                    <div className="mt-3">
                       {answer.content.length > 300 && !expandedAnswers[answer.id] ? (
                         <>
                           <div 
@@ -548,7 +563,7 @@ export default function QuestionDetailPage() {
                       </button>
                     </>
                   )}
-                  {isOwner && !answer.accepted && !question.answers.some(a => a.accepted) && (
+                  {isOwner && !hasAcceptedAnswer && (
                     <button
                       onClick={() => handleAcceptAnswer(answer.id)}
                       className="flex items-center space-x-1 px-3 py-1.5 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors"
@@ -621,151 +636,131 @@ export default function QuestionDetailPage() {
               <div className="mt-4 pt-4 border-t border-gray-200 pl-6 bg-gray-50 rounded-lg p-4">
                 {!showAllComments[answer.id] ? (
                   <button
-                    onClick={() => setShowAllComments((prev) => ({ ...prev, [answer.id]: true }))}
-                    className="text-sm text-primary-600 hover:text-primary-700 mb-3"
+                    onClick={() => {
+                      setShowAllComments((prev) => ({ ...prev, [answer.id]: true }));
+                      setVisibleCommentCounts((prev) => ({ ...prev, [answer.id]: Math.min(10, totalCommentCount) }));
+                    }}
+                    className="text-sm text-primary-600 hover:text-primary-700 mb-3 font-medium"
                   >
                     댓글 {answer.comments.length}개 보기
                   </button>
                 ) : (
                   <>
-                    {answer.comments.length > 3 && !showComments[answer.id] ? (
-                  <>
                     <div className="space-y-3">
-                    {answer.comments.slice(0, 3).map((comment, idx) => (
-                      <div key={comment.id} className={`flex items-start space-x-2 ${idx < 2 ? 'pb-3 border-b border-gray-300' : ''}`}>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between">
-                            <span className="font-medium text-sm text-gray-600">
-                              {comment.nickname}
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-600 mt-1">{comment.content}</p>
-                          <span className="text-xs text-gray-400">
-                            {formatRelativeTime(comment.createdAt)}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                    </div>
-                    <button
-                      onClick={() => setShowComments((prev) => ({ ...prev, [answer.id]: true }))}
-                      className="mt-2 text-sm text-primary-600 hover:text-primary-700"
-                    >
-                      댓글 {answer.comments.length - 3}개 더보기
-                    </button>
-                  </>
-                ) : (
-                  <div className="space-y-3">
-                    {answer.comments.map((comment, idx) => {
-                      const isCommentOwner = comment.nickname === user?.nickname;
-                      return (
-                        <div key={comment.id} className={`flex items-start space-x-2 ${idx < answer.comments.length - 1 ? 'pb-3 border-b border-gray-300' : ''}`}>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                              <span className="font-medium text-sm text-gray-600">
-                                {comment.nickname}
-                              </span>
-                              {isAuthenticated && editingCommentId !== comment.id && (
-                                <div className="flex items-center space-x-1">
-                                  {isCommentOwner && (
-                                    <>
+                      {answer.comments.slice(0, visibleCommentCount || Math.min(10, totalCommentCount)).map((comment, idx) => {
+                        const isCommentOwner = comment.nickname === user?.nickname;
+                        return (
+                          <div key={comment.id} className={`flex items-start space-x-2 ${idx < (visibleCommentCount || Math.min(10, totalCommentCount)) - 1 ? 'pb-3 border-b border-gray-300' : ''}`}>
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-semibold text-sm text-gray-800">
+                                  {comment.nickname}
+                                </span>
+                                {isAuthenticated && editingCommentId !== comment.id && (
+                                  <div className="flex items-center space-x-1">
+                                    {isCommentOwner && (
+                                      <>
+                                        <button 
+                                          onClick={() => {
+                                            setEditingCommentId(comment.id);
+                                            setEditCommentContent((prev) => ({
+                                              ...prev,
+                                              [comment.id]: comment.content,
+                                            }));
+                                          }}
+                                          className="p-1 text-gray-400 hover:text-primary-600 transition-colors" 
+                                          title="수정"
+                                        >
+                                          <Edit className="w-3 h-3" />
+                                        </button>
+                                        <button 
+                                          onClick={() => handleDeleteComment(comment.id)}
+                                          className="p-1 text-gray-400 hover:text-red-600 transition-colors" 
+                                          title="삭제"
+                                        >
+                                          <Trash2 className="w-3 h-3" />
+                                        </button>
+                                      </>
+                                    )}
+                                    {!isCommentOwner && (
                                       <button 
-                                        onClick={() => {
-                                          setEditingCommentId(comment.id);
-                                          setEditCommentContent((prev) => ({
-                                            ...prev,
-                                            [comment.id]: comment.content,
-                                          }));
-                                        }}
-                                        className="p-1 text-gray-400 hover:text-primary-600 transition-colors" 
-                                        title="수정"
-                                      >
-                                        <Edit className="w-3 h-3" />
-                                      </button>
-                                      <button 
-                                        onClick={() => handleDeleteComment(comment.id)}
+                                        onClick={() => handleReportComment(comment.id)}
                                         className="p-1 text-gray-400 hover:text-red-600 transition-colors" 
-                                        title="삭제"
+                                        title="신고"
                                       >
-                                        <Trash2 className="w-3 h-3" />
+                                        <Flag className="w-3 h-3" />
                                       </button>
-                                    </>
-                                  )}
-                                  {!isCommentOwner && (
-                                    <button 
-                                      onClick={() => handleReportComment(comment.id)}
-                                      className="p-1 text-gray-400 hover:text-red-600 transition-colors" 
-                                      title="신고"
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                              {editingCommentId === comment.id ? (
+                                <div className="mt-2 space-y-2">
+                                  <input
+                                    type="text"
+                                    value={editCommentContent[comment.id] || comment.content}
+                                    onChange={(e) =>
+                                      setEditCommentContent((prev) => ({
+                                        ...prev,
+                                        [comment.id]: e.target.value,
+                                      }))
+                                    }
+                                    className="w-full input-field text-sm"
+                                  />
+                                  <div className="flex space-x-2">
+                                    <button
+                                      onClick={() => handleUpdateComment(comment.id)}
+                                      className="px-2 py-1 text-xs btn-primary"
                                     >
-                                      <Flag className="w-3 h-3" />
+                                      저장
                                     </button>
-                                  )}
+                                    <button
+                                      onClick={() => {
+                                        setEditingCommentId(null);
+                                        setEditCommentContent((prev) => {
+                                          const newState = { ...prev };
+                                          delete newState[comment.id];
+                                          return newState;
+                                        });
+                                      }}
+                                      className="px-2 py-1 text-xs btn-secondary"
+                                    >
+                                      취소
+                                    </button>
+                                  </div>
                                 </div>
+                              ) : (
+                                <>
+                                  <p className="text-sm text-gray-700 mt-1">{comment.content}</p>
+                                  <span className="text-xs text-gray-400">
+                                    {formatRelativeTime(comment.createdAt)}
+                                  </span>
+                                </>
                               )}
                             </div>
-                            {editingCommentId === comment.id ? (
-                              <div className="mt-2 space-y-2">
-                                <input
-                                  type="text"
-                                  value={editCommentContent[comment.id] || comment.content}
-                                  onChange={(e) =>
-                                    setEditCommentContent((prev) => ({
-                                      ...prev,
-                                      [comment.id]: e.target.value,
-                                    }))
-                                  }
-                                  className="w-full input-field text-sm"
-                                />
-                                <div className="flex space-x-2">
-                                  <button
-                                    onClick={() => handleUpdateComment(comment.id)}
-                                    className="px-2 py-1 text-xs btn-primary"
-                                  >
-                                    저장
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setEditingCommentId(null);
-                                      setEditCommentContent((prev) => {
-                                        const newState = { ...prev };
-                                        delete newState[comment.id];
-                                        return newState;
-                                      });
-                                    }}
-                                    className="px-2 py-1 text-xs btn-secondary"
-                                  >
-                                    취소
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <>
-                                <p className="text-sm text-gray-600 mt-1">{comment.content}</p>
-                                <span className="text-xs text-gray-400">
-                                  {formatRelativeTime(comment.createdAt)}
-                                </span>
-                              </>
-                            )}
                           </div>
-                        </div>
-                      );
-                    })}
-                    {showComments[answer.id] && answer.comments.length > 3 && (
+                        );
+                      })}
+                    </div>
+                    {visibleCommentCount < totalCommentCount && (
                       <button
-                        onClick={() => setShowComments((prev) => ({ ...prev, [answer.id]: false }))}
-                        className="mt-2 text-sm text-gray-600 hover:text-gray-700"
+                        onClick={() => handleLoadMoreComments(answer.id, visibleCommentCount, totalCommentCount)}
+                        className="mt-3 text-sm text-primary-600 hover:text-primary-700 font-medium"
                       >
-                        접기
+                        댓글 더보기 ({totalCommentCount - visibleCommentCount}개 남음)
                       </button>
                     )}
-                  </div>
-                )}
-                    <button
-                      onClick={() => setShowAllComments((prev) => ({ ...prev, [answer.id]: false }))}
-                      className="mt-2 text-sm text-gray-600 hover:text-gray-700"
-                    >
-                      댓글 숨기기
-                    </button>
+                    {visibleCommentCount >= totalCommentCount && visibleCommentCount > 10 && (
+                      <button
+                        onClick={() => {
+                          setShowAllComments((prev) => ({ ...prev, [answer.id]: false }));
+                          setVisibleCommentCounts((prev) => ({ ...prev, [answer.id]: 0 }));
+                        }}
+                        className="mt-3 text-sm text-gray-600 hover:text-gray-700 font-medium"
+                      >
+                        댓글 숨기기
+                      </button>
+                    )}
                   </>
                 )}
               </div>
@@ -848,4 +843,3 @@ export default function QuestionDetailPage() {
     </div>
   );
 }
-
