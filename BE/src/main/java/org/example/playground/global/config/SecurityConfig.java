@@ -7,6 +7,7 @@ import org.example.playground.global.security.jwt.exception.JwtAuthenticationEnt
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -29,16 +30,14 @@ public class SecurityConfig {
     private final OAuth2FailureHandler oAuth2FailureHandler;
     private final JwtTokenFilter jwtTokenFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-    private final CorsConfigurationSource configurationSource;
 
     // 순환 참조 방지, 의도적으로 생성자 작성
     public SecurityConfig(@Lazy OAuth2SuccessHandler oAuth2SuccessHandler, OAuth2FailureHandler oAuth2FailureHandler, JwtTokenFilter jwtTokenFilter,
-                          JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint, CorsConfigurationSource configurationSource) {
+                          JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) {
         this.oAuth2SuccessHandler = oAuth2SuccessHandler;
         this.oAuth2FailureHandler = oAuth2FailureHandler;
         this.jwtTokenFilter = jwtTokenFilter;
         this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
-        this.configurationSource = configurationSource;
     }
 
     @Bean
@@ -60,7 +59,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 인증 없이 접근 허용할 API
                         // 회원가입, 일반로그인, 토큰 재발급
-                        .requestMatchers("/users", "/auth/login", "/user/refreshToken").permitAll()
+                        .requestMatchers("/users", "/auth/login", "/user/refreshToken", "/").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/questions/**").permitAll()
                         // OAuth 관련
                         .requestMatchers("/oauth2/authorization/**","/login/oauth2/code/**").permitAll()
                         // h2 콘솔 - 테스트용
@@ -76,7 +76,7 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 // cors 설정 적용 - 다른 출처에서의 요청을 허용
-                .cors(cors -> cors.configurationSource(configurationSource))
+                .cors(cors -> cors.configurationSource(configurationSource()))
                 // JWT 인증 필터 등록
                 // UsernamePasswordAuthenticationFilter 전에 실행되어
                 // 요청마다 accessToken을 검증하고 SecurityContext에 인증 정보 저장

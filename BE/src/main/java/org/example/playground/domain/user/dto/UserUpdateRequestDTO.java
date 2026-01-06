@@ -20,7 +20,7 @@ public class UserUpdateRequestDTO {
             message = "닉네임은 한글, 영문, 숫자만 사용할 수 있습니다."
     )
     private String nickname;
-    @NotBlank
+
     @Size(max = 100)
     @Email
     private String email;
