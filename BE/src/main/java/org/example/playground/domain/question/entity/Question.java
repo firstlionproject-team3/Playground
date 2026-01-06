@@ -35,8 +35,7 @@ public class Question implements ReactionCountable {
     @Column(nullable = false, length = 255)
     private String title;
 
-    @Lob
-    @Column(nullable = false)
+    @Column(nullable = false,length = 10000)
     private String content;
 
     @Column(nullable = false)
