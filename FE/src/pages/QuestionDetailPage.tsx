@@ -780,7 +780,7 @@ export default function QuestionDetailPage() {
                 )}
               </div>
             )}
-          </div>
+            </div>
           );
           })}
             </div>
