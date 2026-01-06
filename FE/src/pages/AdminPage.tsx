@@ -128,12 +128,12 @@ export default function AdminPage() {
           <>
             <h2 className="text-xl font-semibold mb-4">사용자 관리</h2>
 
-        {users.length === 0 ? (
-          <p className="text-center text-gray-500 py-8">사용자가 없습니다.</p>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+            {users.length === 0 ? (
+              <p className="text-center text-gray-500 py-8">사용자가 없습니다.</p>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -183,30 +183,32 @@ export default function AdminPage() {
                       </td>
                     </tr>
                   ))}
-                </tbody>
-              </table>
-            </div>
-
-            {totalPages > 1 && (
-              <div className="mt-4 flex justify-center space-x-2">
-                <button
-                  onClick={() => setPage((p) => Math.max(0, p - 1))}
-                  disabled={page === 0}
-                  className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                >
-                  이전
-                </button>
-                <span className="px-4 py-2 text-gray-700">
-                  {page + 1} / {totalPages}
-                </span>
-                <button
-                  onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                  disabled={page >= totalPages - 1}
-                  className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                >
-                  다음
-                </button>
+                  </tbody>
+                </table>
               </div>
+
+              {totalPages > 1 && (
+                <div className="mt-4 flex justify-center space-x-2">
+                  <button
+                    onClick={() => setPage((p) => Math.max(0, p - 1))}
+                    disabled={page === 0}
+                    className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  >
+                    이전
+                  </button>
+                  <span className="px-4 py-2 text-gray-700">
+                    {page + 1} / {totalPages}
+                  </span>
+                  <button
+                    onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                    disabled={page >= totalPages - 1}
+                    className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                  >
+                    다음
+                  </button>
+                </div>
+              )}
+              </>
             )}
           </>
         ) : (
