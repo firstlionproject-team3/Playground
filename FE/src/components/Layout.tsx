@@ -1,4 +1,4 @@
-import { Outlet, Link, useNavigate } from 'react-router-dom';
+import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { authApi } from '@/api/auth';
 import { Bell, LogOut, User, PlusCircle, Trash2 } from 'lucide-react';
@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 export default function Layout() {
   const { isAuthenticated, user, logout: logoutStore } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -26,6 +27,13 @@ export default function Layout() {
       }
     };
   }, [isAuthenticated]);
+
+  // 새로고침 시 알림 다시 로드
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadNotifications();
+    }
+  }, []);
 
   const loadNotifications = async () => {
     try {
@@ -122,16 +130,18 @@ export default function Layout() {
             </div>
 
             <div className="flex items-center space-x-4">
-
               {isAuthenticated ? (
                 <>
-                  <Link
-                    to="/questions/create"
-                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2"
-                  >
-                    <PlusCircle className="w-4 h-4" />
-                    <span>질문하기</span>
-                  </Link>
+                  {/* 질문 목록 페이지가 아닐 때만 상단바에 질문하기 버튼 표시 */}
+                  {location.pathname !== '/' && (
+                    <Link
+                      to="/questions/create"
+                      className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center space-x-2"
+                    >
+                      <PlusCircle className="w-4 h-4" />
+                      <span>질문하기</span>
+                    </Link>
+                  )}
 
                   <div className="relative">
                     <button

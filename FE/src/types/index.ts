@@ -39,6 +39,7 @@ export interface UserRegisterResponse {
 }
 
 export interface UserMyPageResponse {
+  id?: number;
   nickname: string;
   email?: string;
   joinedDate: string;
@@ -65,6 +66,7 @@ export interface QuestionSummary {
   nickname: string;
   title: string;
   createdAt: string;
+  answerCount?: number;
 }
 
 export interface QuestionDetail {

@@ -25,6 +25,7 @@ export const questionApi = {
     const params = new URLSearchParams({
       page: page.toString(),
       size: size.toString(),
+      sort: 'createdAt,desc', // 작성일 기준 내림차순
     });
     if (type) params.append('type', type);
     if (keyword) params.append('keyword', keyword);
