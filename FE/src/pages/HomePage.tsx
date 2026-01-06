@@ -16,10 +16,10 @@ export default function HomePage() {
   const [keyword, setKeyword] = useState('');
   const [searchInput, setSearchInput] = useState('');
 
-  // 페이지 변경 시에만 질문 목록 로드
+  // 페이지 변경 시에만 질문 목록 로드 (searchType 변경 시에는 리셋만)
   useEffect(() => {
     loadQuestions();
-  }, [page, keyword, searchType]);
+  }, [page, keyword]);
 
   const loadQuestions = async () => {
     setLoading(true);
@@ -39,6 +39,13 @@ export default function HomePage() {
     }
   };
 
+  // searchType이 변경될 때만 검색 실행 (의존성 배열에 searchType 추가하지 않음)
+  useEffect(() => {
+    if (keyword) {
+      loadQuestions();
+    }
+  }, [searchType]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setKeyword(searchInput);
@@ -46,8 +53,14 @@ export default function HomePage() {
   };
 
   const handleSearchTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSearchType(e.target.value as 'title' | 'content');
-    setPage(0); // 타입 변경 시 첫 페이지로 리셋
+    const newType = e.target.value as 'title' | 'content';
+    setSearchType(newType);
+    // 타입 변경 시 검색만 다시 실행 (페이지 새로고침 없이)
+    if (keyword) {
+      setPage(0);
+      // 검색어가 있으면 즉시 검색 실행
+      loadQuestions();
+    }
   };
 
   const handleClearSearch = () => {

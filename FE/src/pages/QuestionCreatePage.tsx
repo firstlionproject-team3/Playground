@@ -89,9 +89,12 @@ export default function QuestionCreatePage() {
               rows={15}
               value={formData.content}
               onChange={handleChange}
-              className={`input-field ${errors.content ? 'border-red-500' : ''}`}
-              placeholder="질문 내용을 상세히 입력하세요"
+              className={`input-field font-mono text-sm ${errors.content ? 'border-red-500' : ''}`}
+              placeholder="질문 내용을 상세히 입력하세요&#10;&#10;코드블럭은 다음과 같이 작성하세요:&#10;```&#10;코드 내용&#10;```"
             />
+            <p className="mt-1 text-xs text-gray-500">
+              코드블럭은 ```로 감싸서 작성하세요
+            </p>
             {errors.content && (
               <p className="mt-1 text-sm text-red-600">{errors.content}</p>
             )}
