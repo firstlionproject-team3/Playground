@@ -121,6 +121,7 @@ export default function AdminPage() {
       return;
     }
 
+    setSelectedReport(report);
     setEntityLoading(true);
     setIsEntityModalOpen(true);
     
@@ -306,7 +307,6 @@ export default function AdminPage() {
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">신고자</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">신고당한 사람</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">대상</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">유형</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">내용</th>
@@ -319,7 +319,6 @@ export default function AdminPage() {
                       {reports.map((report) => (
                         <tr key={report.reportId} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{report.reporterNickname}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{report.reportedNickname}</td>
                           <td 
                             className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 cursor-pointer hover:text-primary-600 hover:underline transition-colors"
                             onClick={() => handleOpenEntityModal(report)}
@@ -369,14 +368,6 @@ export default function AdminPage() {
                                     <X className="w-4 h-4" />
                                   </button>
                                 </>
-                              )}
-                              {(report.entityType === 'QUESTION' || report.entityType === 'ANSWER' || report.entityType === 'COMMENT') && (
-                                <Link
-                                  to={report.entityType === 'QUESTION' ? `/questions/${report.entityId}` : '#'}
-                                  className="text-primary-600 hover:text-primary-700 text-sm"
-                                >
-                                  보기
-                                </Link>
                               )}
                             </div>
                           </td>
@@ -460,6 +451,10 @@ export default function AdminPage() {
                   )}
                   {entityContent.type === 'ANSWER' && (
                     <div>
+                      <p className="text-sm font-medium text-gray-500 mb-2">신고당한 사람</p>
+                      <p className="text-sm text-gray-900 mb-4">
+                        {selectedReport?.reportedNickname || (entityContent.data as AnswerDetail).nickname}
+                      </p>
                       <p className="text-sm font-medium text-gray-500 mb-2">작성자</p>
                       <p className="text-sm text-gray-900 mb-4">
                         {(entityContent.data as AnswerDetail).nickname}
@@ -474,6 +469,10 @@ export default function AdminPage() {
                   )}
                   {entityContent.type === 'COMMENT' && (
                     <div>
+                      <p className="text-sm font-medium text-gray-500 mb-2">신고당한 사람</p>
+                      <p className="text-sm text-gray-900 mb-4">
+                        {selectedReport?.reportedNickname || (entityContent.data as CommentResponse).nickname}
+                      </p>
                       <p className="text-sm font-medium text-gray-500 mb-2">작성자</p>
                       <p className="text-sm text-gray-900 mb-4">
                         {(entityContent.data as CommentResponse).nickname}

@@ -618,7 +618,7 @@ export default function QuestionDetailPage() {
                       </button>
                     </>
                   )}
-                  {isOwner && !hasAcceptedAnswer && (
+                  {isOwner && !hasAcceptedAnswer && !answer.accepted && (
                     <button
                       onClick={() => handleAcceptAnswer(answer.id)}
                       className="flex items-center space-x-1 px-3 py-1.5 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors"
