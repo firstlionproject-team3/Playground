@@ -60,7 +60,7 @@ public class QuestionController {
     @GetMapping("/{id}")
     public QuestionResponseDTO getQuestion(
             @PathVariable Long id,
-            @AuthenticationPrincipal(required = false) CustomUserDetails principal
+            @AuthenticationPrincipal CustomUserDetails principal
     ) {
         Long userId = principal != null ? principal.getId() : null;
         return questionService.getQuestion(id, userId);
