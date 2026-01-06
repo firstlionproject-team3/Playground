@@ -2,6 +2,8 @@ package org.example.playground.domain.user.repository;
 
 import org.example.playground.domain.user.entity.User;
 import org.example.playground.domain.user.entity.UserStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,6 +24,20 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     //로그인 아이디로 회원 검색(회원정보 상세조회)
     Optional<User> findByLoginIdAndStatus(String loginId, UserStatus status);
+
+    @Query("""
+    select u
+    from User u
+    where u.status = org.example.playground.domain.user.entity.UserStatus.ACTIVE
+      and not exists (
+          select 1
+          from UserRole ur
+          join ur.role r
+          where ur.user = u
+            and r.name = 'ROLE_ADMIN'
+      )
+""")
+    Page<User> findAllActiveNonAdmins(Pageable pageable);
 
     //ACTIVE 인 관리자 전원의 id 값을 List로 반환하는 메서드
     @Query("""

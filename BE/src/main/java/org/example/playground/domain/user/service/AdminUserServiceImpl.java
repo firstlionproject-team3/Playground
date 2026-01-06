@@ -25,7 +25,7 @@ public class AdminUserServiceImpl implements AdminUserService{
     @Transactional(readOnly = true)
     @PreAuthorize("hasRole('ADMIN')") // 내부적으로 "ROLE_ADMIN"을 기대함
     public Page<User> getAllUsersByAdmin(Pageable pageable) {
-        return userRepository.findAll(pageable);
+        return userRepository.findAllActiveNonAdmins(pageable);
     }
 
     @Override
