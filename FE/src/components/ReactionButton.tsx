@@ -96,18 +96,6 @@ export default function ReactionButton({
   return (
     <div className="flex items-center space-x-2">
       <button
-        onClick={() => handleReaction('LIKE')}
-        disabled={loading}
-        className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg transition-colors ${
-          myReaction === 'LIKE'
-            ? 'bg-primary-100 text-primary-700'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-        } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-      >
-        <ThumbsUp className="w-4 h-4" />
-        <span className="text-sm font-medium">{likeCount}</span>
-      </button>
-      <button
         onClick={() => handleReaction('DISLIKE')}
         disabled={loading}
         className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg transition-colors ${
