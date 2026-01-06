@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class QuestionResponseDTO {
     private Long id;
+    private Long userId;
     private String title;
     private String content;
     private String nickname;
@@ -39,6 +40,7 @@ public class QuestionResponseDTO {
 
         return QuestionResponseDTO.builder()
                 .id(question.getId())
+                .userId(question.getUser().getId())
                 .title(question.getTitle())
                 .content(question.getContent())
                 .nickname(question.getUser().getNickname()) // 쿼리 한 번
