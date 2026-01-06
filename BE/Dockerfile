@@ -7,7 +7,7 @@ COPY . .
 RUN chmod +x ./gradlew
 
 # 빌드 실행 (여기서 JAR 파일이 생성됨)
-RUN ./gradlew bootJar
+RUN ./gradlew bootJar -x test
 
 FROM eclipse-temurin:21-jdk-jammy
 WORKDIR /app
