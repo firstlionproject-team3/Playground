@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
 import { reactionApi } from '@/api/reaction';
 import { TargetType, ReactionType } from '@/types';
@@ -25,6 +25,13 @@ export default function ReactionButton({
   const [dislikeCount, setDislikeCount] = useState(initialDislikeCount);
   const [myReaction, setMyReaction] = useState<'LIKE' | 'DISLIKE' | 'NONE'>(initialMyReaction);
   const [loading, setLoading] = useState(false);
+
+  // Props 변경 시 state 업데이트
+  useEffect(() => {
+    setLikeCount(initialLikeCount);
+    setDislikeCount(initialDislikeCount);
+    setMyReaction(initialMyReaction);
+  }, [initialLikeCount, initialDislikeCount, initialMyReaction]);
 
   const handleReaction = async (reactionType: ReactionType) => {
     if (loading) return;

@@ -8,7 +8,7 @@ import { formatDate, formatRelativeTime } from '@/utils/date';
 import ReactionButton from '@/components/ReactionButton';
 import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
-import { Edit, Trash2, Flag, CheckCircle, MessageSquare, Send } from 'lucide-react';
+import { Edit, Trash2, Flag, CheckCircle, MessageSquare, Send, ArrowLeft } from 'lucide-react';
 
 export default function QuestionDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -22,6 +22,9 @@ export default function QuestionDetailPage() {
   const [answerContent, setAnswerContent] = useState('');
   const [commentContents, setCommentContents] = useState<Record<number, string>>({});
   const [showCommentInputs, setShowCommentInputs] = useState<Record<number, boolean>>({});
+  const [editingAnswerId, setEditingAnswerId] = useState<number | null>(null);
+  const [editAnswerContent, setEditAnswerContent] = useState<Record<number, string>>({});
+  const [showComments, setShowComments] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     if (id) {
@@ -111,10 +114,51 @@ export default function QuestionDetailPage() {
       await commentApi.create(answerId, { content });
       setCommentContents((prev) => ({ ...prev, [answerId]: '' }));
       setShowCommentInputs((prev) => ({ ...prev, [answerId]: false }));
-      await loadQuestion();
+      // 전체 새로고침 대신 해당 답변만 업데이트
+      const updatedQuestion = await questionApi.getQuestion(Number(id));
+      setQuestion(updatedQuestion);
       toast.success('댓글이 등록되었습니다.');
     } catch (error: any) {
       toast.error(error.response?.data?.message || '댓글 등록에 실패했습니다.');
+    }
+  };
+
+  const handleUpdateAnswer = async (answerId: number) => {
+    const content = editAnswerContent[answerId];
+    if (!content?.trim()) return;
+    try {
+      await answerApi.update(answerId, { content });
+      setEditingAnswerId(null);
+      setEditAnswerContent((prev) => {
+        const newState = { ...prev };
+        delete newState[answerId];
+        return newState;
+      });
+      await loadQuestion();
+      toast.success('답변이 수정되었습니다.');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || '답변 수정에 실패했습니다.');
+    }
+  };
+
+  const handleDeleteAnswer = async (answerId: number) => {
+    if (!confirm('정말 삭제하시겠습니까?')) return;
+    try {
+      await answerApi.delete(answerId);
+      await loadQuestion();
+      toast.success('답변이 삭제되었습니다.');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || '삭제에 실패했습니다.');
+    }
+  };
+
+  const handleReportAnswer = async (answerId: number) => {
+    if (!id) return;
+    try {
+      await answerApi.report(Number(id), answerId);
+      toast.success('신고가 접수되었습니다.');
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || '신고에 실패했습니다.');
     }
   };
 
@@ -142,6 +186,16 @@ export default function QuestionDetailPage() {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <Link
+          to="/"
+          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span>전체 목록 보기</span>
+        </Link>
+      </div>
+
       {/* 질문 */}
       <div className="card">
         <div className="flex items-start justify-between mb-4">
@@ -194,11 +248,12 @@ export default function QuestionDetailPage() {
 
         <div className="flex items-center justify-between pt-4 border-t border-gray-200">
           <ReactionButton
+            key={`question-${question.id}-${isEditing}`}
             targetType="QUESTION"
             targetId={question.id}
-            initialLikeCount={0}
-            initialDislikeCount={0}
-            initialMyReaction="NONE"
+            initialLikeCount={question.likeCount || 0}
+            initialDislikeCount={question.dislikeCount || 0}
+            initialMyReaction={question.myReactionType || 'NONE'}
           />
           <div className="flex space-x-2">
             {isOwner && !isEditing && (
@@ -219,7 +274,7 @@ export default function QuestionDetailPage() {
                 </button>
               </>
             )}
-            {isAuthenticated && !isOwner && (
+            {isAuthenticated && !isOwner && user?.nickname !== question.nickname && (
               <button
                 onClick={handleReport}
                 className="flex items-center space-x-1 px-3 py-1.5 text-gray-700 hover:text-red-600 hover:bg-gray-100 rounded-lg transition-colors"
@@ -233,84 +288,167 @@ export default function QuestionDetailPage() {
       </div>
 
       {/* 답변 작성 */}
-      {isAuthenticated && !isOwner && (
+      {isAuthenticated && !isOwner ? (
         <div className="card">
           <h2 className="text-xl font-semibold mb-4">답변 작성</h2>
           <textarea
             value={answerContent}
             onChange={(e) => setAnswerContent(e.target.value)}
-            rows={6}
-            className="input-field mb-4"
+            rows={4}
+            className="input-field mb-4 resize-none"
             placeholder="답변을 입력하세요..."
+            style={{ minHeight: '100px', maxHeight: '200px' }}
           />
           <button onClick={handleSubmitAnswer} className="btn-primary">
             답변 등록
           </button>
         </div>
-      )}
+      ) : isAuthenticated && isOwner ? (
+        <div className="card bg-gray-50 border border-gray-200">
+          <p className="text-gray-600 text-sm">
+            자신의 질문에는 답변을 작성할 수 없습니다.
+          </p>
+        </div>
+      ) : null}
 
       {/* 답변 목록 */}
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold">
           답변 {question.answers.length}개
         </h2>
-        {question.answers.map((answer) => (
-          <div
-            key={answer.id}
-            className={`card ${answer.accepted ? 'border-2 border-green-500 bg-green-50' : ''}`}
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1">
-                <div className="flex items-center space-x-2 mb-2">
-                  <span className="font-medium text-gray-900">{answer.nickname}</span>
-                  {answer.accepted && (
-                    <span className="badge bg-green-100 text-green-800 flex items-center space-x-1">
-                      <CheckCircle className="w-3 h-3" />
-                      <span>채택됨</span>
+        {question.answers.map((answer) => {
+          const isAnswerOwner = answer.nickname === user?.nickname;
+          const isEditingAnswer = editingAnswerId === answer.id;
+          
+          return (
+            <div
+              key={answer.id}
+              className={`card ${answer.accepted ? 'border-2 border-green-500 bg-green-50 shadow-md' : ''}`}
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <span className="font-medium text-gray-900">{answer.nickname}</span>
+                    {answer.accepted && (
+                      <span className="px-2 py-1 bg-green-500 text-white text-xs font-semibold rounded-full flex items-center space-x-1">
+                        <CheckCircle className="w-3 h-3" />
+                        <span>채택됨</span>
+                      </span>
+                    )}
+                    <span className="text-sm text-gray-500">
+                      {formatRelativeTime(answer.createdAt)}
                     </span>
+                  </div>
+                  {isEditingAnswer ? (
+                    <div className="space-y-2">
+                      <textarea
+                        value={editAnswerContent[answer.id] || answer.content}
+                        onChange={(e) =>
+                          setEditAnswerContent((prev) => ({
+                            ...prev,
+                            [answer.id]: e.target.value,
+                          }))
+                        }
+                        rows={4}
+                        className="input-field"
+                      />
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleUpdateAnswer(answer.id)}
+                          className="btn-primary"
+                        >
+                          저장
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingAnswerId(null);
+                            setEditAnswerContent((prev) => {
+                              const newState = { ...prev };
+                              delete newState[answer.id];
+                              return newState;
+                            });
+                          }}
+                          className="btn-secondary"
+                        >
+                          취소
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-gray-700 whitespace-pre-wrap">{answer.content}</p>
                   )}
-                  <span className="text-sm text-gray-500">
-                    {formatRelativeTime(answer.createdAt)}
-                  </span>
                 </div>
-                <p className="text-gray-700 whitespace-pre-wrap">{answer.content}</p>
               </div>
-            </div>
 
-            <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-              <ReactionButton
-                targetType="ANSWER"
-                targetId={answer.id}
-                initialLikeCount={answer.likeCount}
-                initialDislikeCount={answer.dislikeCount}
-                initialMyReaction={answer.myReactionType || 'NONE'}
-              />
-              <div className="flex space-x-2">
-                {isOwner && !answer.accepted && (
-                  <button
-                    onClick={() => handleAcceptAnswer(answer.id)}
-                    className="flex items-center space-x-1 px-3 py-1.5 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors"
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                    <span>채택</span>
-                  </button>
-                )}
-                {isAuthenticated && (
-                  <button
-                    onClick={() =>
-                      setShowCommentInputs((prev) => ({
-                        ...prev,
-                        [answer.id]: !prev[answer.id],
-                      }))
-                    }
-                    className="flex items-center space-x-1 px-3 py-1.5 text-gray-700 hover:text-primary-600 hover:bg-gray-100 rounded-lg transition-colors"
-                  >
-                    <MessageSquare className="w-4 h-4" />
-                    <span>댓글</span>
-                  </button>
-                )}
+            {!isEditingAnswer && (
+              <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                <ReactionButton
+                  targetType="ANSWER"
+                  targetId={answer.id}
+                  initialLikeCount={answer.likeCount}
+                  initialDislikeCount={answer.dislikeCount}
+                  initialMyReaction={answer.myReactionType || 'NONE'}
+                />
+                <div className="flex space-x-2">
+                  {isAnswerOwner && (
+                    <>
+                      <button
+                        onClick={() => {
+                          setEditingAnswerId(answer.id);
+                          setEditAnswerContent((prev) => ({
+                            ...prev,
+                            [answer.id]: answer.content,
+                          }));
+                        }}
+                        className="flex items-center space-x-1 px-3 py-1.5 text-gray-700 hover:text-primary-600 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
+                        <Edit className="w-4 h-4" />
+                        <span>수정</span>
+                      </button>
+                      <button
+                        onClick={() => handleDeleteAnswer(answer.id)}
+                        className="flex items-center space-x-1 px-3 py-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        <span>삭제</span>
+                      </button>
+                    </>
+                  )}
+                  {isOwner && !answer.accepted && (
+                    <button
+                      onClick={() => handleAcceptAnswer(answer.id)}
+                      className="flex items-center space-x-1 px-3 py-1.5 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      <span>채택</span>
+                    </button>
+                  )}
+                  {isAuthenticated && !isAnswerOwner && (
+                    <button
+                      onClick={() => handleReportAnswer(answer.id)}
+                      className="flex items-center space-x-1 px-3 py-1.5 text-gray-700 hover:text-red-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <Flag className="w-4 h-4" />
+                      <span>신고</span>
+                    </button>
+                  )}
+                  {isAuthenticated && (
+                    <button
+                      onClick={() =>
+                        setShowCommentInputs((prev) => ({
+                          ...prev,
+                          [answer.id]: !prev[answer.id],
+                        }))
+                      }
+                      className="flex items-center space-x-1 px-3 py-1.5 text-gray-700 hover:text-primary-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      <span>댓글</span>
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* 댓글 입력 */}
             {showCommentInputs[answer.id] && (
@@ -346,24 +484,61 @@ export default function QuestionDetailPage() {
 
             {/* 댓글 목록 */}
             {answer.comments && answer.comments.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-gray-200 space-y-2">
-                {answer.comments.map((comment) => (
-                  <div key={comment.id} className="flex items-start space-x-2">
-                    <div className="flex-1">
-                      <span className="font-medium text-sm text-gray-900">
-                        {comment.nickname}
-                      </span>
-                      <p className="text-sm text-gray-700">{comment.content}</p>
-                      <span className="text-xs text-gray-500">
-                        {formatRelativeTime(comment.createdAt)}
-                      </span>
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                {answer.comments.length > 3 && !showComments[answer.id] ? (
+                  <>
+                    <div className="space-y-3">
+                      {answer.comments.slice(0, 3).map((comment, idx) => (
+                        <div key={comment.id} className={`flex items-start space-x-2 ${idx < 2 ? 'pb-3 border-b border-gray-200' : ''}`}>
+                          <div className="flex-1">
+                            <span className="font-medium text-sm text-gray-900">
+                              {comment.nickname}
+                            </span>
+                            <p className="text-sm text-gray-700 mt-1">{comment.content}</p>
+                            <span className="text-xs text-gray-500">
+                              {formatRelativeTime(comment.createdAt)}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
+                    <button
+                      onClick={() => setShowComments((prev) => ({ ...prev, [answer.id]: true }))}
+                      className="mt-2 text-sm text-primary-600 hover:text-primary-700"
+                    >
+                      댓글 {answer.comments.length - 3}개 더보기
+                    </button>
+                  </>
+                ) : (
+                  <div className="space-y-3">
+                    {answer.comments.map((comment, idx) => (
+                      <div key={comment.id} className={`flex items-start space-x-2 ${idx < answer.comments.length - 1 ? 'pb-3 border-b border-gray-200' : ''}`}>
+                        <div className="flex-1">
+                          <span className="font-medium text-sm text-gray-900">
+                            {comment.nickname}
+                          </span>
+                          <p className="text-sm text-gray-700 mt-1">{comment.content}</p>
+                          <span className="text-xs text-gray-500">
+                            {formatRelativeTime(comment.createdAt)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                    {showComments[answer.id] && answer.comments.length > 3 && (
+                      <button
+                        onClick={() => setShowComments((prev) => ({ ...prev, [answer.id]: false }))}
+                        className="mt-2 text-sm text-gray-600 hover:text-gray-700"
+                      >
+                        접기
+                      </button>
+                    )}
                   </div>
-                ))}
+                )}
               </div>
             )}
           </div>
-        ))}
+        );
+        })}
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import { ko } from 'date-fns/locale';
 export const formatDate = (dateString: string): string => {
   try {
     const date = parseISO(dateString);
-    return format(date, 'yyyy년 MM월 dd일 HH:mm', { locale: ko });
+    return format(date, 'yyyy년 MM월 dd일', { locale: ko });
   } catch {
     return dateString;
   }

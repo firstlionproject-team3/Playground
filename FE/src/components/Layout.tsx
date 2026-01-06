@@ -1,7 +1,7 @@
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { authApi } from '@/api/auth';
-import { Bell, LogOut, User, Home, PlusCircle } from 'lucide-react';
+import { Bell, LogOut, User, PlusCircle, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { notificationApi } from '@/api/notification';
 import { Notification } from '@/types';
@@ -41,8 +41,9 @@ export default function Layout() {
     // EventSource는 헤더를 직접 설정할 수 없으므로, 
     // 백엔드에서 쿠키 기반 인증을 사용하거나 별도의 인증 방식이 필요합니다.
     // 여기서는 기본 구조만 제공합니다.
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://3.35.4.73:8080';
     const eventSource = new EventSource(
-      'http://localhost:8080/notification/subscribe',
+      `${apiBaseUrl}/notification/subscribe`,
       { withCredentials: true }
     );
 
@@ -91,8 +92,18 @@ export default function Layout() {
     }
     setShowNotifications(false);
     // 알림 타입에 따라 적절한 페이지로 이동
-    if (notification.type === 'NEW_ANSWER') {
-      // 질문 상세 페이지로 이동하는 로직 필요
+    if (notification.questionId) {
+      navigate(`/questions/${notification.questionId}`);
+    } else if (notification.type === 'NEW_ANSWER' || notification.type === 'ANSWER_ACCEPTED') {
+      // 질문 상세 페이지로 이동 (senderId를 임시로 사용)
+      if (notification.senderId) {
+        navigate(`/questions/${notification.senderId}`);
+      }
+    } else if (notification.type === 'COMMENT_ADDED') {
+      // 답변 상세 페이지로 이동
+      if (notification.senderId) {
+        navigate(`/questions/${notification.senderId}`);
+      }
     }
   };
 
@@ -111,12 +122,6 @@ export default function Layout() {
             </div>
 
             <div className="flex items-center space-x-4">
-              <Link
-                to="/"
-                className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-primary-600 hover:bg-gray-100 transition-colors"
-              >
-                <Home className="w-5 h-5" />
-              </Link>
 
               {isAuthenticated ? (
                 <>
@@ -142,7 +147,12 @@ export default function Layout() {
                     </button>
 
                     {showNotifications && (
-                      <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
+                      <>
+                        <div 
+                          className="fixed inset-0 z-40" 
+                          onClick={() => setShowNotifications(false)}
+                        />
+                        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50 max-h-96 overflow-y-auto">
                         <div className="p-4 border-b border-gray-200">
                           <h3 className="font-semibold text-gray-900">알림</h3>
                         </div>
@@ -153,24 +163,46 @@ export default function Layout() {
                             </div>
                           ) : (
                             notifications.map((notification) => (
-                              <button
+                              <div
                                 key={notification.id}
-                                onClick={() => handleNotificationClick(notification)}
-                                className={`w-full text-left p-4 hover:bg-gray-50 transition-colors ${
+                                className={`flex items-start justify-between p-4 hover:bg-gray-50 transition-colors ${
                                   !notification.isRead ? 'bg-primary-50' : ''
                                 }`}
                               >
-                                <p className="text-sm text-gray-900">
-                                  {notification.content}
-                                </p>
-                                <p className="text-xs text-gray-500 mt-1">
-                                  {new Date(notification.createdAt).toLocaleString('ko-KR')}
-                                </p>
-                              </button>
+                                <button
+                                  onClick={() => handleNotificationClick(notification)}
+                                  className="flex-1 text-left"
+                                >
+                                  <p className="text-sm text-gray-900">
+                                    {notification.content}
+                                  </p>
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    {new Date(notification.createdAt).toLocaleString('ko-KR')}
+                                  </p>
+                                </button>
+                                <button
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    try {
+                                      await notificationApi.delete(notification.id);
+                                      setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
+                                      if (!notification.isRead) {
+                                        setUnreadCount((prev) => Math.max(0, prev - 1));
+                                      }
+                                    } catch (error) {
+                                      console.error('알림 삭제 실패:', error);
+                                    }
+                                  }}
+                                  className="ml-2 p-1 text-gray-400 hover:text-red-600 transition-colors"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
                             ))
                           )}
                         </div>
-                      </div>
+                        </div>
+                      </>
                     )}
                   </div>
 
@@ -218,7 +250,7 @@ export default function Layout() {
       <footer className="bg-white border-t border-gray-200 mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <p className="text-center text-gray-500 text-sm">
-            © 2024 Playground. All rights reserved.
+            © 2026 Playground. All rights reserved.
           </p>
         </div>
       </footer>

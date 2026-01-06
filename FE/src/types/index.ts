@@ -84,6 +84,9 @@ export interface QuestionResponse {
   title: string;
   content: string;
   viewCount: number;
+  likeCount?: number;
+  dislikeCount?: number;
+  myReactionType?: 'LIKE' | 'DISLIKE' | 'NONE';
   createdAt: string;
   updatedAt: string;
   answers: AnswerDetail[];
@@ -186,6 +189,9 @@ export interface Notification {
   receiverId: number;
   isRead: boolean;
   createdAt: string;
+  questionId?: number;
+  answerId?: number;
+  commentId?: number;
 }
 
 export interface NotificationListResponse {

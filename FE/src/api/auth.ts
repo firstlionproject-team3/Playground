@@ -21,7 +21,8 @@ export const authApi = {
 
   // OAuth 로그인 시작
   startOAuthLogin: (provider: 'github' | 'naver') => {
-    window.location.href = `http://localhost:8080/oauth2/authorization/${provider}`;
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://3.35.4.73:8080';
+    window.location.href = `${apiBaseUrl}/oauth2/authorization/${provider}`;
   },
 };
 

@@ -14,12 +14,18 @@ services:
       - db_data:/var/lib/mysql
     networks:
       - playground-network
+    command:
+      - --performance-schema=OFF
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 300M
 
   backend:
     build:
@@ -37,12 +43,17 @@ services:
       - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
       - NAVER_CLIENT_ID=${NAVER_CLIENT_ID}
       - NAVER_CLIENT_SECRET=${NAVER_CLIENT_SECRET}
+      - JAVA_TOOL_OPTIONS: "-Xmx200m -Xms200m"
     depends_on:
       db:
         condition: service_healthy
     networks:
       - playground-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 350M
 
   frontend:
     build:
@@ -54,6 +65,10 @@ services:
     networks:
       - playground-network
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 150M
 
 volumes:
   db_data:
