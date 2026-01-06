@@ -786,7 +786,6 @@ export default function QuestionDetailPage() {
             </div>
           </div>
         </div>
-      </div>
 
       {/* 신고 모달 */}
       {showReportModal && (
