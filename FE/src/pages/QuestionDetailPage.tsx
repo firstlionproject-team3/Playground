@@ -417,18 +417,19 @@ export default function QuestionDetailPage() {
             </div>
           )}
         </div>
-        {[...question.answers]
-          .sort((a, b) => {
-            if (answerSortOrder === 'popular') {
-              return (b.likeCount - b.dislikeCount) - (a.likeCount - a.dislikeCount);
-            }
-            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-          })
-          .map((answer) => {
-          const isAnswerOwner = answer.nickname === user?.nickname;
-          const isEditingAnswer = editingAnswerId === answer.id;
-          
-          return (
+        <div className="space-y-4">
+          {[...question.answers]
+            .sort((a, b) => {
+              if (answerSortOrder === 'popular') {
+                return (b.likeCount - b.dislikeCount) - (a.likeCount - a.dislikeCount);
+              }
+              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            })
+            .map((answer) => {
+            const isAnswerOwner = answer.nickname === user?.nickname;
+            const isEditingAnswer = editingAnswerId === answer.id;
+            
+            return (
             <div
               key={answer.id}
               className={`card ${answer.accepted ? 'border-2 border-green-500 bg-gradient-to-br from-green-50 to-green-100 shadow-xl ring-2 ring-green-300' : 'border border-gray-200 bg-white'}`}
@@ -780,11 +781,10 @@ export default function QuestionDetailPage() {
                 )}
               </div>
             )}
-          </div>
-        );
-        })}
             </div>
-          </div>
+          );
+          })}
+        </div>
         </div>
       </div>
 
