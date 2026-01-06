@@ -7,9 +7,10 @@ import { notificationApi } from '@/api/notification';
 import { Notification } from '@/types';
 import toast from 'react-hot-toast';
 import { userApi } from '@/api/user';
+import { getAccessToken } from '@/api/client';
 
 export default function Layout() {
-  const { isAuthenticated, user, logout: logoutStore, setUser } = useAuthStore();
+  const { isAuthenticated, user, logout: logoutStore, setUser, accessToken } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -22,14 +23,16 @@ export default function Layout() {
   const MAX_RECONNECT_ATTEMPTS = 5;
   const RECONNECT_DELAY = 3000; // 3초
 
-  // 새로고침 시 user 정보 로드
+  // 새로고침 시 user 정보 로드 및 관리자 권한 확인
   useEffect(() => {
     if (isAuthenticated && !user) {
       loadUser();
-    } else if (isAuthenticated && user) {
+    } else if (isAuthenticated) {
       checkAdmin();
+    } else {
+      setIsAdmin(false);
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, accessToken]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -55,21 +58,50 @@ export default function Layout() {
     }
   };
 
+  const decodeJWT = (token: string): any => {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      return JSON.parse(jsonPayload);
+    } catch (error) {
+      console.error('JWT 디코딩 실패:', error);
+      return null;
+    }
+  };
+
   const checkAdmin = async (userData?: any) => {
     try {
+      // JWT 토큰에서 roles 추출
+      const token = getAccessToken();
+      if (token) {
+        const decoded = decodeJWT(token);
+        if (decoded && decoded.roles && Array.isArray(decoded.roles)) {
+          setIsAdmin(decoded.roles.includes('ROLE_ADMIN'));
+          return;
+        }
+      }
+
+      // JWT에 roles가 없으면 user 객체에서 확인
       const testUser = userData || user;
       if (testUser) {
-        // 백엔드에서 role 정보를 제공하는 경우
         if (testUser.roles && Array.isArray(testUser.roles)) {
           setIsAdmin(testUser.roles.includes('ROLE_ADMIN'));
         } else if (testUser.loginId === 'admin') {
-          // 임시로 loginId가 'admin'인 경우 관리자로 간주
           setIsAdmin(true);
         } else {
           setIsAdmin(false);
         }
+      } else {
+        setIsAdmin(false);
       }
     } catch (error) {
+      console.error('관리자 권한 확인 실패:', error);
       setIsAdmin(false);
     }
   };

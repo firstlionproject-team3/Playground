@@ -215,11 +215,11 @@ export type ReportCategory =
   | 'SPAM'
   | 'ABUSE'
   | 'INAPPROPRIATE'
-  | 'HARASSMENT'
-  | 'OTHER';
+  | 'COPYRIGHT'
+  | 'MISINFORMATION'
+  | 'ETC';
 
 export interface ReportCreateRequest {
-  reporterId: number;
   reportedId: number;
   entityType: EntityType;
   entityId: number;
@@ -228,15 +228,15 @@ export interface ReportCreateRequest {
 }
 
 export interface ReportResponse {
-  id: number;
-  reporterId: number;
-  reportedId: number;
+  reportId: number;
+  reporterNickname: string;
+  reportedNickname: string;
   entityType: EntityType;
   entityId: number;
-  category: ReportCategory;
-  reasonDetail?: string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
-  createdAt: string;
+  reportCategory: ReportCategory;
+  detail?: string;
+  reportStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
+  reportDate: string;
 }
 
 // Error Types

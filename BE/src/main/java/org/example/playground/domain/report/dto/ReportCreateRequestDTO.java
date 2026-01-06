@@ -12,10 +12,6 @@ public class ReportCreateRequestDTO {
 
     @NotNull
     @Positive
-    private Long reporterId; //신고한 유저 id
-
-    @NotNull
-    @Positive
     private Long reportedId; //신고당한 유저 id
 
     @NotNull

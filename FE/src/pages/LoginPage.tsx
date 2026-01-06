@@ -64,9 +64,9 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-8">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors mb-4"
+          className="inline-flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white rounded-lg border border-gray-300 shadow-sm hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-4 h-4" />
           <span>뒤로가기</span>
         </button>
         <div className="text-center">

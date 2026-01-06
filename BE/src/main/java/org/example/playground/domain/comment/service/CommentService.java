@@ -45,9 +45,10 @@ public class CommentService {
 
     // 댓글 단건 조회
     @Transactional(readOnly = true)
-    public Comment getComment(Long answerId) {
-        return commentRepository.findById(answerId)
+    public CommentResponseDTO getComment(Long answerId) {
+        Comment comment = commentRepository.findById(answerId)
                 .orElseThrow(() -> new CommentException(CommentErrorCode.COMMENT_NOT_FOUND));
+        return CommentResponseDTO.from(comment);
     }
 
     // 댓글 조회
