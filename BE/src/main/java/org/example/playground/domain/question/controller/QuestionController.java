@@ -58,12 +58,8 @@ public class QuestionController {
 
     // 질문 상세 조회 버전 2
     @GetMapping("/{id}")
-    public QuestionResponseDTO getQuestion(
-            @PathVariable Long id,
-            @AuthenticationPrincipal CustomUserDetails principal
-    ) {
-        Long userId = principal != null ? principal.getId() : null;
-        return questionService.getQuestion(id, userId);
+    public QuestionResponseDTO getQuestion(@PathVariable Long id) {
+        return questionService.getQuestion(id);
     }
 
     //질문 수정 - 작성자만
@@ -85,17 +81,6 @@ public class QuestionController {
             @AuthenticationPrincipal CustomUserDetails principal) {
         questionService.delete(id,  principal.getId());
     }
-
-    //질문 신고
-    @PatchMapping("/{id}/report")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void report(
-            @PathVariable Long id,
-            @AuthenticationPrincipal CustomUserDetails principal
-    ) {
-        questionService.report(id, principal.getId());
-    }
-
 
     //답변 채택
     @PatchMapping("/{questionId}/answers/{answerId}/accept")
