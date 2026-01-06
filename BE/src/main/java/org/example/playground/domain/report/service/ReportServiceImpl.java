@@ -46,6 +46,9 @@ public class ReportServiceImpl implements ReportService {
 
         User reporter = userService.findUserOrThrow(reporterId);
         User reported = userService.findUserOrThrow(dto.getReportedId());
+        if(reported.isDeleted()){
+            throw new ReportException(ReportErrorCode.REPORTED_USER_DELETED);
+        }
 
         //3. 자기 자신 체크 확인
         log.info("checking self report... ");

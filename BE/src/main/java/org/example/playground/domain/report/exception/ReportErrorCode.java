@@ -8,6 +8,7 @@ public enum ReportErrorCode implements ErrorCode {
     REPORT_TARGET_NOT_FOUND(HttpStatus.NOT_FOUND, "REPORT_TARGET_NOT_FOUND", "신고 대상이 존재하지 않습니다."),
     REPORTER_NOT_FOUND(HttpStatus.NOT_FOUND, "REPORTER_NOT_FOUND", "신고자를 찾을 수 없습니다."),
     REPORTED_USER_NOT_FOUND(HttpStatus.NOT_FOUND, "REPORTED_USER_NOT_FOUND", "피신고자를 찾을 수 없습니다."),
+    REPORTED_USER_DELETED(HttpStatus.NOT_FOUND, "REPORTED_USER_DELETED", "피신고자가 탈퇴한 계정입니다."),
     SELF_REPORT_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "SELF_REPORT_NOT_ALLOWED", "자기 자신은 신고할 수 없습니다."),
     DUPLICATE_REPORT(HttpStatus.CONFLICT, "DUPLICATE_REPORT", "이미 신고된 대상입니다."),
     INVALID_REPORT_TARGET_TYPE(HttpStatus.BAD_REQUEST, "INVALID_REPORT_TARGET_TYPE","유효하지 않은 신고 대상 타입입니다."),

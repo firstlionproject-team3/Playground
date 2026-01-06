@@ -37,8 +37,8 @@ public class CommentController {
 
     // 댓글 단건 조회
     @GetMapping("/comments/{commentId}")
-    public ResponseEntity<CommentResponseDTO> getComment(@PathVariable Long answerId) {
-        return ResponseEntity.ok(commentService.getComment(answerId));
+    public ResponseEntity<CommentResponseDTO> getComment(@PathVariable Long commentId) {
+        return ResponseEntity.ok(commentService.getComment(commentId));
     }
 
     // 댓글 수정

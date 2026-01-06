@@ -110,8 +110,17 @@ export default function Layout() {
   const loadNotifications = async () => {
     try {
       const data = await notificationApi.getNotifications();
-      setNotifications(data.notifications);
-      setUnreadCount(data.notifications.filter((n) => !n.isRead).length);
+      // 알림 내용에서 ID 제거
+      const cleanedNotifications = data.notifications.map((n) => ({
+        ...n,
+        content: n.content
+          .replace(/\s*(questionId|answerId|commentId|userId|id)=[0-9]+/gi, '')
+          .replace(/,\s*,/g, ',')
+          .replace(/,\s*$/g, '')
+          .trim(),
+      }));
+      setNotifications(cleanedNotifications);
+      setUnreadCount(cleanedNotifications.filter((n) => !n.isRead).length);
     } catch (error) {
       console.error('알림 로드 실패:', error);
     }
@@ -169,7 +178,14 @@ export default function Layout() {
       try {
         console.log('🔔 실시간 알림 수신:', event.data);
         const notification = JSON.parse(event.data) as Notification;
-        setNotifications((prev) => [notification, ...prev]);
+        // 알림 내용에서 ID 제거 (예: "questionId=123" 또는 "answerId=456" 같은 패턴 제거)
+        const cleanedContent = notification.content
+          .replace(/\s*(questionId|answerId|commentId|userId|id)=[0-9]+/gi, '')
+          .replace(/,\s*,/g, ',')
+          .replace(/,\s*$/g, '')
+          .trim();
+        const cleanedNotification = { ...notification, content: cleanedContent };
+        setNotifications((prev) => [cleanedNotification, ...prev]);
         setUnreadCount((prev) => prev + 1);
         
         // 배지 애니메이션 트리거
@@ -178,7 +194,7 @@ export default function Layout() {
           setBadgeAnimation(false);
         }, 600);
         
-        toast.success(notification.content, {
+        toast.success(cleanedContent, {
           icon: '🔔',
           duration: 3000,
         });
@@ -195,7 +211,14 @@ export default function Layout() {
     eventSource.onmessage = (event) => {
       try {
         const notification = JSON.parse(event.data) as Notification;
-        setNotifications((prev) => [notification, ...prev]);
+        // 알림 내용에서 ID 제거
+        const cleanedContent = notification.content
+          .replace(/\s*(questionId|answerId|commentId|userId|id)=[0-9]+/gi, '')
+          .replace(/,\s*,/g, ',')
+          .replace(/,\s*$/g, '')
+          .trim();
+        const cleanedNotification = { ...notification, content: cleanedContent };
+        setNotifications((prev) => [cleanedNotification, ...prev]);
         setUnreadCount((prev) => prev + 1);
         
         // 배지 애니메이션 트리거
@@ -204,7 +227,7 @@ export default function Layout() {
           setBadgeAnimation(false);
         }, 600);
         
-        toast.success(notification.content, {
+        toast.success(cleanedContent, {
           icon: '🔔',
           duration: 3000,
         });
@@ -275,6 +298,7 @@ export default function Layout() {
   };
 
   const handleNotificationClick = async (notification: Notification) => {
+    // 읽음 처리
     if (!notification.isRead) {
       try {
         await notificationApi.markAsRead(notification.id);
@@ -294,27 +318,14 @@ export default function Layout() {
     if (notification.type === 'REPORT_RECEIVED') {
       // 신고 알림은 관리자 페이지로 이동
       navigate('/admin');
-    } else if (notification.type === 'NEW_ANSWER' || notification.type === 'ANSWER_ACCEPTED') {
-      // 답변 알림은 해당 답변이 있는 질문 페이지로 이동
-      if (notification.questionId) {
-        if (notification.answerId) {
-          // answerId가 있으면 쿼리 파라미터로 전달
-          navigate(`/questions/${notification.questionId}?answerId=${notification.answerId}`);
-        } else {
-          navigate(`/questions/${notification.questionId}`);
-        }
-      }
-    } else if (notification.type === 'COMMENT_ADDED') {
-      // 댓글 알림은 해당 답변이 있는 질문 페이지로 이동
-      if (notification.questionId) {
-        if (notification.answerId) {
-          navigate(`/questions/${notification.questionId}?answerId=${notification.answerId}`);
-        } else {
-          navigate(`/questions/${notification.questionId}`);
-        }
-      }
+    } else if (notification.commentId && notification.questionId) {
+      // 댓글 알림은 해당 댓글로 이동
+      navigate(`/questions/${notification.questionId}#comment-${notification.commentId}`);
+    } else if (notification.answerId && notification.questionId) {
+      // 답변 알림은 해당 답변으로 이동
+      navigate(`/questions/${notification.questionId}#answer-${notification.answerId}`);
     } else if (notification.questionId) {
-      // 기타 알림은 질문 페이지로 이동
+      // 질문 알림은 질문 상세 페이지로 이동
       navigate(`/questions/${notification.questionId}`);
     }
   };
@@ -394,7 +405,7 @@ export default function Layout() {
                                   className="flex-1 text-left"
                                 >
                                   <p className="text-sm text-gray-900">
-                                    {notification.content.replace(/\s*(questionId|answerId|commentId|id)\s*=\s*\d+/gi, '').trim()}
+                                    {notification.content}
                                   </p>
                                   <p className="text-xs text-gray-500 mt-1">
                                     {new Date(notification.createdAt).toLocaleString('ko-KR')}

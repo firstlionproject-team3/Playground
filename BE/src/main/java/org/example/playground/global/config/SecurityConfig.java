@@ -62,7 +62,7 @@ public class SecurityConfig {
                         .requestMatchers("/users", "/auth/login", "/user/refreshToken", "/").permitAll()
                         .requestMatchers(HttpMethod.GET,"/questions/**").permitAll()
                         // OAuth 관련
-                        .requestMatchers("/oauth2/authorization/**","/login/oauth2/code/**").permitAll()
+                        .requestMatchers("/oauth2/authorization/**","/login/oauth2/code/**","/oauth/**").permitAll()
                         // h2 콘솔 - 테스트용
                         .requestMatchers("/h2-console/**").permitAll()
                         // 에러 리다이렉트 허용
