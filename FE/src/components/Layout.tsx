@@ -294,18 +294,28 @@ export default function Layout() {
     if (notification.type === 'REPORT_RECEIVED') {
       // 신고 알림은 관리자 페이지로 이동
       navigate('/admin');
-    } else if (notification.questionId) {
-      navigate(`/questions/${notification.questionId}`);
     } else if (notification.type === 'NEW_ANSWER' || notification.type === 'ANSWER_ACCEPTED') {
-      // 질문 상세 페이지로 이동
+      // 답변 알림은 해당 답변이 있는 질문 페이지로 이동
       if (notification.questionId) {
-        navigate(`/questions/${notification.questionId}`);
+        if (notification.answerId) {
+          // answerId가 있으면 쿼리 파라미터로 전달
+          navigate(`/questions/${notification.questionId}?answerId=${notification.answerId}`);
+        } else {
+          navigate(`/questions/${notification.questionId}`);
+        }
       }
     } else if (notification.type === 'COMMENT_ADDED') {
-      // 답변 상세 페이지로 이동
+      // 댓글 알림은 해당 답변이 있는 질문 페이지로 이동
       if (notification.questionId) {
-        navigate(`/questions/${notification.questionId}`);
+        if (notification.answerId) {
+          navigate(`/questions/${notification.questionId}?answerId=${notification.answerId}`);
+        } else {
+          navigate(`/questions/${notification.questionId}`);
+        }
       }
+    } else if (notification.questionId) {
+      // 기타 알림은 질문 페이지로 이동
+      navigate(`/questions/${notification.questionId}`);
     }
   };
 
@@ -384,7 +394,7 @@ export default function Layout() {
                                   className="flex-1 text-left"
                                 >
                                   <p className="text-sm text-gray-900">
-                                    {notification.content}
+                                    {notification.content.replace(/\s*(questionId|answerId|commentId|id)\s*=\s*\d+/gi, '').trim()}
                                   </p>
                                   <p className="text-xs text-gray-500 mt-1">
                                     {new Date(notification.createdAt).toLocaleString('ko-KR')}
