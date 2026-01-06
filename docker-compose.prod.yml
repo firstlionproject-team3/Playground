@@ -43,7 +43,7 @@ services:
       - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
       - NAVER_CLIENT_ID=${NAVER_CLIENT_ID}
       - NAVER_CLIENT_SECRET=${NAVER_CLIENT_SECRET}
-      - JAVA_TOOL_OPTIONS: "-Xmx200m -Xms200m"
+      - JAVA_TOOL_OPTIONS="-Xmx200m -Xms200m"
     depends_on:
       db:
         condition: service_healthy
