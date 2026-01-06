@@ -392,33 +392,32 @@ export default function QuestionDetailPage() {
               <h2 className="text-2xl font-semibold">
                 답변 {question.answers.length}개
               </h2>
-          {question.answers.length > 0 && (
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setAnswerSortOrder('latest')}
-                className={`px-3 py-1 text-sm rounded-lg transition-colors ${
-                  answerSortOrder === 'latest'
-                    ? 'bg-primary-100 text-primary-700'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                최신순
-              </button>
-              <button
-                onClick={() => setAnswerSortOrder('popular')}
-                className={`px-3 py-1 text-sm rounded-lg transition-colors ${
-                  answerSortOrder === 'popular'
-                    ? 'bg-primary-100 text-primary-700'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                추천순
-              </button>
+              {question.answers.length > 0 && (
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setAnswerSortOrder('latest')}
+                    className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                      answerSortOrder === 'latest'
+                        ? 'bg-primary-100 text-primary-700'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    최신순
+                  </button>
+                  <button
+                    onClick={() => setAnswerSortOrder('popular')}
+                    className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                      answerSortOrder === 'popular'
+                        ? 'bg-primary-100 text-primary-700'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    추천순
+                  </button>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-        <div className="space-y-4">
-          {[...question.answers]
+            {[...question.answers]
             .sort((a, b) => {
               if (answerSortOrder === 'popular') {
                 return (b.likeCount - b.dislikeCount) - (a.likeCount - a.dislikeCount);
@@ -781,10 +780,11 @@ export default function QuestionDetailPage() {
                 )}
               </div>
             )}
-            </div>
+          </div>
           );
           })}
-        </div>
+            </div>
+          </div>
         </div>
       </div>
 
