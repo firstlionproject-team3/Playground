@@ -25,11 +25,9 @@ public class CommentResponseDTO {
 
     private int dislikeCount;
 
-    private String myReactionType; // LIKE | DISLIKE | NONE
-
     private LocalDateTime createdAt;
 
-    public static CommentResponseDTO from(Comment comment, String myReactionType) {
+    public static CommentResponseDTO from(Comment comment) {
         return CommentResponseDTO.builder()
                 .id(comment.getId())
                 .userId(comment.getUser().getId())
@@ -37,7 +35,6 @@ public class CommentResponseDTO {
                 .content(comment.getContent())
                 .likeCount(comment.getLikeCount())
                 .dislikeCount(comment.getDislikeCount())
-                .myReactionType(myReactionType != null ? myReactionType : "NONE")
                 .createdAt(comment.getCreatedAt())
                 .build();
     }

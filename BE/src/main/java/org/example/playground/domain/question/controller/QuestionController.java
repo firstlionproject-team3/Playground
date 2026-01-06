@@ -82,17 +82,6 @@ public class QuestionController {
         questionService.delete(id,  principal.getId());
     }
 
-    //질문 신고
-    @PatchMapping("/{id}/report")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void report(
-            @PathVariable Long id,
-            @AuthenticationPrincipal CustomUserDetails principal
-    ) {
-        questionService.report(id, principal.getId());
-    }
-
-
     //답변 채택
     @PatchMapping("/{questionId}/answers/{answerId}/accept")
     @ResponseStatus(HttpStatus.NO_CONTENT)
