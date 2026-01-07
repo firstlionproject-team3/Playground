@@ -441,6 +441,10 @@ export default function AdminPage() {
                       <p className="text-lg font-semibold text-gray-900 mb-4">
                         {(entityContent.data as QuestionResponse).title}
                       </p>
+                      <p className="text-sm font-medium text-gray-500 mb-2">신고당한 사람</p>
+                      <p className="text-sm text-gray-900 mb-4">
+                        {selectedReport?.reportedNickname || (entityContent.data as QuestionResponse).nickname}
+                      </p>
                       <p className="text-sm font-medium text-gray-500 mb-2">내용</p>
                       <div className="bg-gray-50 rounded-lg p-4 min-h-[100px]">
                         <p className="text-sm text-gray-900 whitespace-pre-wrap">
@@ -455,10 +459,6 @@ export default function AdminPage() {
                       <p className="text-sm text-gray-900 mb-4">
                         {selectedReport?.reportedNickname || (entityContent.data as AnswerDetail).nickname}
                       </p>
-                      <p className="text-sm font-medium text-gray-500 mb-2">작성자</p>
-                      <p className="text-sm text-gray-900 mb-4">
-                        {(entityContent.data as AnswerDetail).nickname}
-                      </p>
                       <p className="text-sm font-medium text-gray-500 mb-2">내용</p>
                       <div className="bg-gray-50 rounded-lg p-4 min-h-[100px]">
                         <p className="text-sm text-gray-900 whitespace-pre-wrap">
@@ -472,10 +472,6 @@ export default function AdminPage() {
                       <p className="text-sm font-medium text-gray-500 mb-2">신고당한 사람</p>
                       <p className="text-sm text-gray-900 mb-4">
                         {selectedReport?.reportedNickname || (entityContent.data as CommentResponse).nickname}
-                      </p>
-                      <p className="text-sm font-medium text-gray-500 mb-2">작성자</p>
-                      <p className="text-sm text-gray-900 mb-4">
-                        {(entityContent.data as CommentResponse).nickname}
                       </p>
                       <p className="text-sm font-medium text-gray-500 mb-2">내용</p>
                       <div className="bg-gray-50 rounded-lg p-4 min-h-[100px]">

@@ -1,11 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { questionApi } from '@/api/question';
 import { answerApi } from '@/api/answer';
 import { commentApi } from '@/api/comment';
-import { QuestionResponse } from '@/types';
+import { QuestionResponse, ReportCategory } from '@/types';
 import { formatDate, formatRelativeTime } from '@/utils/date';
-import ReactionButton from '@/components/ReactionButton';
 import { useAuthStore } from '@/store/authStore';
 import toast from 'react-hot-toast';
 import { Edit, Trash2, Flag, CheckCircle, MessageSquare, Send, ArrowLeft } from 'lucide-react';
@@ -13,9 +12,7 @@ import { Edit, Trash2, Flag, CheckCircle, MessageSquare, Send, ArrowLeft } from 
 export default function QuestionDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { isAuthenticated, user } = useAuthStore();
-  const answerRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const [question, setQuestion] = useState<QuestionResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -32,7 +29,7 @@ export default function QuestionDetailPage() {
   const [answerSortOrder, setAnswerSortOrder] = useState<'latest' | 'popular'>('latest');
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportTarget, setReportTarget] = useState<{ type: 'QUESTION' | 'ANSWER' | 'COMMENT'; id: number } | null>(null);
-  const [reportCategory, setReportCategory] = useState<'SPAM' | 'ABUSE' | 'INAPPROPRIATE' | 'HARASSMENT' | 'OTHER'>('SPAM');
+  const [reportCategory, setReportCategory] = useState<ReportCategory>('SPAM');
   const [reportReason, setReportReason] = useState('');
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editCommentContent, setEditCommentContent] = useState<Record<number, string>>({});
@@ -43,28 +40,6 @@ export default function QuestionDetailPage() {
       loadQuestion();
     }
   }, [id]);
-
-  // answerId 쿼리 파라미터가 있으면 해당 답변으로 스크롤
-  useEffect(() => {
-    const answerIdParam = searchParams.get('answerId');
-    if (answerIdParam && question) {
-      const answerId = Number(answerIdParam);
-      // 질문이 로드된 후 약간의 지연을 두고 스크롤
-      setTimeout(() => {
-        const answerElement = answerRefs.current[answerId];
-        if (answerElement) {
-          answerElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          // 하이라이트 효과
-          answerElement.classList.add('ring-2', 'ring-primary-500', 'ring-opacity-50');
-          setTimeout(() => {
-            answerElement.classList.remove('ring-2', 'ring-primary-500', 'ring-opacity-50');
-          }, 2000);
-          // 쿼리 파라미터 제거
-          setSearchParams({});
-        }
-      }, 300);
-    }
-  }, [question, searchParams, setSearchParams]);
 
   const loadQuestion = async () => {
     if (!id) return;
@@ -159,12 +134,42 @@ export default function QuestionDetailPage() {
   };
 
   const submitReport = async () => {
-    if (!reportTarget || !user) return;
+    if (!reportTarget || !user || !question) return;
+    
+    // 신고 대상의 작성자 ID 찾기
+    let reportedUserId: number | undefined;
+    
+    if (reportTarget.type === 'QUESTION') {
+      reportedUserId = question.userId;
+    } else if (reportTarget.type === 'ANSWER') {
+      const answer = question.answers.find(a => a.id === reportTarget.id);
+      reportedUserId = answer?.userId;
+    } else if (reportTarget.type === 'COMMENT') {
+      // 댓글의 경우 답변을 찾아서 댓글을 찾아야 함
+      for (const answer of question.answers) {
+        const comment = answer.comments?.find(c => c.id === reportTarget.id);
+        if (comment) {
+          reportedUserId = comment.userId;
+          break;
+        }
+      }
+    }
+    
+    if (!reportedUserId) {
+      toast.error('신고 대상의 작성자 정보를 찾을 수 없습니다.');
+      return;
+    }
+    
+    // 자기 자신을 신고하는 경우 방지
+    if (reportedUserId === user.id) {
+      toast.error('자기 자신을 신고할 수 없습니다.');
+      return;
+    }
+    
     try {
       const { reportApi } = await import('@/api/report');
       await reportApi.create({
-        reporterId: user.id || 0,
-        reportedId: 0, // 백엔드에서 처리
+        reportedId: reportedUserId,
         entityType: reportTarget.type,
         entityId: reportTarget.id,
         category: reportCategory,
@@ -346,15 +351,7 @@ export default function QuestionDetailPage() {
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-          <ReactionButton
-            key={`question-${question.id}-${isEditing}`}
-            targetType="QUESTION"
-            targetId={question.id}
-            initialLikeCount={question.likeCount || 0}
-            initialDislikeCount={question.dislikeCount || 0}
-            initialMyReaction={question.myReactionType || 'NONE'}
-          />
+        <div className="flex items-center justify-end pt-4 border-t border-gray-200">
           <div className="flex space-x-2">
             {isOwner && !isEditing && (
               <>
@@ -458,10 +455,7 @@ export default function QuestionDetailPage() {
             return (
             <div
               key={answer.id}
-              ref={(el) => {
-                answerRefs.current[answer.id] = el;
-              }}
-              className={`card ${answer.accepted ? 'border-2 border-green-500 bg-gradient-to-br from-green-50 to-green-100 shadow-xl ring-2 ring-green-300' : 'border border-gray-200 bg-white'}`}
+              className={`card ${answer.accepted ? 'border-4 border-green-500 bg-gradient-to-br from-green-50 via-green-100 to-green-50 shadow-2xl ring-4 ring-green-300 ring-opacity-50 transform scale-[1.02]' : 'border border-gray-200 bg-white'}`}
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
@@ -469,9 +463,9 @@ export default function QuestionDetailPage() {
                     <div className="flex items-center space-x-2 mb-2">
                       <span className="text-lg font-bold text-gray-900">{answer.nickname}</span>
                       {answer.accepted && (
-                        <span className="px-3 py-1 bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-bold rounded-full flex items-center space-x-1 shadow-md">
-                          <CheckCircle className="w-4 h-4" />
-                          <span>채택된 답변</span>
+                        <span className="px-4 py-2 bg-gradient-to-r from-green-500 via-green-600 to-green-500 text-white text-sm font-bold rounded-lg flex items-center space-x-2 shadow-lg animate-pulse">
+                          <CheckCircle className="w-5 h-5" />
+                          <span>✓ 채택된 답변</span>
                         </span>
                       )}
                     </div>
@@ -557,14 +551,7 @@ export default function QuestionDetailPage() {
               </div>
 
             {!isEditingAnswer && (
-              <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                <ReactionButton
-                  targetType="ANSWER"
-                  targetId={answer.id}
-                  initialLikeCount={answer.likeCount}
-                  initialDislikeCount={answer.dislikeCount}
-                  initialMyReaction={answer.myReactionType || 'NONE'}
-                />
+              <div className="flex items-center justify-end pt-4 border-t border-gray-200">
                 <div className="flex space-x-2">
                   {isAnswerOwner && (
                     <>
@@ -590,7 +577,7 @@ export default function QuestionDetailPage() {
                       </button>
                     </>
                   )}
-                  {isOwner && !hasAcceptedAnswer && !answer.accepted && (
+                  {isOwner && !hasAcceptedAnswer && (
                     <button
                       onClick={() => handleAcceptAnswer(answer.id)}
                       className="flex items-center space-x-1 px-3 py-1.5 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors"
@@ -821,14 +808,15 @@ export default function QuestionDetailPage() {
                   </label>
                   <select
                     value={reportCategory}
-                    onChange={(e) => setReportCategory(e.target.value as any)}
+                    onChange={(e) => setReportCategory(e.target.value as ReportCategory)}
                     className="w-full input-field"
                   >
-                    <option value="SPAM">스팸</option>
+                    <option value="SPAM">스팸/광고</option>
                     <option value="ABUSE">욕설/비방</option>
                     <option value="INAPPROPRIATE">부적절한 내용</option>
-                    <option value="HARASSMENT">괴롭힘</option>
-                    <option value="OTHER">기타</option>
+                    <option value="COPYRIGHT">저작권 침해</option>
+                    <option value="MISINFORMATION">허위 정보</option>
+                    <option value="ETC">기타</option>
                   </select>
                 </div>
                 <div>

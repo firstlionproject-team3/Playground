@@ -19,6 +19,7 @@ public class AnswerResponseDTO {
     private Long userId;
     private String content;
     private String nickname;
+    private boolean accepted;
     private int likeCount;
     private int dislikeCount;
     private List<CommentResponseDTO> comments;
@@ -29,6 +30,7 @@ public class AnswerResponseDTO {
                 .userId(answer.getUser().getId())
                 .content(answer.getContent())
                 .nickname(answer.getUser().getNickname()) // 답변 개수만큼 쿼리
+                .accepted(answer.isAccepted())
                 .likeCount(answer.getLikeCount())
                 .dislikeCount(answer.getDislikeCount())
                 .comments(comments.stream()

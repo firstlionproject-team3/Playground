@@ -120,7 +120,7 @@ public class ReportServiceImpl implements ReportService {
     @Override
     @Transactional(readOnly = true)
     public Page<ReportResponseDTO> getPendingReports(Pageable pageable) {
-        return reportRepository.findAllByStatus(ReportStatus.PENDING, pageable)
+        return reportRepository.findAllByStatusExcludingDeletedUsers(ReportStatus.PENDING, pageable)
                 .map(ReportResponseDTO::from);
     }
 
