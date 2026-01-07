@@ -95,17 +95,17 @@ jobs:
             MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}
             MYSQL_USER=${{ secrets.MYSQL_USER }}
             MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
-            
+
             # JWT
             JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}
             JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}
-            
+
             # OAuth
             GITHUB_CLIENT_ID=${{ secrets.OAUTH_GITHUB_CLIENT_ID }}
             GITHUB_CLIENT_SECRET=${{ secrets.OAUTH_GITHUB_CLIENT_SECRET }}
             NAVER_CLIENT_ID=${{ secrets.OAUTH_NAVER_CLIENT_ID }}
             NAVER_CLIENT_SECRET=${{ secrets.OAUTH_NAVER_CLIENT_SECRET }}
-            
+
             # API URLs
             VITE_API_BASE_URL=http://3.35.4.73:8080
             OAUTH_CALLBACK_URL=http://3.35.4.73:8080/test/oauth/verify-code
